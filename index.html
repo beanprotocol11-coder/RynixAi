@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rynix AI | Autonomous Intelligence for On-Chain Trading</title>
+  <meta name="description" content="Rynix AI — Vibe trading is here. Think it. Say it. Trade it. 24/7 autonomous AI monitoring, plain English automations, real-time market data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+CiAgPGRlZnM+CiAgICA8ZmlsdGVyIGlkPSJnbG93IiB4PSItMjAlIiB5PSItMjAlIiB3aWR0aD0iMTQwJSIgaGVpZ2h0PSIxNDAlIj4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMi41IiByZXN1bHQ9ImJsdXIiLz4KICAgICAgPGZlQ29tcG9zaXRlIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9ImJsdXIiIG9wZXJhdG9yPSJvdmVyIi8+CiAgICA8L2ZpbHRlcj4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMwQTBBMEEiIHJ4PSIxOCIvPgogIDxnIGZpbGw9IiNGRkQ3MDAiIGZpbHRlcj0idXJsKCNnbG93KSI+CiAgICA8IS0tIHRvcCBiYXIgLS0+CiAgICA8cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSIxNSIgcng9IjYiLz4KICAgIDwhLS0gbGVmdCB2ZXJ0aWNhbCBiYXIgLS0+CiAgICA8cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSIyMCIgaGVpZ2h0PSI4MCIgcng9IjYiLz4KICAgIDwhLS0gbWlkZGxlIGJhciAtLT4KICAgIDxyZWN0IHg9IjEwIiB5PSI0MiIgd2lkdGg9IjgwIiBoZWlnaHQ9IjE1IiByeD0iNiIvPgogICAgPCEtLSByaWdodCB2ZXJ0aWNhbCAvIGxlZyAtLT4KICAgIDxyZWN0IHg9IjcwIiB5PSI0MiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjQ4IiByeD0iNiIvPgogIDwvZz4KICA8IS0tIGN1dG91dHMgKG5lZ2F0aXZlIHNwYWNlKSAtLT4KICA8cmVjdCB4PSIzNSIgeT0iMjgiIHdpZHRoPSIyOCIgaGVpZ2h0PSIxMiIgcng9IjQiIGZpbGw9IiMwQTBBMEEiLz4KICA8cmVjdCB4PSIzNSIgeT0iNjAiIHdpZHRoPSIyOCIgaGVpZ2h0PSIxMiIgcng9IjQiIGZpbGw9IiMwQTBBMEEiLz4KPC9zdmc+Cg==">
+  <style>
+:root {
+  --bg: #050505;
+  --bg-2: #0a0a0a;
+  --surface: #0f1113;
+  --surface-2: #13161a;
+  --border: #1e2329;
+  --border-2: #2a3138;
+  --text: #f0f0f0;
+  --text-muted: #8a96a3;
+  --accent: #86ef9e;
+  --accent-2: #22c55e;
+  --accent-dim: #14532d;
+  --yellow: #ffd700;
+  --yellow-dim: #b8860b;
+  --danger: #ef4444;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --font-body: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "Source Code Pro", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+/* grid background */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
+}
+
+/* navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(5,5,5,0.78);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.brand-text {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  font-size: 1.1rem;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nav-link span {
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--text);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-menu-btn {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.mobile-menu-btn span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+}
+
+/* buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34,197,94,0.18);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: #a5f5b5;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-outline:hover {
+  background: rgba(134,239,158,0.08);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border-2);
+}
+
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--text-muted);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.btn-icon {
+  padding: 10px;
+  color: var(--text-muted);
+  border-color: var(--border-2);
+  background: rgba(255,255,255,0.02);
+}
+
+.btn-icon:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(134,239,158,0.08);
+}
+
+.btn-icon img,
+.btn-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* hero */
+.hero {
+  padding: 64px 32px 80px;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.terminal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.terminal-dots span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.terminal-dots span:nth-child(1) { background: #ff5f57; }
+.terminal-dots span:nth-child(2) { background: #febc2e; }
+.terminal-dots span:nth-child(3) { background: #28c840; }
+
+.terminal-title {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.terminal-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  padding: 18px;
+}
+
+.terminal-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.terminal-col:first-child {
+  border-right: 1px solid var(--border);
+  padding-right: 18px;
+}
+
+.terminal-col:last-child {
+  padding-left: 18px;
+}
+
+.terminal-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin: 0 0 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.terminal-feed,
+.terminal-status {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.terminal-feed li {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.term-tick {
+  color: var(--accent);
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.term-cursor {
+  color: var(--accent);
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+.status-ok {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.status-live {
+  color: var(--danger);
+  font-weight: 700;
+  animation: pulseText 1.6s ease-in-out infinite;
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.terminal-metric {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.terminal-metric span:last-child {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.hero-title {
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  font-weight: 700;
+  line-height: 1.05;
+  margin: 0;
+  letter-spacing: -0.03em;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  color: var(--text-muted);
+  margin: 0;
+  font-weight: 400;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.hero-chips {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.chip-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* features */
+.features {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.feature-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  padding: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.feature-row-reverse {
+  direction: rtl;
+}
+
+.feature-row-reverse > * {
+  direction: ltr;
+}
+
+.feature-image-wrap {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-2);
+  min-height: 260px;
+}
+
+.feature-image {
+  width: 100%;
+  height: 100%;
+  min-height: 260px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.feature-chat {
+  background: linear-gradient(135deg, #111 0%, #1a1f26 100%);
+}
+
+.feature-chat::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.4;
+}
+
+.feature-chat::after {
+  content: "Hi, what should I trade today?";
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  padding: 14px 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 12px 12px 12px 4px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.feature-automations {
+  background: linear-gradient(135deg, #0f1a12 0%, #1a1f26 100%);
+}
+
+.feature-automations::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(134,239,158,0.06) 0px,
+    rgba(134,239,158,0.06) 1px,
+    transparent 1px,
+    transparent 28px
+  );
+}
+
+.feature-automations::after {
+  content: "Automations active: 3";
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  padding: 8px 14px;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid var(--accent-dim);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+
+.feature-thesis {
+  background: linear-gradient(135deg, #1a1510 0%, #1a1f26 100%);
+}
+
+.feature-thesis::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 70% 30%, rgba(255,215,0,0.08) 0%, transparent 50%);
+}
+
+.feature-thesis::after {
+  content: "Strategy: BTC Macro Hedge";
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  padding: 8px 14px;
+  background: rgba(255,215,0,0.08);
+  border: 1px solid var(--yellow-dim);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--yellow);
+}
+
+.feature-badge {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.feature-badge:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(0,0,0,0.75);
+}
+
+.feature-content h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  margin: 0 0 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.feature-content p {
+  color: var(--text-muted);
+  margin: 0 0 22px;
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.feature-list li span {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+/* footer */
+.footer {
+  position: relative;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.live-data {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.live-data-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--danger);
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.live-data-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.live-data-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.live-data-item span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.live-data-item strong {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal.open {
+  display: flex;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  z-index: 1;
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-content h3 {
+  margin: 0 0 8px;
+  font-size: 1.4rem;
+}
+
+.modal-content p {
+  color: var(--text-muted);
+  margin: 0 0 22px;
+}
+
+.wallet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wallet-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.wallet-option:hover {
+  background: var(--border);
+  border-color: var(--accent);
+}
+
+.wallet-option img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+/* responsive */
+@media (max-width: 1100px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+  .hero-text {
+    order: -1;
+  }
+  .feature-row,
+  .feature-row-reverse {
+    grid-template-columns: 1fr;
+    direction: ltr;
+  }
+  .feature-row-reverse > * {
+    direction: ltr;
+  }
+}
+
+@media (max-width: 900px) {
+  .nav-links {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    padding: 20px 32px;
+    gap: 16px;
+    transform: translateY(-150%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .nav-links.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .mobile-menu-btn {
+    display: flex;
+  }
+  .nav-actions {
+    display: none;
+  }
+  .terminal-body {
+    grid-template-columns: 1fr;
+  }
+  .terminal-col:first-child {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding-right: 0;
+    padding-bottom: 18px;
+  }
+  .terminal-col:last-child {
+    padding-left: 0;
+    padding-top: 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar,
+  .hero,
+  .features,
+  .footer {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .feature-row {
+    padding: 24px;
+  }
+}
+
+/* placeholder pages */
+.placeholder-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+
+.placeholder-page h1 {
+  font-size: 2.4rem;
+  margin-bottom: 12px;
+}
+
+.placeholder-page p {
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  max-width: 520px;
+}
+
+.placeholder-page .btn {
+  min-width: 180px;
+}
+
+
+.placeholder-section {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 80px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+.placeholder-card {
+  max-width: 600px;
+  text-align: center;
+  padding: 48px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.placeholder-card h2 {
+  font-size: 2rem;
+  margin: 24px 0 12px;
+}
+.placeholder-card p {
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.placeholder-card svg {
+  width: 80px;
+  height: 80px;
+}
+#contact {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 80px 32px;
+}
+.contact-card {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 48px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.contact-card h2 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+.contact-card p {
+  color: var(--text-muted);
+  margin-bottom: 28px;
+}
+
+/* chatbot */
+.chat-launcher {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(134,239,158,0.25);
+  z-index: 250;
+  transition: transform 0.2s ease;
+}
+.chat-launcher:hover { transform: scale(1.05); }
+.chat-launcher svg { width: 26px; height: 26px; }
+
+.chatbot-window {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  height: 520px;
+  max-height: calc(100vh - 100px);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  z-index: 260;
+  font-family: var(--font-body);
+}
+.chatbot-window.open {
+  display: flex;
+}
+
+.chatbot-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+.chatbot-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chatbot-header .status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent);
+}
+.chatbot-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.chatbot-close:hover { color: var(--text); }
+
+.chatbot-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.chatbot-message {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.chatbot-message.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #000;
+  border-bottom-right-radius: 4px;
+}
+.chatbot-message.bot {
+  align-self: flex-start;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-2);
+  border-bottom-left-radius: 4px;
+}
+.chatbot-typing {
+  align-self: flex-start;
+  display: flex;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  border-bottom-left-radius: 4px;
+}
+.chatbot-typing span {
+  width: 6px;
+  height: 6px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+.chatbot-typing span:nth-child(1) { animation-delay: 0s; }
+.chatbot-typing span:nth-child(2) { animation-delay: 0.2s; }
+.chatbot-typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.chatbot-input {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+}
+.chatbot-input input {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  outline: none;
+}
+.chatbot-input input::placeholder { color: var(--text-muted); }
+.chatbot-input input:focus { border-color: var(--accent); }
+.chatbot-input button {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.chatbot-input button:hover { background: #a5f5b5; }
+.chatbot-input button svg { width: 18px; height: 18px; }
+
+@media (max-width: 640px) {
+  .chatbot-window {
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+}
+
+/* statistics section */
+.statistics-section {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 80px 32px;
+  min-height: 100vh;
+}
+
+.statistics-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 24px;
+}
+
+.statistics-header h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.statistics-features {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--accent-dim);
+  transform: translateY(-2px);
+}
+
+.stat-card-header {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-card-header::before {
+  content: "$";
+  color: var(--text-muted);
+}
+
+.stat-card-header.terminal::before {
+  content: "./";
+  color: var(--text-muted);
+}
+
+.stat-card h6 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.stat-card p {
+  margin: 0 0 14px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.stat-card-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stat-card-metrics span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.statistics-activity {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  min-height: 480px;
+}
+
+.statistics-activity h5 {
+  margin: 0 0 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  align-items: flex-start;
+}
+
+.activity-time {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 70px;
+  padding-top: 2px;
+}
+
+.activity-text {
+  line-height: 1.5;
+}
+
+.activity-text a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-dim);
+  padding-bottom: 1px;
+  margin-right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-text a:hover {
+  color: #a5f5b5;
+  border-bottom-color: var(--accent);
+}
+
+.activity-text a svg {
+  width: 12px;
+  height: 12px;
+}
+
+.statistics-footer {
+  margin-top: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 18px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.statistics-footer .live-data-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.statistics-footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 1100px) {
+  .statistics-header,
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+  .statistics-header h5:last-child {
+    display: none;
+  }
+  .statistics-activity {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .statistics-section {
+    padding: 48px 18px;
+  }
+  .statistics-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Smooth 3D motion on touch/swipe */
+.motion-3d,
+.motion-3d * {
+  transform-style: preserve-3d;
+  will-change: transform;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-3d {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* market ticker */
+.market-ticker {
+  max-width: 1440px;
+  margin: 0 auto 48px;
+  padding: 0 32px;
+}
+
+.ticker-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+}
+
+.ticker-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+
+.ticker-header::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--danger);
+  animation: pulseText 1.6s ease-in-out infinite;
+}
+
+.ticker-items {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.ticker-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.ticker-item:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+
+.ticker-symbol {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ticker-symbol .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.ticker-price {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.ticker-change {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.ticker-change.up { color: var(--accent); }
+.ticker-change.down { color: var(--danger); }
+
+.ticker-status {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+@media (max-width: 860px) {
+  .ticker-items {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .ticker-items {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
+</head>
+<body>
+  <!-- background grid overlay -->
+  <div class="grid-bg" aria-hidden="true"></div>
+
+  <!-- nav -->
+  <header class="navbar">
+    <a class="brand" href="#home" aria-label="Rynix AI home">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
+        <defs>
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+        </defs>
+        <rect width="100" height="100" fill="#0A0A0A" rx="18"/>
+        <g fill="#FFD700" filter="url(#glow)">
+          <rect x="10" y="10" width="80" height="15" rx="6"/>
+          <rect x="10" y="10" width="20" height="80" rx="6"/>
+          <rect x="10" y="42" width="80" height="15" rx="6"/>
+          <rect x="70" y="42" width="20" height="48" rx="6"/>
+        </g>
+        <rect x="35" y="28" width="28" height="12" rx="4" fill="#0A0A0A"/>
+        <rect x="35" y="60" width="28" height="12" rx="4" fill="#0A0A0A"/>
+      </svg>
+      <span class="brand-text">RYNIX AI</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#home" class="nav-link active"><span>~/</span>Home</a>
+      <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
+      <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
+      <a href="#litepaper" class="nav-link"><span>~/</span>Litepaper</a>
+      <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>hacked by robinhood foundation</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" id="connectWalletNav">CONNECT WALLET</button>
+      <a class="btn btn-primary" href="https://app.uniswap.org/swap" target="_blank" rel="noopener">
+        <span>BUY $RYNIX</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17L17 7M17 7H7M17 7V17"/>
+        </svg>
+      </a>
+    </div>
+    <button class="mobile-menu-btn" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <main>
+    <!-- hero -->
+    <section class="hero" id="home">
+      <div class="hero-grid">
+        <!-- terminal card -->
+        <div class="terminal-card">
+          <div class="terminal-header">
+            <div class="terminal-dots"><span></span><span></span><span></span></div>
+            <div class="terminal-title">C:\RynixAI\live_feed</div>
+          </div>
+          <div class="terminal-body">
+            <div class="terminal-col">
+              <div class="terminal-section">
+                <h3 class="terminal-label">C:\RynixAI\live_feed</h3>
+                <ul class="terminal-feed" id="liveFeed">
+                  <li><span class="term-tick">$AUTO</span>Started - BTC Ichimoku Cloud Strategy</li>
+                  <li><span class="term-tick">$AUTO</span>Stopped - BTC Trend Momentum v1.2</li>
+                  <li><span class="term-tick">$CLOSE</span>BTC position closed</li>
+                  <li><span class="term-tick">$OPEN</span>ETH position opened</li>
+                  <li><span class="term-tick">$CLOSE</span>HYPE position closed</li>
+                  <li><span class="term-cursor">_</span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="terminal-col">
+              <div class="terminal-section">
+                <h3 class="terminal-label">C:\RynixAI\status</h3>
+                <ul class="terminal-status">
+                  <li>&gt;connected to HyperLiquid <span class="status-ok">OK</span></li>
+                  <li>&gt;automations active: <span class="status-ok">3</span></li>
+                  <li>&gt;open positions: <span class="status-ok">2</span></li>
+                  <li>&gt;monitoring <span class="status-live">LIVE</span></li>
+                </ul>
+              </div>
+              <div class="terminal-section">
+                <h3 class="terminal-label">C:\RynixAI\metrics</h3>
+                <div class="terminal-metric">
+                  <span>trades_this_month:</span><span>0</span>
+                </div>
+                <div class="terminal-metric">
+                  <span>volume:</span><span>$168,553,875.50</span>
+                </div>
+                <div class="terminal-metric">
+                  <span>analysis_runs:</span><span id="analysisRuns">1348</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- hero text -->
+        <div class="hero-text">
+          <h1 class="hero-title">Vibe trading is here.</h1>
+          <p class="hero-subtitle">Think it. Say it. Trade it.</p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" id="connectWalletHero">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/>
+                <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
+                <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>
+              </svg>
+              <span id="connectWalletHeroText">Connect Wallet</span>
+            </button>
+            <a href="#features" class="btn btn-outline">View Features</a>
+          </div>
+          <div class="hero-chips">
+            <span class="chip"><span class="chip-dot"></span>24/7 AI Monitoring</span>
+            <span class="chip"><span class="chip-dot"></span>Plain English Automations</span>
+            <span class="chip"><span class="chip-dot"></span>Real-time Market Data</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- market ticker -->
+    <section class="market-ticker" id="marketTicker" aria-label="Real-time market prices">
+      <div class="ticker-card">
+        <div class="ticker-header">Live Market Data</div>
+        <div class="ticker-items" id="tickerItems">
+          <div class="ticker-item" data-symbol="BTC">
+            <div class="ticker-symbol"><span class="dot"></span>BTC/USD</div>
+            <div class="ticker-price" id="price-BTC">$--</div>
+            <div class="ticker-change" id="change-BTC">--</div>
+            <div class="ticker-status">updating...</div>
+          </div>
+          <div class="ticker-item" data-symbol="ETH">
+            <div class="ticker-symbol"><span class="dot"></span>ETH/USD</div>
+            <div class="ticker-price" id="price-ETH">$--</div>
+            <div class="ticker-change" id="change-ETH">--</div>
+            <div class="ticker-status">updating...</div>
+          </div>
+          <div class="ticker-item" data-symbol="SOL">
+            <div class="ticker-symbol"><span class="dot"></span>SOL/USD</div>
+            <div class="ticker-price" id="price-SOL">$--</div>
+            <div class="ticker-change" id="change-SOL">--</div>
+            <div class="ticker-status">updating...</div>
+          </div>
+          <div class="ticker-item" data-symbol="HYPE">
+            <div class="ticker-symbol"><span class="dot"></span>HYPE/USD</div>
+            <div class="ticker-price" id="price-HYPE">$--</div>
+            <div class="ticker-change" id="change-HYPE">--</div>
+            <div class="ticker-status">updating...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- features -->
+    <section class="features" id="features">
+      <article class="feature-row">
+        <div class="feature-image-wrap">
+          <div class="feature-image feature-chat" role="img" aria-label="AI chat interface preview"></div>
+          <a class="feature-badge" href="javascript:void(0)" data-chat="AI Chat" role="button" aria-label="Open AI Chat">AI Chat</a>
+        </div>
+        <div class="feature-content">
+          <h2>Just Say What You Want</h2>
+          <p>Trade the way you think. Tell RynixAI "buy some ETH" or "what's BTC doing?" — no buttons, no forms, no learning curve. Just vibes.</p>
+          <ul class="feature-list">
+            <li><span>&gt;</span>Trade with plain English - no complex interfaces</li>
+            <li><span>&gt;</span>Get market insights just by asking</li>
+            <li><span>&gt;</span>Your AI trading companion, available 24/7</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="feature-row feature-row-reverse">
+        <div class="feature-image-wrap">
+          <div class="feature-image feature-automations" role="img" aria-label="Active automations preview"></div>
+          <a class="feature-badge" href="javascript:void(0)" data-chat="Active Trading" role="button" aria-label="Open Active Trading Chat">Active Trading</a>
+        </div>
+        <div class="feature-content">
+          <h2>Automate Your Edge</h2>
+          <p>Set up market making, grid strategies, or technical rules. "Exit after 2 consecutive 4h closes below the 21 EMA" — RynixAI monitors and executes around the clock.</p>
+          <ul class="feature-list">
+            <li><span>&gt;</span>AI interprets your conditions intelligently</li>
+            <li><span>&gt;</span>Supports price, indicator, and time-based triggers</li>
+            <li><span>&gt;</span>Smart execution with retry and error handling</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="feature-row">
+        <div class="feature-image-wrap">
+          <div class="feature-image feature-thesis" role="img" aria-label="Set and forget strategy preview"></div>
+          <a class="feature-badge" href="javascript:void(0)" data-chat="Set &amp; Forget" role="button" aria-label="Open Set &amp; Forget Chat">Set &amp; Forget</a>
+        </div>
+        <div class="feature-content">
+          <h2>Explain Your Thesis, Walk Away</h2>
+          <p>Brief RynixAI on your game plan: "Put 20% of margin in BTC, but sell everything if the Fed confirms a rate hike." Go live your life while your strategy runs.</p>
+          <ul class="feature-list">
+            <li><span>&gt;</span>Understands news, events, and macro conditions</li>
+            <li><span>&gt;</span>Portfolio-aware position sizing</li>
+            <li><span>&gt;</span>Monitors markets while you do other things</li>
+          </ul>
+        </div>
+      </article>
+    </section>
+  
+<!-- single-page placeholder sections -->
+<section class="placeholder-section" id="terminal">
+  <div class="placeholder-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8l4 4-4 4"/><line x1="12" y1="16" x2="18" y2="16"/></svg>
+    <h2>Terminal</h2>
+    <p>The Rynix AI terminal is launching soon. Manage automations, view open positions, and execute trades in a single command-line style interface.</p>
+    <a href="#home" class="btn btn-outline">Back to Home</a>
+  </div>
+</section>
+
+<section class="statistics-section" id="statistics">
+  <div class="statistics-header">
+    <h5>Features</h5>
+    <h5>Live Activity</h5>
+  </div>
+  <div class="statistics-grid">
+    <div class="statistics-features" id="statisticsFeatures">
+      <div class="stat-card">
+        <div class="stat-card-header">connect</div>
+        <h6>Wallet Connectivity</h6>
+        <p>Connect any EVM wallet in one click. Rynix AI tracks your on-chain activity and agent status across the network.</p>
+        <div class="stat-card-metrics"><span id="statWallets">265</span> unique wallets connected</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header terminal">terminal</div>
+        <h6>Natural Language Trading</h6>
+        <p>Trade with plain English. Place orders, manage positions, and set stops by simply asking Rynix AI.</p>
+        <div class="stat-card-metrics"><span id="statTrades">0</span> trades this month • <span id="statVolume">$168,553,875.50</span> total volume</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header terminal">analysis</div>
+        <h6>AI Market Analysis</h6>
+        <p>Multi-timeframe technical analysis runs continuously across BTC, ETH, SOL, and HYPE.</p>
+        <div class="stat-card-metrics"><span id="statAnalysis">1348</span> analysis runs • <span id="statAssets">4</span> unique assets</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header terminal">automations</div>
+        <h6>Autonomous Strategies</h6>
+        <p>Define rules in plain English and Rynix AI executes them 24/7 with smart retry and error handling.</p>
+        <div class="stat-card-metrics"><span id="statActive">3</span> active • <span id="statOpenPositions">2</span> open positions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header terminal">acp</div>
+        <h6>Autonomous Compute Protocol</h6>
+        <p>Connected to agent networks. Rynix AI receives and executes trading jobs from other AI agents.</p>
+        <div class="stat-card-metrics"><span id="statJobs">308</span> jobs processed • <span id="statTotalTrades">47569</span> total trades</div>
+      </div>
+    </div>
+    <div class="statistics-activity">
+      <h5>Live Activity</h5>
+      <div class="activity-list" id="activityList">
+        <div class="activity-item">
+          <div class="activity-time">[16:50:10]</div>
+          <div class="activity-text">Automation:Started - BTC Ichimoku Cloud Strategy for BTC</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">[16:04:01]</div>
+          <div class="activity-text">Automation:Stopped - BTC Ichimoku Cloud Strategy for BTC</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">[03:33:36]</div>
+          <div class="activity-text">Automation:Stopped - BTC Trend Momentum v1.0 for BTC</div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">[18:25:32]</div>
+          <div class="activity-text">
+            <a href="https://app.hyperliquid.xyz/explorer/tx/0xf6d75a1b2c3d4e5f6789012345678901234567890abcdef" target="_blank" rel="noopener">Close long<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>:$BTC position closed
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">[17:45:16]</div>
+          <div class="activity-text">
+            <a href="https://app.hyperliquid.xyz/explorer/tx/0x92034a1b2c3d4e5f6789012345678901234567890abcdef" target="_blank" rel="noopener">Open long<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>:$BTC position opened
+          </div>
+        </div>
+        <div class="activity-item">
+          <div class="activity-time">[22:44:49]</div>
+          <div class="activity-text">
+            <a href="https://app.hyperliquid.xyz/explorer/tx/0x952eea1b2c3d4e5f6789012345678901234567890abcdef" target="_blank" rel="noopener">Close long<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>:$HYPE position closed
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="statistics-footer">
+    <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
+    <div class="statistics-footer-actions">
+      <a class="btn btn-icon" href="https://app.hyperliquid.xyz/join/" target="_blank" rel="noopener" aria-label="HyperLiquid"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="12" font-weight="700" font-family="Space Grotesk">HL</text></svg></a>
+      <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+      <a class="btn btn-icon" href="https://t.me/rynixai" target="_blank" rel="noopener" aria-label="Telegram"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.4 4.2L2.3 11.1c-1.1.4-1.1 1.1-.2 1.4l5.1 1.6 1.9 6c.2.6.1.8.6.8.4 0 .6-.2.8-.4l2.8-2.7 5.5 4c1 .6 1.8.3 2-1.1l3.2-15.1c.3-1.3-.5-1.9-1.4-1.5zM9.1 13.1l10.4-6.6-6.4 7.2-.2.3-3.2 3.2-.6-4.1z"/></svg></a>
+    </div>
+  </div>
+</section>
+
+<section class="placeholder-section" id="litepaper">
+  <div class="placeholder-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    <h2>Litepaper</h2>
+    <p>The Rynix AI litepaper is being finalized. It will detail the tokenomics, agent architecture, and decentralized governance model.</p>
+    <a href="#home" class="btn btn-outline">Back to Home</a>
+  </div>
+</section>
+
+<section class="placeholder-section" id="hacked-by-robinhood-foundation">
+  <div class="placeholder-card">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.5A6 6 0 0 1 8 11.5"/><line x1="9" y1="9" x2="9" y2="9"/><line x1="15" y1="9" x2="15" y2="9"/></svg>
+    <h2>hacked by robinhood foundation</h2>
+    <p>Rynix AI supports the hacked by robinhood foundation agent token standard for on-chain autonomous agents. Documentation and integration examples are coming soon.</p>
+    <a href="#home" class="btn btn-outline">Back to Home</a>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact-card">
+    <h2>Contact Us</h2>
+    <p>Reach out to the Rynix AI team for partnerships, integrations, or support. All social links below are clickable.</p>
+    <div class="footer-actions" style="justify-content:center">
+      <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+      <a href="#home" class="btn btn-outline">Back to Home</a>
+    </div>
+  </div>
+</section>
+</main>
+
+  <!-- footer / live data -->
+  <footer class="footer">
+    <div class="live-data">
+      <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
+      <div class="live-data-row">
+        <div class="live-data-item"><span>MCAP:</span><strong id="mcap">$122,326.13</strong></div>
+        <div class="live-data-item"><span>TWEETS:</span><strong id="tweets">1934</strong></div>
+        <div class="live-data-item"><span>VERSION:</span><strong id="version">1.3.1.252</strong></div>
+      </div>
+    </div>
+    <div class="footer-actions">
+      <a href="#contact" class="btn btn-outline btn-sm"><span>contact us</span></a>
+      <a class="btn btn-icon" href="https://dexscreener.com" target="_blank" rel="noopener" aria-label="Dexscreener">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="14" font-weight="700" font-family="Space Grotesk">DEX</text></svg>
+      </a>
+      <a class="btn btn-icon" href="https://coingecko.com" target="_blank" rel="noopener" aria-label="CoinGecko">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="1" y="18" font-size="13" font-weight="700" font-family="Space Grotesk">CG</text></svg>
+      </a>
+      <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+    </div>
+  </footer>
+
+  <!-- wallet modal -->
+  <div class="modal" id="walletModal" aria-hidden="true" role="dialog" aria-labelledby="walletModalTitle">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <button class="modal-close" aria-label="Close">&times;</button>
+      <h3 id="walletModalTitle">Connect Wallet</h3>
+      <p>Choose a wallet to connect to Rynix AI.</p>
+      <div class="wallet-options">
+        <button class="wallet-option" data-wallet="MetaMask">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#E17726"/><path d="M7 14l5 4 5-4V8H7v6z" fill="white"/><text x="12" y="16" text-anchor="middle" font-size="8" fill="white" font-weight="bold">M</text></svg>
+          <span>MetaMask</span>
+        </button>
+        <button class="wallet-option" data-wallet="Coinbase Wallet">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#0052FF"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="white" font-weight="bold">C</text></svg>
+          <span>Coinbase Wallet</span>
+        </button>
+        <button class="wallet-option" data-wallet="WalletConnect">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#3B99FC"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="white" font-weight="bold">W</text></svg>
+          <span>WalletConnect</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  // live feed ticker
+  const feedItems = [
+    'Started - BTC Ichimoku Cloud Strategy',
+    'Stopped - BTC Trend Momentum v1.2',
+    'CLOSE - BTC position closed',
+    'OPEN - ETH position opened',
+    'CLOSE - HYPE position closed',
+    'OPEN - SOL position opened',
+    'CLOSE - BTC position closed',
+    'Started - ETH Grid Strategy',
+    'Stopped - HYPE Momentum v1.1',
+    'OPEN - BTC position opened'
+  ];
+
+  const feedList = document.getElementById('liveFeed');
+  if (feedList) {
+    let cursorLi = feedList.querySelector('.term-cursor').parentElement;
+    let tickIndex = 0;
+
+    setInterval(() => {
+      const text = feedItems[tickIndex % feedItems.length];
+      const tickType = text.includes('OPEN') ? '$OPEN' : text.includes('CLOSE') ? '$CLOSE' : text.includes('Stopped') ? '$AUTO' : '$AUTO';
+      const li = document.createElement('li');
+      li.innerHTML = `<span class="term-tick">${tickType}</span>${text.replace(/^\w+ - /, '')}`;
+      feedList.insertBefore(li, cursorLi);
+      if (feedList.children.length > 7) {
+        feedList.removeChild(feedList.firstElementChild);
+      }
+      tickIndex++;
+    }, 2600);
+  }
+
+  // increment analysis runs
+  const analysisRuns = document.getElementById('analysisRuns');
+  if (analysisRuns) {
+    let runs = parseInt(analysisRuns.textContent.replace(/\D/g, ''), 10) || 1348;
+    setInterval(() => {
+      runs += Math.floor(Math.random() * 3) + 1;
+      analysisRuns.textContent = runs.toLocaleString();
+    }, 4000);
+  }
+
+  // mcap / tweets / version updates
+  const mcapEl = document.getElementById('mcap');
+  const tweetsEl = document.getElementById('tweets');
+  if (mcapEl) {
+    let mcap = 122326.13;
+    setInterval(() => {
+      mcap += (Math.random() - 0.45) * 50;
+      mcapEl.textContent = '$' + mcap.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }, 5000);
+  }
+  if (tweetsEl) {
+    let tweets = 1934;
+    setInterval(() => {
+      tweets += Math.floor(Math.random() * 3);
+      tweetsEl.textContent = tweets.toLocaleString();
+    }, 7000);
+  }
+
+  // wallet modal
+  const walletModal = document.getElementById('walletModal');
+  const connectButtons = [document.getElementById('connectWalletNav'), document.getElementById('connectWalletHero')];
+
+  function openModal() {
+    if (!walletModal) return;
+    walletModal.classList.add('open');
+    walletModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    if (!walletModal) return;
+    walletModal.classList.remove('open');
+    walletModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  connectButtons.forEach(btn => {
+    if (btn) {
+      btn.addEventListener('click', openModal);
+    }
+  });
+
+  if (walletModal) {
+    walletModal.querySelector('.modal-backdrop').addEventListener('click', closeModal);
+    walletModal.querySelector('.modal-close').addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    walletModal.querySelectorAll('.wallet-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const wallet = option.dataset.wallet;
+        const heroText = document.getElementById('connectWalletHeroText');
+        const navText = document.getElementById('connectWalletNav');
+        if (heroText) heroText.textContent = '0x...' + Math.random().toString(36).slice(2, 6);
+        if (navText) navText.textContent = 'CONNECTED';
+        alert(`Connected to ${wallet}`);
+        closeModal();
+      });
+    });
+  }
+
+  // mobile menu
+  const menuBtn = document.querySelector('.mobile-menu-btn');
+  const navLinks = document.querySelector('.nav-links');
+  if (menuBtn && navLinks) {
+    menuBtn.addEventListener('click', () => {
+      const open = navLinks.classList.toggle('open');
+      menuBtn.setAttribute('aria-expanded', String(open));
+    });
+  }
+
+  // nav active state on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinksList = document.querySelectorAll('.nav-link');
+  if (sections.length && navLinksList.length) {
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop - 120;
+        if (scrollY >= sectionTop) {
+          current = section.getAttribute('id');
+        }
+      });
+      navLinksList.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current || (current === 'home' && link.getAttribute('href') === '#home')) {
+          link.classList.add('active');
+        }
+      });
+    });
+  }
+
+  // view features smooth scroll is native via anchor
+
+  // footer social buttons already have real links
+  // buy button links to uniswap
+
+  // make sure all buttons on page are clickable / have cursor pointer
+  document.querySelectorAll('button, a').forEach(el => {
+    if (el.tagName === 'BUTTON' && !el.disabled) {
+      el.style.cursor = 'pointer';
+    }
+  });
+
+  // log page visibility for debugging
+  console.log('Rynix AI loaded. All buttons clickable.');
+})();
+
+</script>
+
+<!-- chatbot -->
+<button class='chat-launcher' id='chatLauncher' aria-label='Open Rynix AI chat'>
+  <svg width='26' height='26' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+    <path d='M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7A8.38 8.38 0 0 1 4 11.5a8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z'/>
+  </svg>
+</button>
+
+<div class='chatbot-window' id='chatbotWindow' aria-hidden='true' role='dialog' aria-label='Rynix AI Chat'>
+  <div class='chatbot-header'>
+    <h3><span class='status-dot'></span>Rynix AI Chat</h3>
+    <button class='chatbot-close' id='chatbotClose' aria-label='Close chat'>&times;</button>
+  </div>
+  <div class='chatbot-messages' id='chatbotMessages'></div>
+  <form class='chatbot-input' id='chatbotForm'>
+    <input type='text' id='chatbotInput' placeholder='Ask Rynix AI...' autocomplete='off' aria-label='Message'>
+    <button type='submit' aria-label='Send'>
+      <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+        <path d='M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z'/>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const chatbotWindow = document.getElementById('chatbotWindow');
+  const chatbotMessages = document.getElementById('chatbotMessages');
+  const chatbotForm = document.getElementById('chatbotForm');
+  const chatbotInput = document.getElementById('chatbotInput');
+  const chatLauncher = document.getElementById('chatLauncher');
+  const chatbotClose = document.getElementById('chatbotClose');
+  const featureBadges = document.querySelectorAll('.feature-badge');
+
+  const priceMap = { BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana', HYPE: 'hyperliquid' };
+  const fallbackPrices = {
+    BTC: { base: 94500, change: 2.4 },
+    ETH: { base: 3450, change: -1.2 },
+    SOL: { base: 180, change: 0.8 },
+    HYPE: { base: 20, change: 5.1 }
+  };
+  let prices = JSON.parse(JSON.stringify(fallbackPrices));
+  let lastFetchTime = 0;
+  const tokens = Object.keys(prices);
+  let openPositions = 2;
+  let tradesThisMonth = 0;
+  let analysisRuns = 1348;
+  let activeAutomations = 3;
+  let uniqueAssets = 4;
+  let totalJobs = 308;
+  let totalTrades = 47569;
+  let connectedWallets = 265;
+  let currentContext = '';
+  let typingIndicator = null;
+
+  function getPrice(symbol) {
+    const ticker = symbol.toUpperCase();
+    const data = prices[ticker];
+    if (!data) return null;
+    const variation = (Math.random() - 0.5) * 0.0008;
+    const price = data.base * (1 + variation);
+    const change = data.change.toFixed(2);
+    return { price: price, change: parseFloat(change), symbol: ticker };
+  }
+
+  async function fetchPrices() {
+    const now = Date.now();
+    if (now - lastFetchTime < 15000) return; // debounce 15s
+    lastFetchTime = now;
+    try {
+      const ids = Object.values(priceMap).join(',');
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+      for (const [symbol, id] of Object.entries(priceMap)) {
+        if (data[id] && typeof data[id].usd === 'number') {
+          prices[symbol] = {
+            base: data[id].usd,
+            change: data[id].usd_24h_change || 0
+          };
+        }
+      }
+      updatePriceTicker();
+    } catch (err) {
+      console.warn('Failed to fetch live prices:', err);
+    }
+  }
+
+  function formatPrice(n) {
+    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function updatePriceTicker() {
+    for (const symbol of Object.keys(prices)) {
+      const priceEl = document.getElementById('price-' + symbol);
+      const changeEl = document.getElementById('change-' + symbol);
+      const item = document.querySelector('.ticker-item[data-symbol="' + symbol + '"]');
+      if (priceEl) priceEl.textContent = formatPrice(prices[symbol].base);
+      if (changeEl) {
+        const change = prices[symbol].change;
+        const sign = change >= 0 ? '+' : '';
+        changeEl.textContent = sign + change.toFixed(2) + '%';
+        changeEl.className = 'ticker-change ' + (change >= 0 ? 'up' : 'down');
+      }
+      if (item) {
+        const status = item.querySelector('.ticker-status');
+        if (status) status.textContent = 'Live • updated ' + new Date().toLocaleTimeString();
+      }
+    }
+  }
+
+  function formatNumber(n) {
+    return n.toLocaleString('en-US');
+  }
+
+  function getSymbolFromText(text) {
+    const upper = text.toUpperCase();
+    for (let i = 0; i < tokens.length; i++) {
+      if (upper.includes(tokens[i])) return tokens[i];
+    }
+    return null;
+  }
+
+  function parseQuantity(text) {
+    const parts = text.split(/\s+/);
+    for (let i = 0; i < parts.length; i++) {
+      const n = parseFloat(parts[i]);
+      if (!isNaN(n) && n > 0) return n;
+    }
+    return 0.1;
+  }
+
+  function parseSide(text) {
+    const t = text.toLowerCase();
+    if (t.includes('buy') || t.includes('long')) return 'buy';
+    if (t.includes('sell') || t.includes('short')) return 'sell';
+    return null;
+  }
+
+  function updateMetric(label, value) {
+    const metrics = document.querySelectorAll('.terminal-metric');
+    metrics.forEach(function(el) {
+      const labelEl = el.querySelector('span:first-child');
+      if (labelEl && labelEl.textContent.trim().toLowerCase().includes(label.toLowerCase())) {
+        const valueEl = el.querySelector('span:last-child');
+        if (valueEl) valueEl.textContent = value;
+      }
+    });
+    const statusItems = document.querySelectorAll('.terminal-status li');
+    statusItems.forEach(function(li) {
+      if (li.textContent.toLowerCase().includes(label.toLowerCase())) {
+        const span = li.querySelector('span');
+        if (span) span.textContent = value;
+      }
+    });
+  }
+
+  function updateStatElement(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const num = Number(value);
+    const display = formatNumber(num);
+    el.textContent = display;
+    const metric = el.parentElement;
+    if (!metric || !metric.classList.contains('stat-card-metrics')) return;
+    if (id === 'statTrades') {
+      metric.innerHTML = '<span id="statTrades">' + display + '</span> ' + (num === 1 ? 'trade' : 'trades') + ' this month • <span id="statVolume">$168,553,875.50</span> total volume';
+    } else if (id === 'statOpenPositions') {
+      const activeEl = document.getElementById('statActive');
+      const active = activeEl ? Number(activeEl.textContent.replace(/,/g, '')) : activeAutomations;
+      metric.innerHTML = '<span id="statActive">' + formatNumber(active) + '</span> active • <span id="statOpenPositions">' + display + '</span> open ' + (num === 1 ? 'position' : 'positions');
+    } else if (id === 'statActive') {
+      const posEl = document.getElementById('statOpenPositions');
+      const pos = posEl ? Number(posEl.textContent.replace(/,/g, '')) : openPositions;
+      metric.innerHTML = '<span id="statActive">' + display + '</span> active • <span id="statOpenPositions">' + formatNumber(pos) + '</span> open ' + (pos === 1 ? 'position' : 'positions');
+    } else if (id === 'statAnalysis') {
+      const assetsEl = document.getElementById('statAssets');
+      const assets = assetsEl ? Number(assetsEl.textContent.replace(/,/g, '')) : uniqueAssets;
+      metric.innerHTML = '<span id="statAnalysis">' + display + '</span> analysis ' + (num === 1 ? 'run' : 'runs') + ' • <span id="statAssets">' + formatNumber(assets) + '</span> unique ' + (assets === 1 ? 'asset' : 'assets');
+    } else if (id === 'statAssets') {
+      const analysisEl = document.getElementById('statAnalysis');
+      const analysis = analysisEl ? Number(analysisEl.textContent.replace(/,/g, '')) : analysisRuns;
+      metric.innerHTML = '<span id="statAnalysis">' + formatNumber(analysis) + '</span> analysis ' + (analysis === 1 ? 'run' : 'runs') + ' • <span id="statAssets">' + display + '</span> unique ' + (num === 1 ? 'asset' : 'assets');
+    } else if (id === 'statJobs') {
+      const tradesEl = document.getElementById('statTotalTrades');
+      const trades = tradesEl ? Number(tradesEl.textContent.replace(/,/g, '')) : totalTrades;
+      metric.innerHTML = '<span id="statJobs">' + display + '</span> ' + (num === 1 ? 'job' : 'jobs') + ' processed • <span id="statTotalTrades">' + formatNumber(trades) + '</span> total ' + (trades === 1 ? 'trade' : 'trades');
+    } else if (id === 'statTotalTrades') {
+      const jobsEl = document.getElementById('statJobs');
+      const jobs = jobsEl ? Number(jobsEl.textContent.replace(/,/g, '')) : totalJobs;
+      metric.innerHTML = '<span id="statJobs">' + formatNumber(jobs) + '</span> ' + (jobs === 1 ? 'job' : 'jobs') + ' processed • <span id="statTotalTrades">' + display + '</span> total ' + (num === 1 ? 'trade' : 'trades');
+    } else if (id === 'statWallets') {
+      metric.innerHTML = '<span id="statWallets">' + display + '</span> unique wallet' + (num === 1 ? '' : 's') + ' connected';
+    }
+  }
+
+  function addActivity(tickType, message, link) {
+    const activityList = document.getElementById('activityList');
+    if (!activityList) return;
+    const now = new Date();
+    const time = '[' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ']';
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    let textHtml = '';
+    if (link) {
+      textHtml = '<a href="' + link + '" target="_blank" rel="noopener">' + tickType + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>:' + message;
+    } else {
+      textHtml = 'Automation:' + tickType + ' - ' + message;
+    }
+    item.innerHTML = '<div class="activity-time">' + time + '</div><div class="activity-text">' + textHtml + '</div>';
+    activityList.insertBefore(item, activityList.firstElementChild);
+    while (activityList.children.length > 20) {
+      activityList.removeChild(activityList.lastElementChild);
+    }
+  }
+
+  function pushFeed(tickType, message) {
+    const feedList = document.getElementById('liveFeed');
+    if (!feedList) return;
+    const cursor = feedList.querySelector('.term-cursor');
+    const cursorLi = cursor ? cursor.parentElement : null;
+    if (!cursorLi) return;
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="term-tick">' + tickType + '</span>' + message;
+    feedList.insertBefore(li, cursorLi);
+    if (feedList.children.length > 7) {
+      feedList.removeChild(feedList.firstElementChild);
+    }
+  }
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = 'chatbot-message ' + sender;
+    div.textContent = text;
+    chatbotMessages.appendChild(div);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+  }
+
+  function addBotMessage(text, delay) {
+    if (typingIndicator) {
+      typingIndicator.remove();
+      typingIndicator = null;
+    }
+    delay = delay || 600;
+    typingIndicator = document.createElement('div');
+    typingIndicator.className = 'chatbot-typing';
+    typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+    chatbotMessages.appendChild(typingIndicator);
+    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    setTimeout(function() {
+      if (typingIndicator) {
+        typingIndicator.remove();
+        typingIndicator = null;
+      }
+      addMessage(text, 'bot');
+    }, delay);
+  }
+
+  function openChatbot(context) {
+    chatbotWindow.classList.add('open');
+    chatbotWindow.setAttribute('aria-hidden', 'false');
+    chatLauncher.style.display = 'none';
+    chatbotInput.focus();
+    if (context) currentContext = context;
+    if (chatbotMessages.children.length === 0) {
+      if (context === 'Active Trading') {
+        addBotMessage('Active Trading selected. I can set up grid, market-making, or indicator rules. What would you like to automate?');
+      } else if (context === 'Set & Forget') {
+        addBotMessage('Set & Forget selected. Tell me your thesis and I will monitor it. What is your strategy?');
+      } else if (context === 'AI Chat') {
+        addBotMessage('Hi, I am Rynix AI. Ask me about prices, trades, or strategies.');
+      } else {
+        addBotMessage('Hi, I am Rynix AI. Ask me about prices, trades, or strategies.');
+      }
+    } else if (context) {
+      addBotMessage('Switched to ' + context + '. How can I help?');
+    }
+  }
+
+  function closeChatbot() {
+    chatbotWindow.classList.remove('open');
+    chatbotWindow.setAttribute('aria-hidden', 'true');
+    chatLauncher.style.display = 'flex';
+  }
+
+  function scrollToStatistics() {
+    const stats = document.getElementById('statistics');
+    if (stats) stats.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function getStatisticsSummary() {
+    return 'Rynix AI Live Statistics:\n' +
+      '• Wallets connected: ' + formatNumber(connectedWallets) + '\n' +
+      '• Trades this month: ' + formatNumber(tradesThisMonth) + '\n' +
+      '• Total volume: $168,553,875.50\n' +
+      '• Analysis runs: ' + formatNumber(analysisRuns) + '\n' +
+      '• Active automations: ' + activeAutomations + '\n' +
+      '• Open positions: ' + openPositions + '\n' +
+      '• ACP jobs processed: ' + formatNumber(totalJobs) + '\n' +
+      '• Total ACP trades: ' + formatNumber(totalTrades);
+  }
+
+  function computeResponse(text) {
+    const input = text.trim().toLowerCase();
+    if (!input) return;
+
+    const greetings = ['hi', 'hello', 'hey'];
+    if (greetings.includes(input) || input === 'help') {
+      return 'Hi! I can help with prices (BTC price), trading (buy 0.1 ETH), portfolio, statistics, and strategies. What would you like to do?';
+    }
+    if (input.includes('help') || input.includes('what can you do') || input.includes('commands')) {
+      return 'Try: price of BTC, buy 0.1 ETH, sell BTC, open positions, statistics, active trading, set & forget, or connect wallet.';
+    }
+    if (input.includes('statistics') || input.includes('stats') || input.includes('metrics') || input.includes('dashboard')) {
+      scrollToStatistics();
+      return getStatisticsSummary();
+    }
+    if (input.includes('price') || input.includes('doing') || input.includes('how much') || input.includes('trading at')) {
+      const symbol = getSymbolFromText(text) || 'BTC';
+      const p = getPrice(symbol);
+      if (p) return p.symbol + ' is trading at ' + formatPrice(p.price) + ' (24h: ' + (p.change > 0 ? '+' : '') + p.change + '%).';
+      return 'Which token? Ask price of BTC, ETH, SOL, or HYPE.';
+    }
+
+    const side = parseSide(text);
+    if (side) {
+      const qty = parseQuantity(text);
+      let symbol = getSymbolFromText(text);
+      if (!symbol) symbol = 'BTC';
+      const p = getPrice(symbol);
+      const price = p ? formatPrice(p.price) : '$--';
+      if (side === 'buy') {
+        openPositions++;
+        tradesThisMonth++;
+        totalTrades++;
+        analysisRuns++;
+        updateMetric('open positions', openPositions);
+        updateMetric('trades_this_month', tradesThisMonth);
+        updateStatElement('statTrades', tradesThisMonth);
+        updateStatElement('statOpenPositions', openPositions);
+        updateStatElement('statAnalysis', analysisRuns);
+        updateStatElement('statTotalTrades', totalTrades);
+        pushFeed('$OPEN', qty + ' ' + symbol + ' position opened');
+        addActivity('Open long', '$' + symbol + ' position opened', 'https://app.hyperliquid.xyz/explorer/tx/0x' + Math.random().toString(16).slice(2, 42));
+        return 'Order placed: buy ' + qty + ' ' + symbol + ' at ' + price + '. Position opened.';
+      } else {
+        if (openPositions > 0) openPositions--;
+        tradesThisMonth++;
+        totalTrades++;
+        analysisRuns++;
+        updateMetric('open positions', openPositions);
+        updateMetric('trades_this_month', tradesThisMonth);
+        updateStatElement('statTrades', tradesThisMonth);
+        updateStatElement('statOpenPositions', openPositions);
+        updateStatElement('statAnalysis', analysisRuns);
+        updateStatElement('statTotalTrades', totalTrades);
+        pushFeed('$CLOSE', qty + ' ' + symbol + ' position closed');
+        addActivity('Close long', '$' + symbol + ' position closed', 'https://app.hyperliquid.xyz/explorer/tx/0x' + Math.random().toString(16).slice(2, 42));
+        return 'Order filled: sell ' + qty + ' ' + symbol + ' at ' + price + '. Position closed.';
+      }
+    }
+    if (input.includes('open positions') || input.includes('position')) {
+      return 'You currently have ' + openPositions + ' open position(s).';
+    }
+    if (input.includes('portfolio') || input.includes('balance') || input.includes('wallet')) {
+      return 'Connect your wallet via the Connect Wallet button to see your portfolio. This is a demo, so no real transactions are made.';
+    }
+    if (input.includes('connect')) {
+      connectedWallets++;
+      updateStatElement('statWallets', connectedWallets);
+      return 'Wallet connected. Welcome to Rynix AI. ' + formatNumber(connectedWallets) + ' wallets are now connected to the network.';
+    }
+    if (input.includes('analysis') || input.includes('analyze') || input.includes('indicator')) {
+      analysisRuns += Math.floor(Math.random() * 3) + 1;
+      updateStatElement('statAnalysis', analysisRuns);
+      return 'Analysis complete. I processed ' + formatNumber(analysisRuns) + ' multi-timeframe indicator runs across ' + uniqueAssets + ' assets.';
+    }
+    if (input.includes('automation') || input.includes('grid') || input.includes('market making') || input.includes('active trading')) {
+      currentContext = 'Active Trading';
+      activeAutomations = Math.min(activeAutomations + 1, 12);
+      updateStatElement('statActive', activeAutomations);
+      return 'Active Trading: I can run grid, DCA, or indicator-based automations. Try "set a grid bot for ETH" or "DCA 0.1 BTC every 4 hours".';
+    }
+    if (input.includes('thesis') || input.includes('strategy') || input.includes('set & forget') || input.includes('set and forget')) {
+      currentContext = 'Set & Forget';
+      return 'Set & Forget: describe your strategy, e.g., "Close BTC long if Fed confirms rate hike," and I will monitor it 24/7.';
+    }
+    if (input.includes('acp') || input.includes('job') || input.includes('agent')) {
+      totalJobs += 1;
+      totalTrades += Math.floor(Math.random() * 5) + 1;
+      updateStatElement('statJobs', totalJobs);
+      updateStatElement('statTotalTrades', totalTrades);
+      return 'ACP network: ' + formatNumber(totalJobs) + ' jobs processed, ' + formatNumber(totalTrades) + ' total trades executed by agents.';
+    }
+    if (input.includes('terminal')) {
+      return 'Terminal: open the chat and type commands like "buy 0.1 ETH" or "show statistics" to control Rynix AI.';
+    }
+    return 'I am not sure I understood. Try price of BTC, buy 0.1 ETH, statistics, or help.';
+  }
+
+  chatLauncher.addEventListener('click', function() { openChatbot(); });
+  chatbotClose.addEventListener('click', closeChatbot);
+  chatbotForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const text = chatbotInput.value;
+    if (!text.trim()) return;
+    addMessage(text, 'user');
+    chatbotInput.value = '';
+    const response = computeResponse(text);
+    if (response) addBotMessage(response);
+  });
+  featureBadges.forEach(function(badge) {
+    badge.addEventListener('click', function(e) {
+      e.preventDefault();
+      openChatbot(badge.textContent);
+    });
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && chatbotWindow.classList.contains('open')) closeChatbot();
+  });
+
+  // real-time price market
+  updatePriceTicker();
+  fetchPrices();
+  setInterval(fetchPrices, 60000);
+})();
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const perspective = 1200;
+  const lerp = 0.12;
+  const inactiveThreshold = 0.05;
+  const scaleTarget = 1.02;
+
+  const rangeMap = new WeakMap();
+  function getRange(el) {
+    if (rangeMap.has(el)) return rangeMap.get(el);
+    let range = 10;
+    if (el.classList.contains('terminal-card')) range = 20;
+    else if (el.classList.contains('feature-image-wrap')) range = 16;
+    else if (el.classList.contains('stat-card')) range = 12;
+    else if (el.classList.contains('contact-card')) range = 12;
+    else if (el.classList.contains('placeholder-card')) range = 12;
+    rangeMap.set(el, range);
+    return range;
+  }
+
+  function isInteractiveTarget(target) {
+    return target && target.closest && target.closest('a, button, input, textarea, select, [role="button"]');
+  }
+
+  function clamp01(v) {
+    return Math.max(0, Math.min(1, v));
+  }
+
+  const motionEls = document.querySelectorAll('.terminal-card, .feature-image-wrap, .stat-card, .contact-card, .placeholder-card');
+  motionEls.forEach(function (el) {
+    el.classList.add('motion-3d');
+  });
+
+  const tracked = new Map();
+
+  function update(el) {
+    const t = tracked.get(el);
+    if (!t) return;
+    t.currentX += (t.targetX - t.currentX) * lerp;
+    t.currentY += (t.targetY - t.currentY) * lerp;
+    t.currentS += (t.targetS - t.currentS) * lerp;
+
+    const near =
+      Math.abs(t.targetX - t.currentX) < inactiveThreshold &&
+      Math.abs(t.targetY - t.currentY) < inactiveThreshold &&
+      Math.abs(t.targetS - t.currentS) < inactiveThreshold;
+
+    if (near && !t.active) {
+      t.currentX = t.targetX;
+      t.currentY = t.targetY;
+      t.currentS = t.targetS;
+      el.style.transform = '';
+      t.raf = null;
+      return;
+    }
+
+    el.style.transform =
+      'perspective(' + perspective + 'px) ' +
+      'rotateX(' + t.currentX.toFixed(2) + 'deg) ' +
+      'rotateY(' + t.currentY.toFixed(2) + 'deg) ' +
+      'scale3d(' + t.currentS.toFixed(3) + ', ' + t.currentS.toFixed(3) + ', 1)';
+    t.raf = requestAnimationFrame(function () { update(el); });
+  }
+
+  function computeTarget(t, el, clientX, clientY) {
+    const rect = el.getBoundingClientRect();
+    const x = clamp01((clientX - rect.left) / rect.width);
+    const y = clamp01((clientY - rect.top) / rect.height);
+    const range = getRange(el);
+    t.targetY = (x - 0.5) * range;
+    t.targetX = (0.5 - y) * range;
+  }
+
+  function onPointerDown(e) {
+    if (e.button !== 0) return;
+    const el = e.currentTarget;
+    const t = tracked.get(el);
+    if (!t) return;
+    if (isInteractiveTarget(e.target)) return;
+    t.active = true;
+    t.targetS = scaleTarget;
+    if (e.pointerType === 'mouse') e.preventDefault();
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    computeTarget(t, el, e.clientX, e.clientY);
+    if (!t.raf) t.raf = requestAnimationFrame(function () { update(el); });
+  }
+
+  function onPointerMove(e) {
+    const el = e.currentTarget;
+    const t = tracked.get(el);
+    if (!t) return;
+    if (isInteractiveTarget(e.target)) {
+      if (t.active) {
+        t.active = false;
+        t.targetX = 0;
+        t.targetY = 0;
+        t.targetS = 1;
+      }
+      return;
+    }
+    if (!t.active) {
+      t.active = true;
+      t.targetS = scaleTarget;
+      if (!t.raf) t.raf = requestAnimationFrame(function () { update(el); });
+    }
+    computeTarget(t, el, e.clientX, e.clientY);
+  }
+
+  function endInteraction(el, t, e) {
+    if (e && e.pointerId) {
+      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+    }
+    t.active = false;
+    t.targetX = 0;
+    t.targetY = 0;
+    t.targetS = 1;
+  }
+
+  function onPointerUp(e) {
+    const el = e.currentTarget;
+    const t = tracked.get(el);
+    if (!t) return;
+    endInteraction(el, t, e);
+  }
+
+  function onPointerLeave(e) {
+    const el = e.currentTarget;
+    const t = tracked.get(el);
+    if (!t) return;
+    endInteraction(el, t, null);
+  }
+
+  function onPointerCancel(e) {
+    const el = e.currentTarget;
+    const t = tracked.get(el);
+    if (!t) return;
+    endInteraction(el, t, e);
+  }
+
+  motionEls.forEach(function (el) {
+    tracked.set(el, {
+      active: false,
+      targetX: 0,
+      targetY: 0,
+      currentX: 0,
+      currentY: 0,
+      targetS: 1,
+      currentS: 1,
+      raf: null
+    });
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('pointerleave', onPointerLeave);
+    el.addEventListener('pointercancel', onPointerCancel);
+  });
+})();
+</script>
+
+</body>
+</html>
