@@ -67,24 +67,26 @@ body {
   color: var(--bg);
 }
 
-/* Hero background video + overlay */
-.hero-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
-  z-index: 0;
-  background: #000;
+/* Smooth fade / touch interactions */
+button, .btn, .chip, .nav-link, .mobile-menu-btn, .chat-launcher, .chatbot-close, .chatbot-input button, .modal-close, .footer-actions a, .feature-card, .stat-card, .ticker-item, .terminal-card, .placeholder-card, .contact-card, .market-ticker .ticker-card {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 0.2s ease, opacity 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.2s ease;
 }
 
-.hero-overlay {
-  position: absolute;
+button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:active, .chatbot-input button:active, .modal-close:active, .footer-actions a:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+/* Background 3D space grid */
+.grid-bg {
+  position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
-  background: rgba(0, 0, 0, 0.35);
+  z-index: -1;
+  background: transparent;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
 }
 
 /* --------------------------------------------------------------------------
@@ -146,7 +148,7 @@ body {
   text-decoration: none;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.2s ease;
   user-select: none;
   white-space: nowrap;
 }
@@ -157,7 +159,8 @@ body {
 }
 
 .btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.97);
+  opacity: 0.9;
 }
 
 .btn-primary {
@@ -310,6 +313,13 @@ body {
   border: none;
   padding: 8px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-menu-btn:active {
+  opacity: 0.6;
+  transform: scale(0.95);
 }
 
 .mobile-menu-btn span {
@@ -318,6 +328,7 @@ body {
   height: 2px;
   background: var(--text);
   border-radius: 2px;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
 
 /* --------------------------------------------------------------------------
@@ -326,20 +337,45 @@ body {
 
 .hero {
   position: relative;
-  z-index: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
   overflow: hidden;
+  padding: 100px 32px 120px;
+  background: #000;
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+  background: #000;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.88) 100%),
+    radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.85) 80%);
 }
 
 .hero-grid {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 56px;
   align-items: center;
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 80px 32px 100px;
-  position: relative;
-  z-index: 2;
 }
 
 .hero-text {
@@ -374,6 +410,7 @@ body {
   margin: 0;
   letter-spacing: -0.03em;
   color: var(--text);
+  text-shadow: 0 4px 30px rgba(0,0,0,0.85);
 }
 
 .hero-title .accent {
@@ -383,10 +420,11 @@ body {
 
 .hero-tagline {
   font-size: clamp(1.15rem, 2.2vw, 1.6rem);
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.85);
   margin: 0;
   font-weight: 400;
   max-width: 560px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.8);
 }
 
 .hero-actions {
@@ -412,6 +450,16 @@ body {
   border-radius: 999px;
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.chip:active {
+  transform: scale(0.97);
+  opacity: 0.85;
 }
 
 .chip-dot {
@@ -443,6 +491,15 @@ body {
   padding: 16px 20px;
   background: rgba(255,255,255,0.03);
   border-bottom: 1px solid var(--border-2);
+}
+
+.terminal-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  margin-left: auto;
+  object-fit: cover;
+  animation: logo3d 6s ease-in-out infinite;
 }
 
 .terminal-dots {
@@ -547,6 +604,13 @@ body {
   50% { opacity: 0.55; }
 }
 
+@keyframes logo3d {
+  0%, 100% { transform: perspective(600px) rotateY(0deg) scale(1); }
+  25% { transform: perspective(600px) rotateY(12deg) scale(1.05); }
+  50% { transform: perspective(600px) rotateY(0deg) scale(1); }
+  75% { transform: perspective(600px) rotateY(-12deg) scale(1.05); }
+}
+
 .terminal-metric {
   display: flex;
   justify-content: space-between;
@@ -619,6 +683,10 @@ body {
   transform: translateY(-3px);
   border-color: var(--accent);
   box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 18px rgba(204,255,0,0.1);
+}
+
+.ticker-item:active {
+  transform: translateY(-2px) scale(0.98);
 }
 
 .ticker-symbol {
@@ -927,6 +995,10 @@ body {
   box-shadow: 0 16px 40px rgba(0,0,0,0.35), 0 0 24px rgba(204,255,0,0.08);
 }
 
+.stat-card:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
 .stat-card-header {
   font-family: var(--font-mono);
   font-size: 0.8rem;
@@ -1102,13 +1174,79 @@ body {
   position: relative;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 32px;
+  padding: 32px 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border-top: 1px solid var(--border-2);
+}
+
+.footer-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 18px;
+  width: 100%;
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  width: 100%;
+  padding-top: 20px;
   border-top: 1px solid var(--border-2);
+}
+
+.footer-copyright {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.footer-partners {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.footer-partners span {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.partner-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.25s ease, transform 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.partner-link:hover {
+  opacity: 1;
+}
+
+.partner-link:active {
+  transform: scale(0.95);
+  opacity: 0.6;
+}
+
+.partner-logo {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+
+.partner-logo.dex {
+  height: 34px;
 }
 
 .live-data {
@@ -1219,10 +1357,17 @@ body {
   color: var(--text-muted);
   font-size: 1.6rem;
   cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .modal-close:hover {
   color: var(--text);
+}
+
+.modal-close:active {
+  transform: scale(0.92);
+  opacity: 0.8;
 }
 
 .modal-content h3 {
@@ -1386,12 +1531,18 @@ body {
   cursor: pointer;
   box-shadow: 0 8px 28px rgba(204,255,0,0.35);
   z-index: 250;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .chat-launcher:hover {
   transform: scale(1.06);
   box-shadow: 0 10px 34px rgba(204,255,0,0.45);
+}
+
+.chat-launcher:active {
+  transform: scale(0.94);
+  opacity: 0.85;
 }
 
 .chat-launcher svg {
@@ -1439,6 +1590,14 @@ body {
   gap: 10px;
 }
 
+.chatbot-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  object-fit: cover;
+  animation: logo3d 6s ease-in-out infinite;
+}
+
 .chatbot-header .status-dot {
   width: 8px;
   height: 8px;
@@ -1453,9 +1612,12 @@ body {
   color: var(--text-muted);
   font-size: 1.6rem;
   cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .chatbot-close:hover { color: var(--text); }
+.chatbot-close:active { transform: scale(0.92); opacity: 0.8; }
 
 .chatbot-messages {
   flex: 1;
@@ -1554,12 +1716,18 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .chatbot-input button:hover {
   background: var(--accent-2);
   box-shadow: 0 0 18px rgba(204,255,0,0.35);
+}
+
+.chatbot-input button:active {
+  transform: scale(0.92);
+  opacity: 0.85;
 }
 
 .chatbot-input button svg {
@@ -1667,7 +1835,7 @@ body {
 
 @media (max-width: 640px) {
   .navbar,
-  .hero-grid,
+  .hero,
   .features,
   .market-ticker,
   .statistics-section,
@@ -1826,6 +1994,9 @@ button, a {
 </head>
 <body>
 
+  <!-- background grid overlay -->
+  <canvas id="spaceGrid" class="grid-bg" aria-hidden="true"></canvas>
+
   <!-- nav -->
   <header class="navbar">
     <a class="brand" href="#home" aria-label="Rynix AI home">
@@ -1837,16 +2008,9 @@ button, a {
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
       <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="#litepaper" class="nav-link"><span>~/</span>Litepaper</a>
-      <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>hacked by robinhood foundation</a>
     </nav>
     <div class="nav-actions">
       <button class="btn btn-ghost" id="connectWalletNav">CONNECT WALLET</button>
-      <a class="btn btn-primary" href="https://app.uniswap.org/swap" target="_blank" rel="noopener">
-        <span>BUY $RYNIX</span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M7 17L17 7M17 7H7M17 7V17"/>
-        </svg>
-      </a>
     </div>
     <button class="mobile-menu-btn" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -1856,7 +2020,7 @@ button, a {
   <main>
     <!-- hero -->
     <section class="hero" id="home">
-      <video class="hero-video" src="assets/hero-video.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+      <video class="hero-video" src="assets/hero-video.mp4?v=2" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
       <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-grid">
         <!-- terminal card -->
@@ -1864,6 +2028,7 @@ button, a {
           <div class="terminal-header">
             <div class="terminal-dots"><span></span><span></span><span></span></div>
             <div class="terminal-title">C:\RynixAI\live_feed</div>
+            <img class="terminal-logo" src="logo.png" alt="Rynix AI" width="22" height="22">
           </div>
           <div class="terminal-body">
             <div class="terminal-col">
@@ -1922,7 +2087,7 @@ button, a {
             <a href="#features" class="btn btn-outline">View Features</a>
           </div>
           <div class="hero-chips">
-            <span class="chip"><span class="chip-dot"></span>24/7 AI Monitoring</span>
+            <span class="chip"><span class="chip-dot"></span>Real-time Execution</span>
             <span class="chip"><span class="chip-dot"></span>Plain English Automations</span>
             <span class="chip"><span class="chip-dot"></span>Real-time Market Data</span>
           </div>
@@ -2097,7 +2262,6 @@ button, a {
     </div>
   </div>
   <div class="statistics-footer">
-    <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
     <div class="statistics-footer-actions">
       <a class="btn btn-icon" href="https://app.hyperliquid.xyz/join/" target="_blank" rel="noopener" aria-label="HyperLiquid"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="12" font-weight="700" font-family="Space Grotesk">HL</text></svg></a>
       <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
@@ -2110,15 +2274,6 @@ button, a {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
     <h2>Litepaper</h2>
     <p>The Rynix AI litepaper is being finalized. It will detail the tokenomics, agent architecture, and decentralized governance model.</p>
-    <a href="#home" class="btn btn-outline">Back to Home</a>
-  </div>
-</section>
-
-<section class="placeholder-section" id="hacked-by-robinhood-foundation">
-  <div class="placeholder-card">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.5A6 6 0 0 1 8 11.5"/><line x1="9" y1="9" x2="9" y2="9"/><line x1="15" y1="9" x2="15" y2="9"/></svg>
-    <h2>hacked by robinhood foundation</h2>
-    <p>Rynix AI supports the hacked by robinhood foundation agent token standard for on-chain autonomous agents. Documentation and integration examples are coming soon.</p>
     <a href="#home" class="btn btn-outline">Back to Home</a>
   </div>
 </section>
@@ -2137,25 +2292,32 @@ button, a {
 
   <!-- footer / live data -->
   <footer class="footer">
-    <div class="live-data">
-      <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
-      <div class="live-data-row">
-        <div class="live-data-item"><span>MCAP:</span><strong id="mcap">$0.00</strong></div>
-        <div class="live-data-item"><span>TWEETS:</span><strong id="tweets">0</strong></div>
-        <div class="live-data-item"><span>VERSION:</span><strong id="version">1.3.1.252</strong></div>
+    <div class="footer-main">
+      <div class="live-data">
+        <div class="live-data-row">
+          <div class="live-data-item"><span>MCAP:</span><strong id="mcap">$122,326.13</strong></div>
+          <div class="live-data-item"><span>TWEETS:</span><strong id="tweets">1934</strong></div>
+          <div class="live-data-item"><span>VERSION:</span><strong id="version">1.3.1.252</strong></div>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <a href="#contact" class="btn btn-outline btn-sm"><span>contact us</span></a>
+        <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
       </div>
     </div>
-    <div class="footer-actions">
-      <a href="#contact" class="btn btn-outline btn-sm"><span>contact us</span></a>
-      <a class="btn btn-icon" href="https://dexscreener.com" target="_blank" rel="noopener" aria-label="Dexscreener">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="14" font-weight="700" font-family="Space Grotesk">DEX</text></svg>
-      </a>
-      <a class="btn btn-icon" href="https://coingecko.com" target="_blank" rel="noopener" aria-label="CoinGecko">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><text x="1" y="18" font-size="13" font-weight="700" font-family="Space Grotesk">CG</text></svg>
-      </a>
-      <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-      </a>
+    <div class="footer-bottom">
+      <div class="footer-copyright">&copy; 2026 Rynix AI. All rights reserved.</div>
+      <div class="footer-partners">
+        <span>Data partners</span>
+        <a class="partner-link" href="https://coingecko.com" target="_blank" rel="noopener" aria-label="CoinGecko">
+          <img class="partner-logo" src="assets/coingecko-logo.svg" alt="CoinGecko" height="28">
+        </a>
+        <a class="partner-link" href="https://dexscreener.com" target="_blank" rel="noopener" aria-label="DexScreener">
+          <img class="partner-logo dex" src="assets/dexscreener-icon.png" alt="DexScreener" height="34">
+        </a>
+      </div>
     </div>
   </footer>
 
@@ -2382,7 +2544,7 @@ button, a {
 
 <div class='chatbot-window' id='chatbotWindow' aria-hidden='true' role='dialog' aria-label='Rynix AI Chat'>
   <div class='chatbot-header'>
-    <h3><span class='status-dot'></span>Rynix AI Chat</h3>
+    <h3><img class='chatbot-logo' src='logo.png' alt='Rynix AI' width='26' height='26'><span class='status-dot'></span>Rynix AI Chat</h3>
     <button class='chatbot-close' id='chatbotClose' aria-label='Close chat'>&times;</button>
   </div>
   <div class='chatbot-messages' id='chatbotMessages'></div>
@@ -2396,329 +2558,9 @@ button, a {
   </form>
 </div>
 
-<script>
-(function() {
-  'use strict';
-
-  const chatbotWindow = document.getElementById('chatbotWindow');
-  const chatbotMessages = document.getElementById('chatbotMessages');
-  const chatbotForm = document.getElementById('chatbotForm');
-  const chatbotInput = document.getElementById('chatbotInput');
-  const chatLauncher = document.getElementById('chatLauncher');
-  const chatbotClose = document.getElementById('chatbotClose');
-  const featureBadges = document.querySelectorAll('.feature-badge');
-
-  const priceMap = { BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana', HYPE: 'hyperliquid' };
-  let prices = {};
-  let lastFetchTime = 0;
-  const tokens = Object.keys(priceMap);
-  let openPositions = 2;
-  let tradesThisMonth = 0;
-  let analysisRuns = 1348;
-  let activeAutomations = 3;
-  let uniqueAssets = 4;
-  let totalJobs = 308;
-  let totalTrades = 47569;
-  let connectedWallets = 265;
-  let currentContext = '';
-  let typingIndicator = null;
-
-  function getPrice(symbol) {
-    const ticker = symbol.toUpperCase();
-    const data = prices[ticker];
-    if (!data) return null;
-    const price = data.base;
-    const change = data.change.toFixed(2);
-    return { price: price, change: parseFloat(change), symbol: ticker };
-  }
-
-  async function fetchPrices() {
-    const now = Date.now();
-    if (now - lastFetchTime < 15000) return; // debounce 15s
-    lastFetchTime = now;
-
-    let data = null;
-
-    // Try backend proxy first (with 60s cache)
-    try {
-      const proxyResponse = await fetch('/api/prices', { timeout: 10000 });
-      if (proxyResponse.ok) {
-        data = await proxyResponse.json();
-      }
-    } catch (err) {
-      console.warn('Proxy unavailable, falling back to CoinGecko:', err);
-    }
-
-    // Fallback to CoinGecko directly if proxy fails or site is static
-    if (!data) {
-      try {
-        const ids = Object.values(priceMap).join(',');
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
-        if (!response.ok) throw new Error('Network response was not ok');
-        const cgData = await response.json();
-        data = {};
-        for (const [symbol, id] of Object.entries(priceMap)) {
-          if (cgData[id] && typeof cgData[id].usd === 'number') {
-            data[symbol] = {
-              price: cgData[id].usd,
-              change24h: cgData[id].usd_24h_change || 0
-            };
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to fetch live prices:', err);
-        return;
-      }
-    }
-
-    for (const symbol of Object.keys(priceMap)) {
-      if (data[symbol] && typeof data[symbol].price === 'number') {
-        prices[symbol] = {
-          base: data[symbol].price,
-          change: data[symbol].change24h || 0
-        };
-      }
-    }
-    updatePriceTicker();
-  }
-
-  function formatPrice(n) {
-    return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  function updatePriceTicker() {
-    for (const symbol of Object.keys(prices)) {
-      const priceEl = document.getElementById('price-' + symbol);
-      const changeEl = document.getElementById('change-' + symbol);
-      const item = document.querySelector('.ticker-item[data-symbol="' + symbol + '"]');
-      if (priceEl) priceEl.textContent = formatPrice(prices[symbol].base);
-      if (changeEl) {
-        const change = prices[symbol].change;
-        const sign = change >= 0 ? '+' : '';
-        changeEl.textContent = sign + change.toFixed(2) + '%';
-        changeEl.className = 'ticker-change ' + (change >= 0 ? 'up' : 'down');
-      }
-      if (item) {
-        const status = item.querySelector('.ticker-status');
-        if (status) status.textContent = 'Live • updated ' + new Date().toLocaleTimeString();
-      }
-    }
-  }
-
-  function formatNumber(n) {
-    return n.toLocaleString('en-US');
-  }
-
-  function getSymbolFromText(text) {
-    const upper = text.toUpperCase();
-    for (let i = 0; i < tokens.length; i++) {
-      if (upper.includes(tokens[i])) return tokens[i];
-    }
-    return null;
-  }
-
-  function updateStatElement(id, value) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const num = Number(value);
-    const display = formatNumber(num);
-    el.textContent = display;
-    const metric = el.parentElement;
-    if (!metric || !metric.classList.contains('stat-card-metrics')) return;
-    if (id === 'statTrades') {
-      metric.innerHTML = '<span id="statTrades">' + display + '</span> ' + (num === 1 ? 'trade' : 'trades') + ' this month • <span id="statVolume">$168,553,875.50</span> total volume';
-    } else if (id === 'statOpenPositions') {
-      const activeEl = document.getElementById('statActive');
-      const active = activeEl ? Number(activeEl.textContent.replace(/,/g, '')) : activeAutomations;
-      metric.innerHTML = '<span id="statActive">' + formatNumber(active) + '</span> active • <span id="statOpenPositions">' + display + '</span> open ' + (num === 1 ? 'position' : 'positions');
-    } else if (id === 'statActive') {
-      const posEl = document.getElementById('statOpenPositions');
-      const pos = posEl ? Number(posEl.textContent.replace(/,/g, '')) : openPositions;
-      metric.innerHTML = '<span id="statActive">' + display + '</span> active • <span id="statOpenPositions">' + formatNumber(pos) + '</span> open ' + (pos === 1 ? 'position' : 'positions');
-    } else if (id === 'statAnalysis') {
-      const assetsEl = document.getElementById('statAssets');
-      const assets = assetsEl ? Number(assetsEl.textContent.replace(/,/g, '')) : uniqueAssets;
-      metric.innerHTML = '<span id="statAnalysis">' + display + '</span> analysis ' + (num === 1 ? 'run' : 'runs') + ' • <span id="statAssets">' + formatNumber(assets) + '</span> unique ' + (assets === 1 ? 'asset' : 'assets');
-    } else if (id === 'statAssets') {
-      const analysisEl = document.getElementById('statAnalysis');
-      const analysis = analysisEl ? Number(analysisEl.textContent.replace(/,/g, '')) : analysisRuns;
-      metric.innerHTML = '<span id="statAnalysis">' + formatNumber(analysis) + '</span> analysis ' + (analysis === 1 ? 'run' : 'runs') + ' • <span id="statAssets">' + display + '</span> unique ' + (num === 1 ? 'asset' : 'assets');
-    } else if (id === 'statJobs') {
-      const tradesEl = document.getElementById('statTotalTrades');
-      const trades = tradesEl ? Number(tradesEl.textContent.replace(/,/g, '')) : totalTrades;
-      metric.innerHTML = '<span id="statJobs">' + display + '</span> ' + (num === 1 ? 'job' : 'jobs') + ' processed • <span id="statTotalTrades">' + formatNumber(trades) + '</span> total ' + (trades === 1 ? 'trade' : 'trades');
-    } else if (id === 'statTotalTrades') {
-      const jobsEl = document.getElementById('statJobs');
-      const jobs = jobsEl ? Number(jobsEl.textContent.replace(/,/g, '')) : totalJobs;
-      metric.innerHTML = '<span id="statJobs">' + formatNumber(jobs) + '</span> ' + (jobs === 1 ? 'job' : 'jobs') + ' processed • <span id="statTotalTrades">' + display + '</span> total ' + (num === 1 ? 'trade' : 'trades');
-    } else if (id === 'statWallets') {
-      metric.innerHTML = '<span id="statWallets">' + display + '</span> unique wallet' + (num === 1 ? '' : 's') + ' connected';
-    }
-  }
-
-  function addMessage(text, sender) {
-    const div = document.createElement('div');
-    div.className = 'chatbot-message ' + sender;
-    div.textContent = text;
-    chatbotMessages.appendChild(div);
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-  }
-
-  function addBotMessage(text, delay) {
-    if (typingIndicator) {
-      typingIndicator.remove();
-      typingIndicator = null;
-    }
-    delay = delay || 600;
-    typingIndicator = document.createElement('div');
-    typingIndicator.className = 'chatbot-typing';
-    typingIndicator.innerHTML = '<span></span><span></span><span></span>';
-    chatbotMessages.appendChild(typingIndicator);
-    chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
-    setTimeout(function() {
-      if (typingIndicator) {
-        typingIndicator.remove();
-        typingIndicator = null;
-      }
-      addMessage(text, 'bot');
-    }, delay);
-  }
-
-  function openChatbot(context) {
-    chatbotWindow.classList.add('open');
-    chatbotWindow.setAttribute('aria-hidden', 'false');
-    chatLauncher.style.display = 'none';
-    chatbotInput.focus();
-    if (context) currentContext = context;
-    if (chatbotMessages.children.length === 0) {
-      if (context === 'Active Trading') {
-        addBotMessage('Active Trading selected. I can set up grid, market-making, or indicator rules. What would you like to automate?');
-      } else if (context === 'Set & Forget') {
-        addBotMessage('Set & Forget selected. Tell me your thesis and I will monitor it. What is your strategy?');
-      } else if (context === 'AI Chat') {
-        addBotMessage('Hi, I am Rynix AI. Ask me about prices, trades, or strategies.');
-      } else {
-        addBotMessage('Hi, I am Rynix AI. Ask me about prices, trades, or strategies.');
-      }
-    } else if (context) {
-      addBotMessage('Switched to ' + context + '. How can I help?');
-    }
-  }
-
-  function closeChatbot() {
-    chatbotWindow.classList.remove('open');
-    chatbotWindow.setAttribute('aria-hidden', 'true');
-    chatLauncher.style.display = 'flex';
-  }
-
-  function scrollToStatistics() {
-    const stats = document.getElementById('statistics');
-    if (stats) stats.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function getStatisticsSummary() {
-    return 'Rynix AI Live Statistics:\n' +
-      '• Wallets connected: ' + formatNumber(connectedWallets) + '\n' +
-      '• Trades this month: ' + formatNumber(tradesThisMonth) + '\n' +
-      '• Total volume: $168,553,875.50\n' +
-      '• Analysis runs: ' + formatNumber(analysisRuns) + '\n' +
-      '• Active automations: ' + activeAutomations + '\n' +
-      '• Open positions: ' + openPositions + '\n' +
-      '• ACP jobs processed: ' + formatNumber(totalJobs) + '\n' +
-      '• Total ACP trades: ' + formatNumber(totalTrades);
-  }
-
-  function computeResponse(text) {
-    const input = text.trim().toLowerCase();
-    if (!input) return;
-
-    const greetings = ['hi', 'hello', 'hey'];
-    if (greetings.includes(input) || input === 'help') {
-      return 'Hi! I can help with prices (BTC price), the Terminal, portfolio, statistics, and strategies. What would you like to do?';
-    }
-    if (input.includes('help') || input.includes('what can you do') || input.includes('commands')) {
-      return 'Try: price of BTC, terminal, status, open positions, statistics, active trading, set & forget, or connect wallet.';
-    }
-    if (input.includes('statistics') || input.includes('stats') || input.includes('metrics') || input.includes('dashboard')) {
-      scrollToStatistics();
-      return getStatisticsSummary();
-    }
-    if (input.includes('price') || input.includes('doing') || input.includes('how much') || input.includes('trading at')) {
-      const symbol = getSymbolFromText(text) || 'BTC';
-      const p = getPrice(symbol);
-      if (p) return p.symbol + ' is trading at ' + formatPrice(p.price) + ' (24h: ' + (p.change > 0 ? '+' : '') + p.change + '%).';
-      return 'Which token? Ask price of BTC, ETH, SOL, or HYPE.';
-    }
-
-    if (/(buy|sell|long|short)/.test(input)) {
-      return 'I do not execute real trades in chat. Open the Terminal to run commands like price, status, and balance in real time, or connect your wallet to trade.';
-    }
-    if (input.includes('open positions') || input.includes('position')) {
-      return 'You currently have ' + openPositions + ' open position(s).';
-    }
-    if (input.includes('portfolio') || input.includes('balance') || input.includes('wallet')) {
-      return 'Connect your wallet via the Connect Wallet button to see your portfolio.';
-    }
-    if (input.includes('connect')) {
-      connectedWallets++;
-      updateStatElement('statWallets', connectedWallets);
-      return 'Wallet connected. Welcome to Rynix AI. ' + formatNumber(connectedWallets) + ' wallets are now connected to the network.';
-    }
-    if (input.includes('analysis') || input.includes('analyze') || input.includes('indicator')) {
-      analysisRuns += Math.floor(Math.random() * 3) + 1;
-      updateStatElement('statAnalysis', analysisRuns);
-      return 'Analysis complete. I processed ' + formatNumber(analysisRuns) + ' multi-timeframe indicator runs across ' + uniqueAssets + ' assets.';
-    }
-    if (input.includes('automation') || input.includes('grid') || input.includes('market making') || input.includes('active trading')) {
-      currentContext = 'Active Trading';
-      activeAutomations = Math.min(activeAutomations + 1, 12);
-      updateStatElement('statActive', activeAutomations);
-      return 'Active Trading: I can run grid, DCA, or indicator-based automations. Try "set a grid bot for ETH" or "DCA 0.1 BTC every 4 hours".';
-    }
-    if (input.includes('thesis') || input.includes('strategy') || input.includes('set & forget') || input.includes('set and forget')) {
-      currentContext = 'Set & Forget';
-      return 'Set & Forget: describe your strategy, e.g., "Close BTC long if Fed confirms rate hike," and I will monitor it 24/7.';
-    }
-    if (input.includes('acp') || input.includes('job') || input.includes('agent')) {
-      totalJobs += 1;
-      totalTrades += Math.floor(Math.random() * 5) + 1;
-      updateStatElement('statJobs', totalJobs);
-      updateStatElement('statTotalTrades', totalTrades);
-      return 'ACP network: ' + formatNumber(totalJobs) + ' jobs processed, ' + formatNumber(totalTrades) + ' total trades executed by agents.';
-    }
-    if (input.includes('terminal') || input.includes('status') || input.includes('balance')) {
-      return 'Terminal: open the Terminal section below to type commands like price, status, and balance in real time.';
-    }
-    return 'I am not sure I understood. Try price of BTC, terminal, statistics, or help.';
-  }
-
-  chatLauncher.addEventListener('click', function() { openChatbot(); });
-  chatbotClose.addEventListener('click', closeChatbot);
-  chatbotForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const text = chatbotInput.value;
-    if (!text.trim()) return;
-    addMessage(text, 'user');
-    chatbotInput.value = '';
-    const response = computeResponse(text);
-    if (response) addBotMessage(response);
-  });
-  featureBadges.forEach(function(badge) {
-    badge.addEventListener('click', function(e) {
-      e.preventDefault();
-      openChatbot(badge.textContent);
-    });
-  });
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && chatbotWindow.classList.contains('open')) closeChatbot();
-  });
-
-  // real-time price market
-  updatePriceTicker();
-  fetchPrices();
-  setInterval(fetchPrices, 60000);
-})();
-</script>
+<!-- chatbot moved to external scripts -->
+<script src="chatbot-locales.js"></script>
+<script src="chatbot.js"></script>
 
 <script>
 (function () {
@@ -2881,6 +2723,87 @@ button, a {
     el.addEventListener('pointercancel', onPointerCancel);
   });
 
+  // 3D space grid background
+  const spaceGrid = document.getElementById('spaceGrid');
+  if (spaceGrid) {
+    const sgCtx = spaceGrid.getContext('2d');
+    let sgW, sgH, sgFov, sgCamY, sgHorizon, sgMaxZ, sgGrid, sgOffset, sgSpeed;
+
+    function resizeSpaceGrid() {
+      sgW = spaceGrid.width = window.innerWidth;
+      sgH = spaceGrid.height = window.innerHeight;
+      sgFov = sgW / 2;
+      sgCamY = sgH / 2 / sgFov;
+      sgHorizon = sgH / 2;
+      sgMaxZ = 30;
+      sgGrid = 0.5;
+      sgSpeed = 0.04;
+    }
+
+    function projectSpaceGrid(x, z) {
+      const scale = sgFov / z;
+      return [sgW / 2 + x * scale, sgHorizon + sgCamY * scale];
+    }
+
+    function drawSpaceGrid() {
+      sgCtx.clearRect(0, 0, sgW, sgH);
+      sgCtx.strokeStyle = 'rgba(204,255,0,0.12)';
+      sgCtx.lineWidth = 1;
+
+      sgOffset = (sgOffset + sgSpeed) % sgGrid;
+      const zSteps = Math.ceil(sgMaxZ / sgGrid);
+
+      // horizontal lines (depth)
+      for (let i = 0; i < zSteps; i++) {
+        const z = sgOffset + i * sgGrid;
+        if (z <= 0.1) continue;
+        const scale = sgFov / z;
+        const xVisible = (sgW / 2) / scale;
+        const xStart = Math.floor(-xVisible / sgGrid) * sgGrid;
+        const xEnd = Math.ceil(xVisible / sgGrid) * sgGrid;
+        let first = true;
+        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
+          const [sx, sy] = projectSpaceGrid(x, z);
+          if (first) {
+            first = false;
+            sgCtx.beginPath();
+            sgCtx.moveTo(sx, sy);
+          } else {
+            sgCtx.lineTo(sx, sy);
+          }
+        }
+        sgCtx.stroke();
+      }
+
+      // vertical lines (width)
+      for (let i = 0; i < zSteps - 1; i++) {
+        const z = sgOffset + i * sgGrid;
+        if (z <= 0.1) continue;
+        const zNext = z + sgGrid;
+        const scale = sgFov / z;
+        const xVisible = (sgW / 2) / scale;
+        const scaleNext = sgFov / zNext;
+        const xVisibleNext = (sgW / 2) / scaleNext;
+        const xStart = Math.min(Math.floor(-xVisible / sgGrid) * sgGrid, Math.floor(-xVisibleNext / sgGrid) * sgGrid);
+        const xEnd = Math.max(Math.ceil(xVisible / sgGrid) * sgGrid, Math.ceil(xVisibleNext / sgGrid) * sgGrid);
+        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
+          const [sx, sy] = projectSpaceGrid(x, z);
+          const [sx2, sy2] = projectSpaceGrid(x, zNext);
+          sgCtx.beginPath();
+          sgCtx.moveTo(sx, sy);
+          sgCtx.lineTo(sx2, sy2);
+          sgCtx.stroke();
+        }
+      }
+
+      requestAnimationFrame(drawSpaceGrid);
+    }
+
+    resizeSpaceGrid();
+    sgOffset = 0;
+    window.addEventListener('resize', resizeSpaceGrid);
+    requestAnimationFrame(drawSpaceGrid);
+  }
 })();
 </script>
 
