@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rynix AI — Litepaper</title>
+  <meta name="description" content="Rynix AI Litepaper: autonomous AI trading on Robinhood Chain. Tokenomics, architecture, and roadmap.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo.png">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-2: #050505;
+      --surface: #0a0a0a;
+      --surface-2: #0f0f0f;
+      --border: #1a1a1a;
+      --border-2: #262626;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --text-dim: #555555;
+      --accent: #ccff00;
+      --accent-2: #e5ff4d;
+      --danger: #ff4444;
+      --font-body: "Space Grotesk", system-ui, sans-serif;
+      --font-mono: "Source Code Pro", ui-monospace, monospace;
+      --radius: 18px;
+      --radius-sm: 10px;
+      --max-width: 960px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      background: rgba(0,0,0,0.9);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+    .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--text); font-weight: 700; letter-spacing: 0.1em; }
+    .brand img { width: 42px; height: 42px; border-radius: 12px; }
+    .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
+    .nav-link:hover { color: var(--accent); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 12px 22px; border-radius: var(--radius-sm);
+      font-weight: 600; text-decoration: none;
+      border: 1px solid var(--border-2);
+      background: var(--surface); color: var(--text);
+      transition: all 0.2s ease; margin-top: 8px;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    main { max-width: var(--max-width); margin: 0 auto; padding: 80px 32px 120px; }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    }
+    .section-label::before { content: ""; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
+    h1 { font-size: clamp(2.4rem, 5vw, 3.6rem); letter-spacing: -0.03em; margin: 0 0 24px; }
+    h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin: 56px 0 18px; letter-spacing: -0.02em; }
+    h3 { font-size: 1.25rem; margin: 32px 0 12px; color: var(--accent); }
+    p { color: var(--text-muted); margin: 0 0 18px; }
+    .lead { font-size: 1.15rem; color: var(--text); margin-bottom: 48px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin: 32px 0;
+    }
+    ul, ol { color: var(--text-muted); padding-left: 20px; margin: 0 0 18px; }
+    li { margin-bottom: 8px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .stat { font-family: var(--font-mono); color: var(--accent); font-weight: 600; }
+    .highlight { color: var(--accent); }
+    .disclaimer { color: var(--text-dim); font-size: 0.85rem; border-top: 1px solid var(--border-2); padding-top: 32px; margin-top: 64px; }
+    @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } main { padding-left: 20px; padding-right: 20px; } }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a class="brand" href="index.html">
+      <img src="logo.png" alt="Rynix AI">
+      <span>RYNIX AI</span>
+    </a>
+    <a class="nav-link" href="index.html">Back to Home</a>
+  </header>
+
+  <main>
+    <div class="section-label">Litepaper</div>
+    <h1>Rynix AI Litepaper</h1>
+    <p class="lead">Autonomous intelligence for on-chain trading, built native on Robinhood Chain.</p>
+
+    <h2>TLDR</h2>
+    <p>Rynix AI is your personal trading companion. It handles market analysis, strategy monitoring, and plain-English trade execution on Robinhood Chain so you can focus on the decisions that matter.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>What’s live</h3>
+        <ul>
+          <li>Natural-language chat and terminal</li>
+          <li>Real-time market data (BTC, ETH, SOL, HYPE)</li>
+          <li>24/7 automation design and monitoring</li>
+          <li>Multi-platform access: web, Telegram, X DMs</li>
+          <li>Wallet-aware context and portfolio snapshots</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>For $RYNIX holders</h3>
+        <ul>
+          <li>Access tiers through token holding or subscription</li>
+          <li>Protocol revenue → buyback + burn</li>
+          <li>Governance voting on roadmap and parameters</li>
+          <li>Community-driven development</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Introduction</h2>
+    <p>Crypto markets move 24/7. Data is fragmented, execution is complex, and the best opportunities often arrive when you are not watching. Rynix AI solves this by combining a large language model, live market data, and Robinhood Chain settlement into a single autonomous trading companion.</p>
+    <p>Traders describe what they want in plain English. Rynix AI interprets the intent, builds the strategy, monitors the triggers, and prepares execution — all settled transparently on Robinhood Chain.</p>
+
+    <h2>Vision</h2>
+    <p>Make sophisticated, on-chain trading as simple as speaking your mind. Rynix AI becomes the default interface for Robinhood Chain traders by fusing real-time data, AI reasoning, and trustless execution.</p>
+
+    <h2>Mission</h2>
+    <p>Deliver a platform that accepts market analysis, trade instructions, and automation rules through natural language. As the protocol grows, Rynix AI will expand into:</p>
+    <ul>
+      <li>Cross-venue funding and liquidation monitoring</li>
+      <li>Whale wallet and exchange flow correlation</li>
+      <li>Portfolio-level risk management and auto-hedging</li>
+      <li>Agent-to-agent job markets on Robinhood Chain</li>
+    </ul>
+
+    <h2>Rynix AI Terminal</h2>
+    <p>The Terminal is the command center for Rynix AI. It is publicly available and provides:</p>
+    <ul>
+      <li><span class="highlight">Natural-language trading</span> — describe your trade in plain English.</li>
+      <li><span class="highlight">24/7 automation</span> — define rules and let Rynix monitor them.</li>
+      <li><span class="highlight">Market analysis</span> — multi-timeframe indicators and price context.</li>
+      <li><span class="highlight">Research & sentiment</span> — web search and social signal aggregation.</li>
+      <li><span class="highlight">Multi-platform access</span> — web, Telegram, X, and agent networks.</li>
+      <li><span class="highlight">Real-time context</span> — live prices, wallet balance, and open positions.</li>
+    </ul>
+
+    <h2>How Automation Works</h2>
+    <ol>
+      <li><strong>User Intent</strong> — any natural-language description of conditions and actions.</li>
+      <li><strong>AI Understands</strong> — Rynix parses intent and selects the optimal trigger type.</li>
+      <li><strong>Smart Trigger</strong> — price, pattern, time, portfolio, or indicator trigger is set.</li>
+      <li><strong>Idle Monitor</strong> — lightweight background watcher waits for the trigger.</li>
+      <li><strong>Trigger Fires</strong> — Rynix evaluates the full context and prepares execution.</li>
+      <li><strong>Trade Settled</strong> — the user confirms and the order is settled on Robinhood Chain.</li>
+    </ol>
+
+    <h2>Problem & Solution</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Data overload</h3>
+        <p>Traders are overwhelmed by fragmented data across exchanges, explorers, and social feeds.</p>
+        <p class="highlight">Rynix aggregates data into a single interface and converts noise into clear signals.</p>
+      </div>
+      <div class="card">
+        <h3>Manual execution</h3>
+        <p>Manual decision-making is slow and costly in volatile markets.</p>
+        <p class="highlight">AI-driven automation executes predefined criteria precisely and on time.</p>
+      </div>
+      <div class="card">
+        <h3>Limited accessibility</h3>
+        <p>Advanced tools and insights are often gated behind complex UIs.</p>
+        <p class="highlight">Plain-English commands lower the barrier for beginners and speed up experts.</p>
+      </div>
+      <div class="card">
+        <h3>Market complexity</h3>
+        <p>Fast-paced markets demand real-time analysis and monitoring.</p>
+        <p class="highlight">Rynix analyzes trends, monitors conditions, and acts 24/7.</p>
+      </div>
+    </div>
+
+    <h2>Competitive Advantage</h2>
+    <ul>
+      <li><strong>Robinhood Chain native</strong> — purpose-built for the L2 that bridges traditional finance, RWAs, and crypto.</li>
+      <li><strong>Protocol-level agent</strong> — Rynix is not just a chatbot; it is a trading agent with a discoverable capability endpoint and wallet-authorized execution.</li>
+      <li><strong>Accessibility and automation</strong> — intuitive natural-language interface combined with automated triggers, PnL tracking, and execution.</li>
+      <li><strong>Aligned incentives</strong> — platform usage and revenue flow back to $RYNIX holders through buyback and burn.</li>
+      <li><strong>Multi-platform</strong> — the same agent accessible via web, Telegram, X, and other agent networks.</li>
+    </ul>
+
+    <h2>Technology & Architecture</h2>
+    <p>Rynix AI runs on a modular, scalable architecture:</p>
+    <ol>
+      <li><strong>Data Sources</strong> — user input, market data (CoinGecko), wallet snapshots, automation history.</li>
+      <li><strong>Context Builder</strong> — assembles a unified prompt with system instructions, user profile, portfolio snapshot, and conversation history.</li>
+      <li><strong>Agent Core</strong> — understands intent, decides on tools, and plans actions.</li>
+      <li><strong>Actions</strong> — price queries, strategy creation, order preparation, and status checks.</li>
+      <li><strong>User Receives</strong> — streaming response, real-time updates, and confirmation status.</li>
+    </ol>
+
+    <h2>Tokenomics</h2>
+    <p>$RYNIX is the utility and governance token of the Rynix AI protocol.</p>
+    <ul>
+      <li><strong>Access</strong> — holding or staking $RYNIX unlocks premium tiers and reduced automation fees.</li>
+      <li><strong>Revenue share</strong> — a portion of platform fees is used to buy back and burn $RYNIX.</li>
+      <li><strong>Governance</strong> — holders vote on feature priorities, fee parameters, and treasury allocations.</li>
+      <li><strong>Token contract</strong> — to be announced on Robinhood Chain mainnet.</li>
+    </ul>
+    <a class="btn" href="tokenomics.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="16"/>
+      </svg>
+      View Tokenomics
+    </a>
+
+    <h2>Roadmap</h2>
+    <ul>
+      <li><strong>Phase 1</strong> — Web terminal, live chatbot, wallet connection, and litepaper.</li>
+      <li><strong>Phase 2</strong> — Telegram/X bot integration, automation engine, and strategy backtesting.</li>
+      <li><strong>Phase 3</strong> — Agent-to-agent marketplace, RWA integration, and Robinhood Chain governance.</li>
+    </ul>
+
+    <h2>Risk & Disclaimer</h2>
+    <p class="disclaimer">Cryptocurrency trading carries significant risk. Rynix AI is an assistant, not a financial advisor. Users are responsible for their own trades, and all execution requires explicit wallet authorization. The $RYNIX token contract has not been published yet; do not trust any unofficial contract address.</p>
+  </main>
+</body>
+</html>

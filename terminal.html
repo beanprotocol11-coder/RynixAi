@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rynix AI Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo.png">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-2: #050505;
+      --surface: #0a0a0a;
+      --surface-2: #0f0f0f;
+      --border: #1a1a1a;
+      --border-2: #262626;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --text-dim: #555555;
+      --accent: #ccff00;
+      --accent-2: #e5ff4d;
+      --danger: #ff4444;
+      --font-body: "Space Grotesk", system-ui, sans-serif;
+      --font-mono: "Source Code Pro", ui-monospace, monospace;
+      --radius: 18px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      background: rgba(0,0,0,0.9);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+    .brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    .nav-link:hover { color: var(--accent); }
+    .terminal-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .terminal-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border-2);
+    }
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .terminal-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .terminal-status .dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+    .terminal-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+    }
+    .terminal-output .line { margin: 6px 0; }
+    .terminal-output .line.user { color: var(--accent); }
+    .terminal-output .line.bot { color: var(--text); }
+    .terminal-output .line.system { color: var(--text-dim); font-style: italic; }
+    .terminal-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-2);
+      background: var(--surface-2);
+    }
+    .terminal-input-wrap .prompt {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .terminal-input-wrap input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+    }
+    .terminal-input-wrap button {
+      padding: 10px 18px;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .typing span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: typing 1.4s infinite ease-in-out both;
+    }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%,80%,100%{transform:scale(0);opacity:.5} 40%{transform:scale(1);opacity:1} }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a class="brand" href="index.html">
+      <img src="logo.png" alt="Rynix AI">
+      <span>RYNIX AI</span>
+    </a>
+    <a class="nav-link" href="index.html">Back to Home</a>
+  </header>
+
+  <main class="terminal-wrap">
+    <div class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-title">C:\RynixAI\terminal</div>
+        <div class="terminal-status"><span class="dot"></span>Robinhood Chain Connected</div>
+      </div>
+      <div class="terminal-output" id="terminalOutput"></div>
+      <form class="terminal-input-wrap" id="terminalForm">
+        <span class="prompt">&gt;</span>
+        <input type="text" id="terminalInput" placeholder="Ask Rynix AI..." autocomplete="off" autofocus>
+        <button type="submit">Enter</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+      const STORAGE_KEY = 'rynix_terminal_session';
+      const output = document.getElementById('terminalOutput');
+      const form = document.getElementById('terminalForm');
+      const input = document.getElementById('terminalInput');
+      let messages = [];
+      let abortController = null;
+
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        messages = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        messages = [];
+      }
+
+      function save() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-40))); } catch (e) {}
+      }
+
+      function log(text, cls) {
+        const div = document.createElement('div');
+        div.className = 'line ' + (cls || 'system');
+        div.textContent = text;
+        output.appendChild(div);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function showTyping() {
+        const div = document.createElement('div');
+        div.className = 'line typing';
+        div.innerHTML = '<span></span><span></span><span></span>';
+        div.id = 'terminalTyping';
+        output.appendChild(div);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      function removeTyping() {
+        const el = document.getElementById('terminalTyping');
+        if (el) el.remove();
+      }
+
+      async function submit(text) {
+        if (!text.trim()) return;
+        log('> ' + text, 'user');
+        messages.push({ role: 'user', content: text });
+        save();
+        input.value = '';
+        showTyping();
+
+        if (abortController) abortController.abort();
+        abortController = new AbortController();
+
+        try {
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages }),
+            signal: abortController.signal
+          });
+          if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.details || 'Chat failed');
+          }
+          const data = await response.json();
+          removeTyping();
+          const reply = data.content || '...';
+          messages.push({ role: 'assistant', content: reply });
+          save();
+          log(reply, 'bot');
+        } catch (err) {
+          removeTyping();
+          if (err.name !== 'AbortError') {
+            log('Rynix AI: ' + (err.message && err.message.includes('API key') ? 'LLM not configured yet.' : 'Service unavailable. Please try again.'), 'system');
+          }
+        }
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        submit(input.value);
+      });
+
+      if (messages.length === 0) {
+        log('Rynix AI Terminal v1.0 — built on Robinhood Chain', 'system');
+        log('Type a command or question to begin.', 'system');
+      } else {
+        for (const m of messages) {
+          log((m.role === 'user' ? '> ' : '') + m.content, m.role === 'user' ? 'user' : 'bot');
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
