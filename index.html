@@ -3019,11 +3019,22 @@ button, a {
       const list = document.getElementById('activityList');
       if (!list) return;
       list.innerHTML = '';
+      if (!data.activities || data.activities.length === 0) {
+        list.innerHTML = '<div class="activity-item"><div class="activity-text">No activity yet.</div></div>';
+        return;
+      }
       data.activities.forEach(a => {
         const time = new Date(a.time).toLocaleTimeString('en-US', { hour12: false });
         const item = document.createElement('div');
         item.className = 'activity-item';
-        item.innerHTML = '<div class="activity-time">[' + time + ']</div><div class="activity-text">' + a.message + '</div>';
+        const timeDiv = document.createElement('div');
+        timeDiv.className = 'activity-time';
+        timeDiv.textContent = '[' + time + ']';
+        const textDiv = document.createElement('div');
+        textDiv.className = 'activity-text';
+        textDiv.textContent = a.message || '';
+        item.appendChild(timeDiv);
+        item.appendChild(textDiv);
         list.appendChild(item);
       });
     } catch (e) {

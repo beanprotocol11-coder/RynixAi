@@ -173,7 +173,8 @@ app.get('/api/activity', (req, res) => {
 });
 
 app.post('/api/terminal', async (req, res) => {
-  const cmd = (req.body.command || '').trim().toLowerCase();
+  const body = typeof req.body === 'object' && req.body !== null ? req.body : {};
+  const cmd = (body.command || '').trim().toLowerCase();
   let output = '';
   if (!cmd) output = 'Usage: type a command and press Enter. Try `help`.';
   else if (cmd === 'help') {
@@ -209,7 +210,7 @@ app.post('/api/terminal', async (req, res) => {
   } else if (cmd === 'clear') {
     output = '__CLEAR__';
   } else {
-    output = `Command not recognized: ${req.body.command}\nType 'help' for available commands.`;
+    output = `Command not recognized: ${body.command}\nType 'help' for available commands.`;
   }
   res.json({ output, mode: 'live' });
 });
