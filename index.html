@@ -1680,6 +1680,29 @@ body {
   }
 }
 
+/* --------------------------------------------------------------------------
+   Smooth touch / click feedback
+   -------------------------------------------------------------------------- */
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.btn, .btn-icon, .nav-link, .feature-badge, .chat-launcher, .chatbot-input button, .wallet-option, .modal-close, .chatbot-close, .mobile-menu-btn {
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.2s ease;
+}
+
+.btn:active, .nav-link:active, .feature-badge:active, .chat-launcher:active, .chatbot-input button:active, .wallet-option:active, .modal-close:active, .chatbot-close:active, .mobile-menu-btn:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+.brand:active {
+  opacity: 1;
+  transform: none;
+}
+
 </style>
 </head>
 <body>
