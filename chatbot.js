@@ -59,26 +59,23 @@
 
   function detectLanguage(text) {
     const lower = text.toLowerCase().replace(/&/g, ' and ');
-    // Prefer Indonesian if we see Indonesian-specific words
+    // Score Indonesian-specific words higher than universal English intent words
     let idScore = 0;
     const idDetect = i18nGlobal.id && i18nGlobal.id.detect;
     if (idDetect && Array.isArray(idDetect)) {
       for (let i = 0; i < idDetect.length; i++) {
-        if (hasWord(lower, idDetect[i])) idScore++;
+        if (hasWord(lower, idDetect[i])) idScore += 3;
       }
-    } else {
-      const idIntents = i18nGlobal.id && i18nGlobal.id.intents;
-      if (idIntents) {
-        for (const key in idIntents) {
-          if (!Array.isArray(idIntents[key])) continue;
-          for (let i = 0; i < idIntents[key].length; i++) {
-            if (hasWord(lower, idIntents[key][i])) idScore++;
-          }
+    }
+    const idIntents = i18nGlobal.id && i18nGlobal.id.intents;
+    if (idIntents) {
+      for (const key in idIntents) {
+        if (!Array.isArray(idIntents[key])) continue;
+        for (let i = 0; i < idIntents[key].length; i++) {
+          if (hasWord(lower, idIntents[key][i])) idScore++;
         }
       }
     }
-    if (idScore > 0) return 'id';
-    // Otherwise English (universal intent words)
     let enScore = 0;
     const enIntents = i18nGlobal.en && i18nGlobal.en.intents;
     if (enIntents) {
@@ -89,7 +86,8 @@
         }
       }
     }
-    if (enScore > 0) return 'en';
+    if (idScore > enScore) return 'id';
+    if (enScore > idScore) return 'en';
     return memory.lang || normalizeLang(navigator.language) || 'en';
   }
 
@@ -114,6 +112,7 @@
       lang: '',
       lastSymbol: '',
       lastTopic: '',
+      lastSide: '',
       lastPrice: 0,
       lastChange: 0,
       lastQty: 0.1,
@@ -507,6 +506,7 @@
         pushFeed('$OPEN', qty + ' ' + symbol + ' position opened');
         addActivity('Open long', '$' + symbol + ' position opened', 'https://app.hyperliquid.xyz/explorer/tx/0x' + Math.random().toString(16).slice(2, 42));
         memory.lastTopic = 'trade';
+        memory.lastSide = 'buy';
         memory.lastSymbol = symbol;
         memory.lastQty = qty;
         persistMemory();
@@ -525,6 +525,7 @@
         pushFeed('$CLOSE', qty + ' ' + symbol + ' position closed');
         addActivity('Close long', '$' + symbol + ' position closed', 'https://app.hyperliquid.xyz/explorer/tx/0x' + Math.random().toString(16).slice(2, 42));
         memory.lastTopic = 'trade';
+        memory.lastSide = 'sell';
         memory.lastSymbol = symbol;
         memory.lastQty = qty;
         persistMemory();
@@ -595,10 +596,11 @@
             return t(lang, 'price', { symbol: p.symbol, price: formatPrice(p.price), change: changeStr });
           }
         }
-        if (memory.lastTopic === 'trade' && (side || _has('buy') || _has('sell'))) {
-          const newSide = _has('buy') ? 'buy' : 'sell';
+        if (memory.lastTopic === 'trade' && _has('followUp')) {
+          const newSide = memory.lastSide || 'buy';
           const qty = parseQuantity(clean);
-          return computeResponse((newSide === 'buy' ? 'buy ' : 'sell ') + qty + ' ' + (memory.lastSymbol || 'BTC'));
+          const sideWord = (lang === 'id') ? (newSide === 'buy' ? 'beli' : 'jual') : (newSide === 'buy' ? 'buy' : 'sell');
+          return computeResponse(sideWord + ' ' + qty + ' ' + (memory.lastSymbol || 'BTC'));
         }
       }
     }
