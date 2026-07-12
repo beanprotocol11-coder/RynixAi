@@ -21,4 +21,4 @@ knowledge:
     contents: |
       Static frontend is index.html. server.js exposes /api/prices and /api/chat.
       The /api/chat endpoint uses an OpenRouter key (OPENROUTER_API_KEY) or an OpenAI key (OPENAI_API_KEY). If neither is set, the chatbot returns a configuration error.
-      Additional pages: litepaper.html, terminal.html.
+      Additional pages: litepaper.html, terminal.html, tokenomics.html.

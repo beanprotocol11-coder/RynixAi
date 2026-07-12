@@ -5,6 +5,7 @@
     { "src": "/api/chat", "dest": "/api/chat.js" },
     { "src": "/litepaper", "dest": "/litepaper.html" },
     { "src": "/terminal", "dest": "/terminal.html" },
+    { "src": "/tokenomics", "dest": "/tokenomics.html" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }

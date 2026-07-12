@@ -54,6 +54,15 @@
     .brand img { width: 42px; height: 42px; border-radius: 12px; }
     .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
     .nav-link:hover { color: var(--accent); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 12px 22px; border-radius: var(--radius-sm);
+      font-weight: 600; text-decoration: none;
+      border: 1px solid var(--border-2);
+      background: var(--surface); color: var(--text);
+      transition: all 0.2s ease; margin-top: 8px;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
     main { max-width: var(--max-width); margin: 0 auto; padding: 80px 32px 120px; }
     .section-label {
       display: inline-flex; align-items: center; gap: 10px;
@@ -209,6 +218,12 @@
       <li><strong>Governance</strong> — holders vote on feature priorities, fee parameters, and treasury allocations.</li>
       <li><strong>Token contract</strong> — to be announced on Robinhood Chain mainnet.</li>
     </ul>
+    <a class="btn" href="tokenomics.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="16"/>
+      </svg>
+      View Tokenomics
+    </a>
 
     <h2>Roadmap</h2>
     <ul>
