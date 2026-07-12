@@ -141,7 +141,7 @@ async function fetchLivePrices() {
   return result;
 }
 
-module.exports = async (req, res) => {
+const pricesHandler = async (req, res) => {
   // Enable CORS for the frontend
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -174,3 +174,6 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+pricesHandler.fetchLivePrices = fetchLivePrices;
+module.exports = pricesHandler;

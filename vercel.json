@@ -1,6 +1,9 @@
 {
   "version": 2,
   "routes": [
+    { "src": "/api/terminal", "dest": "/api/terminal.js" },
+    { "src": "/api/stats", "dest": "/api/stats.js" },
+    { "src": "/api/activity", "dest": "/api/activity.js" },
     { "src": "/api/prices", "dest": "/api/prices.js" },
     { "src": "/(.*)", "dest": "/$1" }
   ],
