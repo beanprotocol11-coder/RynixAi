@@ -2699,7 +2699,7 @@ button, a {
       updateStatElement('statTotalTrades', totalTrades);
       return 'ACP network: ' + formatNumber(totalJobs) + ' jobs processed, ' + formatNumber(totalTrades) + ' total trades executed by agents.';
     }
-    if (input.includes('terminal')) {
+    if (input.includes('terminal') || input.includes('status') || input.includes('balance')) {
       return 'Terminal: open the Terminal section below to type commands like price, status, and balance in real time.';
     }
     return 'I am not sure I understood. Try price of BTC, terminal, statistics, or help.';
