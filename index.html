@@ -8,11 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+CiAgPGRlZnM+CiAgICA8ZmlsdGVyIGlkPSJnbG93IiB4PSItMjAlIiB5PSItMjAlIiB3aWR0aD0iMTQwJSIgaGVpZ2h0PSIxNDAlIj4KICAgICAgPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iMi41IiByZXN1bHQ9ImJsdXIiLz4KICAgICAgPGZlQ29tcG9zaXRlIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9ImJsdXIiIG9wZXJhdG9yPSJvdmVyIi8+CiAgICA8L2ZpbHRlcj4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMwMDAwMDAiIHJ4PSIxOCIvPgogIDxnIGZpbGw9IiNmZmNjMDAiIGZpbHRlcj0idXJsKCNnbG93KSI+CiAgICA8cmVjdCB4PSIxMCIgeT0iMTAiIHdpZHRoPSI4MCIgaGVpZ2h0PSIxNSIgcng9IjYiLz4KICAgIDxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjgwIiByeD0iNiIvPgogICAgPHJlY3QgeD0iMTAiIHk9IjQyIiB3aWR0aD0iODAiIGhlaWdodD0iMTUiIHJ4PSI2Ii8+CiAgICA8cmVjdCB4PSI3MCIgeT0iNDIiIHdpZHRoPSIyMCIgaGVpZ2h0PSI0OCIgcng9IjYiLz4KICA8L2c+CiAgPHJlY3QgeD0iMzUiIHk9IjI4IiB3aWR0aD0iMjgiIGhlaWdodD0iMTIiIHJ4PSI0IiBmaWxsPSIjMDAwMDAwIi8+CiAgPHJlY3QgeD0iMzUiIHk9IjYwIiB3aWR0aD0iMjgiIGhlaWdodD0iMTIiIHJ4PSI0IiBmaWxsPSIjMDAwMDAwIi8+Cjwvc3ZnPg==">
+  <link rel="icon" type="image/png" href="logo.png">
   <style>
 /* ==========================================================================
    RYNIX AI — Revox-style neon green-yellow redesign
-   Palette: black, white, neon amber-orange (#ffcc00 / #ffaa00)
+   Palette: black, white, neon highlighter yellow (#ccff00 / #bfff00)
    ========================================================================== */
 
 :root {
@@ -28,11 +28,11 @@
   --text: #ffffff;
   --text-muted: #888888;
   --text-dim: #555555;
-  --accent: #ffcc00;
-  --accent-2: #ffb700;
-  --accent-3: #ffaa00;
-  --accent-dim: #331a00;
-  --accent-glow: rgba(255, 204, 0, 0.35);
+  --accent: #ccff00;
+  --accent-2: #e5ff4d;
+  --accent-3: #bfff00;
+  --accent-dim: #1a3300;
+  --accent-glow: rgba(204, 255, 0, 0.35);
   --danger: #ff4444;
   --radius: 18px;
   --radius-sm: 10px;
@@ -67,26 +67,15 @@ body {
   color: var(--bg);
 }
 
-/* Background grid + glow */
+/* Background 3D space grid */
 .grid-bg {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-  background-size: 70px 70px;
-  mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 35%, transparent 80%);
-}
-
-.grid-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(255,204,0,0.08), transparent 55%);
-  pointer-events: none;
+  background: #000;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
 }
 
 /* --------------------------------------------------------------------------
@@ -155,7 +144,7 @@ body {
 
 .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(255,204,0,0.22);
+  box-shadow: 0 8px 28px rgba(204,255,0,0.22);
 }
 
 .btn:active {
@@ -170,7 +159,7 @@ body {
 
 .btn-primary:hover {
   background: var(--accent-2);
-  box-shadow: 0 8px 32px rgba(255,204,0,0.35);
+  box-shadow: 0 8px 32px rgba(204,255,0,0.35);
 }
 
 .btn-outline {
@@ -180,7 +169,7 @@ body {
 }
 
 .btn-outline:hover {
-  background: rgba(255,204,0,0.08);
+  background: rgba(204,255,0,0.08);
 }
 
 .btn-ghost {
@@ -210,8 +199,8 @@ body {
 .btn-icon:hover {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(255,204,0,0.08);
-  box-shadow: 0 0 18px rgba(255,204,0,0.15);
+  background: rgba(204,255,0,0.08);
+  box-shadow: 0 0 18px rgba(204,255,0,0.15);
 }
 
 .btn-icon img,
@@ -345,32 +334,44 @@ body {
   gap: 24px;
 }
 
-.hero-title {
-  font-size: clamp(3rem, 7vw, 6rem);
+.hero-brand-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
   font-weight: 700;
-  line-height: 1;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hero-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #000;
+}
+
+.hero-title {
+  font-size: clamp(2.5rem, 6.5vw, 4.8rem);
+  font-weight: 700;
+  line-height: 1.05;
   margin: 0;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   color: var(--text);
 }
 
 .hero-title .accent {
   color: var(--accent);
-  text-shadow: 0 0 28px rgba(255,204,0,0.35);
-}
-
-.hero-subtitle {
-  font-size: clamp(1.25rem, 2.4vw, 1.7rem);
-  color: var(--text-muted);
-  margin: 0;
-  font-weight: 400;
-  max-width: 560px;
+  text-shadow: 0 0 28px rgba(204,255,0,0.35);
 }
 
 .hero-tagline {
-  font-size: 1rem;
-  color: var(--text-dim);
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+  color: var(--text-muted);
   margin: 0;
+  font-weight: 400;
   max-width: 560px;
 }
 
@@ -418,7 +419,7 @@ body {
   overflow: hidden;
   box-shadow:
     0 32px 80px rgba(0,0,0,0.6),
-    0 0 0 1px rgba(255,204,0,0.06);
+    0 0 0 1px rgba(204,255,0,0.06);
 }
 
 .terminal-header {
@@ -504,7 +505,7 @@ body {
   color: var(--accent);
   font-weight: 700;
   margin-right: 8px;
-  text-shadow: 0 0 8px rgba(255,204,0,0.35);
+  text-shadow: 0 0 8px rgba(204,255,0,0.35);
 }
 
 .term-cursor {
@@ -603,7 +604,7 @@ body {
 .ticker-item:hover {
   transform: translateY(-3px);
   border-color: var(--accent);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 18px rgba(255,204,0,0.1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35), 0 0 18px rgba(204,255,0,0.1);
 }
 
 .ticker-symbol {
@@ -750,8 +751,8 @@ body {
   inset: 0;
   background-image: repeating-linear-gradient(
     0deg,
-    rgba(255,204,0,0.05) 0px,
-    rgba(255,204,0,0.05) 1px,
+    rgba(204,255,0,0.05) 0px,
+    rgba(204,255,0,0.05) 1px,
     transparent 1px,
     transparent 30px
   );
@@ -763,7 +764,7 @@ body {
   top: 24px;
   left: 24px;
   padding: 8px 16px;
-  background: rgba(255,204,0,0.1);
+  background: rgba(204,255,0,0.1);
   border: 1px solid var(--accent-dim);
   border-radius: 8px;
   font-family: var(--font-mono);
@@ -779,7 +780,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle at 70% 30%, rgba(255,204,0,0.08) 0%, transparent 50%);
+  background-image: radial-gradient(circle at 70% 30%, rgba(204,255,0,0.08) 0%, transparent 50%);
 }
 
 .feature-thesis::after {
@@ -788,7 +789,7 @@ body {
   top: 24px;
   left: 24px;
   padding: 8px 16px;
-  background: rgba(255,204,0,0.08);
+  background: rgba(204,255,0,0.08);
   border: 1px solid var(--accent-dim);
   border-radius: 8px;
   font-family: var(--font-mono);
@@ -909,7 +910,7 @@ body {
 .stat-card:hover {
   border-color: var(--accent);
   transform: translateY(-3px);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.35), 0 0 24px rgba(255,204,0,0.08);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35), 0 0 24px rgba(204,255,0,0.08);
 }
 
 .stat-card-header {
@@ -1369,14 +1370,14 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 28px rgba(255,204,0,0.35);
+  box-shadow: 0 8px 28px rgba(204,255,0,0.35);
   z-index: 250;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .chat-launcher:hover {
   transform: scale(1.06);
-  box-shadow: 0 10px 34px rgba(255,204,0,0.45);
+  box-shadow: 0 10px 34px rgba(204,255,0,0.45);
 }
 
 .chat-launcher svg {
@@ -1544,7 +1545,7 @@ body {
 
 .chatbot-input button:hover {
   background: var(--accent-2);
-  box-shadow: 0 0 18px rgba(255,204,0,0.35);
+  box-shadow: 0 0 18px rgba(204,255,0,0.35);
 }
 
 .chatbot-input button svg {
@@ -1683,28 +1684,12 @@ body {
 </head>
 <body>
   <!-- background grid overlay -->
-  <div class="grid-bg" aria-hidden="true"></div>
+  <canvas id="spaceGrid" class="grid-bg" aria-hidden="true"></canvas>
 
   <!-- nav -->
   <header class="navbar">
     <a class="brand" href="#home" aria-label="Rynix AI home">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
-        <defs>
-          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2.5" result="blur"/>
-            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-          </filter>
-        </defs>
-        <rect width="100" height="100" fill="#000000" rx="18"/>
-        <g fill="#ffcc00" filter="url(#glow)">
-          <rect x="10" y="10" width="80" height="15" rx="6"/>
-          <rect x="10" y="10" width="20" height="80" rx="6"/>
-          <rect x="10" y="42" width="80" height="15" rx="6"/>
-          <rect x="70" y="42" width="20" height="48" rx="6"/>
-        </g>
-        <rect x="35" y="28" width="28" height="12" rx="4" fill="#000000"/>
-        <rect x="35" y="60" width="28" height="12" rx="4" fill="#000000"/>
-      </svg>
+      <img class="brand-logo" src="logo.png" alt="Rynix AI">
       <span class="brand-text">RYNIX AI</span>
     </a>
     <nav class="nav-links">
@@ -1780,8 +1765,11 @@ body {
 
         <!-- hero text -->
         <div class="hero-text">
-          <h1 class="hero-title">RYNIX <span class="accent">AI</span></h1>
-          <p class="hero-subtitle">Vibe trading is here.</p>
+          <div class="hero-brand-label">
+            <img class="hero-logo" src="logo.png" alt="Rynix AI">
+            <span>RYNIX AI</span>
+          </div>
+          <h1 class="hero-title"><span class="accent">Vibe trading</span> is here.</h1>
           <p class="hero-tagline">Think it. Say it. Trade it.</p>
           <div class="hero-actions">
             <button class="btn btn-primary" id="connectWalletHero">
@@ -2908,6 +2896,89 @@ body {
     el.addEventListener('pointerleave', onPointerLeave);
     el.addEventListener('pointercancel', onPointerCancel);
   });
+
+  // 3D space grid background
+  const spaceGrid = document.getElementById('spaceGrid');
+  if (spaceGrid) {
+    const sgCtx = spaceGrid.getContext('2d');
+    let sgW, sgH, sgFov, sgCamY, sgHorizon, sgMaxZ, sgGrid, sgOffset, sgSpeed;
+
+    function resizeSpaceGrid() {
+      sgW = spaceGrid.width = window.innerWidth;
+      sgH = spaceGrid.height = window.innerHeight;
+      sgFov = sgW / 2;
+      sgCamY = sgH / 2 / sgFov;
+      sgHorizon = sgH / 2;
+      sgMaxZ = 30;
+      sgGrid = 0.5;
+      sgSpeed = 0.04;
+    }
+
+    function projectSpaceGrid(x, z) {
+      const scale = sgFov / z;
+      return [sgW / 2 + x * scale, sgHorizon + sgCamY * scale];
+    }
+
+    function drawSpaceGrid() {
+      sgCtx.fillStyle = '#000';
+      sgCtx.fillRect(0, 0, sgW, sgH);
+      sgCtx.strokeStyle = 'rgba(204,255,0,0.12)';
+      sgCtx.lineWidth = 1;
+
+      sgOffset = (sgOffset + sgSpeed) % sgGrid;
+      const zSteps = Math.ceil(sgMaxZ / sgGrid);
+
+      // horizontal lines (depth)
+      for (let i = 0; i < zSteps; i++) {
+        const z = sgOffset + i * sgGrid;
+        if (z <= 0.1) continue;
+        const scale = sgFov / z;
+        const xVisible = (sgW / 2) / scale;
+        const xStart = Math.floor(-xVisible / sgGrid) * sgGrid;
+        const xEnd = Math.ceil(xVisible / sgGrid) * sgGrid;
+        let first = true;
+        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
+          const [sx, sy] = projectSpaceGrid(x, z);
+          if (first) {
+            first = false;
+            sgCtx.beginPath();
+            sgCtx.moveTo(sx, sy);
+          } else {
+            sgCtx.lineTo(sx, sy);
+          }
+        }
+        sgCtx.stroke();
+      }
+
+      // vertical lines (width)
+      for (let i = 0; i < zSteps - 1; i++) {
+        const z = sgOffset + i * sgGrid;
+        if (z <= 0.1) continue;
+        const zNext = z + sgGrid;
+        const scale = sgFov / z;
+        const xVisible = (sgW / 2) / scale;
+        const scaleNext = sgFov / zNext;
+        const xVisibleNext = (sgW / 2) / scaleNext;
+        const xStart = Math.min(Math.floor(-xVisible / sgGrid) * sgGrid, Math.floor(-xVisibleNext / sgGrid) * sgGrid);
+        const xEnd = Math.max(Math.ceil(xVisible / sgGrid) * sgGrid, Math.ceil(xVisibleNext / sgGrid) * sgGrid);
+        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
+          const [sx, sy] = projectSpaceGrid(x, z);
+          const [sx2, sy2] = projectSpaceGrid(x, zNext);
+          sgCtx.beginPath();
+          sgCtx.moveTo(sx, sy);
+          sgCtx.lineTo(sx2, sy2);
+          sgCtx.stroke();
+        }
+      }
+
+      requestAnimationFrame(drawSpaceGrid);
+    }
+
+    resizeSpaceGrid();
+    sgOffset = 0;
+    window.addEventListener('resize', resizeSpaceGrid);
+    requestAnimationFrame(drawSpaceGrid);
+  }
 })();
 </script>
 
