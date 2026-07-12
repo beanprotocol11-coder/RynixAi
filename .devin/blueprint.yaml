@@ -1,0 +1,22 @@
+# https://docs.devin.ai/onboard-devin/environment-yaml
+# Commands run from the repo root.
+
+initialize: |
+  # No system-level setup needed; Node is provided by the environment.
+
+maintenance: |
+  npm install
+
+knowledge:
+  - name: start
+    contents: |
+      node server.js
+  - name: lint
+    contents: |
+      # No lint script configured in this repo
+  - name: test
+    contents: |
+      # No test script configured in this repo
+  - name: notes
+    contents: |
+      Static frontend is index.html. server.js exposes /api/prices.
