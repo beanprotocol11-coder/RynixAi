@@ -196,6 +196,7 @@
 
     showTyping();
 
+    if (abortController) abortController.abort();
     abortController = new AbortController();
     const { connected, wallet } = getWalletInfo();
 

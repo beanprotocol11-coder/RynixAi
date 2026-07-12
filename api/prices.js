@@ -1,12 +1,22 @@
 const { getPrices } = require('../lib/prices');
+const { setCors } = require('../lib/cors');
+const { rateLimit } = require('../lib/rate-limit');
 
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  const allowed = setCors(req, res, 'GET, OPTIONS');
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
+    res.status(allowed ? 200 : 403).end();
+    return;
+  }
+
+  if (!allowed) {
+    res.status(403).json({ error: 'Origin not allowed' });
+    return;
+  }
+
+  if (!rateLimit(req)) {
+    res.status(429).json({ error: 'Rate limit exceeded' });
     return;
   }
 
