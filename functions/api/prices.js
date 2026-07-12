@@ -18,12 +18,14 @@ export async function onRequest(context) {
     );
   }
 
-  const priceMap = {
+  const COINGECKO_IDS = {
     BTC: 'bitcoin',
     ETH: 'ethereum',
     SOL: 'solana',
     HYPE: 'hyperliquid'
   };
+
+  const HYPERLIQUID_SYMBOLS = ['BTC', 'ETH', 'SOL', 'HYPE'];
 
   const cache = caches.default;
   const cacheKey = new Request(request.url, { method: 'GET' });
@@ -44,35 +46,123 @@ export async function onRequest(context) {
     }
   }
 
-  try {
-    const ids = Object.values(priceMap).join(',');
+  function isValidPrice(value) {
+    return typeof value === 'number' && !isNaN(value) && value > 0;
+  }
+
+  async function fetchHyperliquidPrices() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true',
-      {
+    try {
+      const response = await fetch('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'allMids' }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error('Hyperliquid API error: ' + response.status);
+      }
+
+      const data = await response.json();
+      const result = {};
+
+      for (const symbol of HYPERLIQUID_SYMBOLS) {
+        if (data[symbol] && (typeof data[symbol] === 'string' || typeof data[symbol] === 'number')) {
+          const price = parseFloat(data[symbol]);
+          if (isValidPrice(price)) {
+            result[symbol] = { price: price };
+          }
+        }
+      }
+
+      return result;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  }
+
+  async function fetchCoinGeckoPrices() {
+    const ids = Object.values(COINGECKO_IDS).join(',');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', {
         headers: { 'Accept': 'application/json' },
         signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error('CoinGecko API error: ' + response.status);
       }
-    );
 
-    clearTimeout(timeoutId);
+      const data = await response.json();
+      const result = {};
 
-    if (!response.ok) {
-      throw new Error('CoinGecko API error: ' + response.status);
+      for (const [symbol, id] of Object.entries(COINGECKO_IDS)) {
+        if (data[id] && typeof data[id].usd === 'number') {
+          result[symbol] = {
+            price: data[id].usd,
+            change24h: data[id].usd_24h_change || 0
+          };
+        }
+      }
+
+      return result;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
     }
+  }
 
-    const data = await response.json();
+  function mergePriceData(hyperliquidData, coinGeckoData) {
     const result = {};
 
-    for (const [symbol, id] of Object.entries(priceMap)) {
-      if (data[id] && typeof data[id].usd === 'number') {
+    for (const symbol of HYPERLIQUID_SYMBOLS) {
+      const hl = hyperliquidData[symbol];
+      const cg = coinGeckoData[symbol];
+
+      if (!hl && !cg) continue;
+
+      const price = hl && isValidPrice(hl.price) ? hl.price : (cg && isValidPrice(cg.price) ? cg.price : null);
+      const change24h = cg && typeof cg.change24h === 'number' ? cg.change24h : 0;
+
+      if (isValidPrice(price)) {
         result[symbol] = {
-          price: data[id].usd,
-          change24h: data[id].usd_24h_change || 0
+          price: price,
+          change24h: change24h
         };
       }
+    }
+
+    return result;
+  }
+
+  try {
+    const [hyperliquidData, coinGeckoData] = await Promise.allSettled([
+      fetchHyperliquidPrices(),
+      fetchCoinGeckoPrices()
+    ]);
+
+    const hl = hyperliquidData.status === 'fulfilled' ? hyperliquidData.value : {};
+    const cg = coinGeckoData.status === 'fulfilled' ? coinGeckoData.value : {};
+
+    const errors = [];
+    if (hyperliquidData.status === 'rejected') errors.push('Hyperliquid: ' + hyperliquidData.reason.message);
+    if (coinGeckoData.status === 'rejected') errors.push('CoinGecko: ' + coinGeckoData.reason.message);
+
+    const result = mergePriceData(hl, cg);
+
+    if (Object.keys(result).length === 0) {
+      throw new Error('Unable to fetch prices from any source. ' + errors.join('; '));
     }
 
     const now = Date.now();
