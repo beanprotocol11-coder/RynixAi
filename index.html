@@ -67,37 +67,24 @@ body {
   color: var(--bg);
 }
 
-/* Background video + overlay */
-.video-bg {
-  position: fixed;
+/* Hero background video + overlay */
+.hero-video {
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-  z-index: -3;
+  z-index: 0;
   background: #000;
-  filter: brightness(0.4) contrast(1.2) saturate(0.5);
-  -webkit-filter: brightness(0.4) contrast(1.2) saturate(0.5);
 }
 
-.video-overlay {
-  position: fixed;
+.hero-overlay {
+  position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: -2;
-  background: rgba(0, 0, 0, 0.55);
-}
-
-/* Background 3D space grid */
-.grid-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background: transparent;
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 /* --------------------------------------------------------------------------
@@ -338,9 +325,9 @@ body {
    -------------------------------------------------------------------------- */
 
 .hero {
-  padding: 80px 32px 100px;
-  max-width: var(--max-width);
-  margin: 0 auto;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
 }
 
 .hero-grid {
@@ -348,6 +335,11 @@ body {
   grid-template-columns: 1.2fr 1fr;
   gap: 56px;
   align-items: center;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 80px 32px 100px;
+  position: relative;
+  z-index: 2;
 }
 
 .hero-text {
@@ -1675,7 +1667,7 @@ body {
 
 @media (max-width: 640px) {
   .navbar,
-  .hero,
+  .hero-grid,
   .features,
   .market-ticker,
   .statistics-section,
@@ -1834,13 +1826,6 @@ button, a {
 </head>
 <body>
 
-  <!-- background video -->
-  <video class="video-bg" src="assets/background-video.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
-  <div class="video-overlay" aria-hidden="true"></div>
-
-  <!-- background grid overlay -->
-  <canvas id="spaceGrid" class="grid-bg" aria-hidden="true"></canvas>
-
   <!-- nav -->
   <header class="navbar">
     <a class="brand" href="#home" aria-label="Rynix AI home">
@@ -1871,6 +1856,8 @@ button, a {
   <main>
     <!-- hero -->
     <section class="hero" id="home">
+      <video class="hero-video" src="assets/hero-video.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+      <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-grid">
         <!-- terminal card -->
         <div class="terminal-card">
@@ -2894,87 +2881,6 @@ button, a {
     el.addEventListener('pointercancel', onPointerCancel);
   });
 
-  // 3D space grid background
-  const spaceGrid = document.getElementById('spaceGrid');
-  if (spaceGrid) {
-    const sgCtx = spaceGrid.getContext('2d');
-    let sgW, sgH, sgFov, sgCamY, sgHorizon, sgMaxZ, sgGrid, sgOffset, sgSpeed;
-
-    function resizeSpaceGrid() {
-      sgW = spaceGrid.width = window.innerWidth;
-      sgH = spaceGrid.height = window.innerHeight;
-      sgFov = sgW / 2;
-      sgCamY = sgH / 2 / sgFov;
-      sgHorizon = sgH / 2;
-      sgMaxZ = 30;
-      sgGrid = 0.5;
-      sgSpeed = 0.04;
-    }
-
-    function projectSpaceGrid(x, z) {
-      const scale = sgFov / z;
-      return [sgW / 2 + x * scale, sgHorizon + sgCamY * scale];
-    }
-
-    function drawSpaceGrid() {
-      sgCtx.clearRect(0, 0, sgW, sgH);
-      sgCtx.strokeStyle = 'rgba(204,255,0,0.12)';
-      sgCtx.lineWidth = 1;
-
-      sgOffset = (sgOffset + sgSpeed) % sgGrid;
-      const zSteps = Math.ceil(sgMaxZ / sgGrid);
-
-      // horizontal lines (depth)
-      for (let i = 0; i < zSteps; i++) {
-        const z = sgOffset + i * sgGrid;
-        if (z <= 0.1) continue;
-        const scale = sgFov / z;
-        const xVisible = (sgW / 2) / scale;
-        const xStart = Math.floor(-xVisible / sgGrid) * sgGrid;
-        const xEnd = Math.ceil(xVisible / sgGrid) * sgGrid;
-        let first = true;
-        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
-          const [sx, sy] = projectSpaceGrid(x, z);
-          if (first) {
-            first = false;
-            sgCtx.beginPath();
-            sgCtx.moveTo(sx, sy);
-          } else {
-            sgCtx.lineTo(sx, sy);
-          }
-        }
-        sgCtx.stroke();
-      }
-
-      // vertical lines (width)
-      for (let i = 0; i < zSteps - 1; i++) {
-        const z = sgOffset + i * sgGrid;
-        if (z <= 0.1) continue;
-        const zNext = z + sgGrid;
-        const scale = sgFov / z;
-        const xVisible = (sgW / 2) / scale;
-        const scaleNext = sgFov / zNext;
-        const xVisibleNext = (sgW / 2) / scaleNext;
-        const xStart = Math.min(Math.floor(-xVisible / sgGrid) * sgGrid, Math.floor(-xVisibleNext / sgGrid) * sgGrid);
-        const xEnd = Math.max(Math.ceil(xVisible / sgGrid) * sgGrid, Math.ceil(xVisibleNext / sgGrid) * sgGrid);
-        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
-          const [sx, sy] = projectSpaceGrid(x, z);
-          const [sx2, sy2] = projectSpaceGrid(x, zNext);
-          sgCtx.beginPath();
-          sgCtx.moveTo(sx, sy);
-          sgCtx.lineTo(sx2, sy2);
-          sgCtx.stroke();
-        }
-      }
-
-      requestAnimationFrame(drawSpaceGrid);
-    }
-
-    resizeSpaceGrid();
-    sgOffset = 0;
-    window.addEventListener('resize', resizeSpaceGrid);
-    requestAnimationFrame(drawSpaceGrid);
-  }
 })();
 </script>
 
