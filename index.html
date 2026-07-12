@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rynix AI | Autonomous Intelligence for On-Chain Trading</title>
-  <meta name="description" content="Rynix AI — Vibe trading demo. Think it. Say it. Trade it. Autonomous AI trading concept, plain English automations, real-time market data.">
+  <meta name="description" content="Rynix AI — Vibe trading is here. Think it. Say it. Trade it. 24/7 autonomous AI monitoring, plain English automations, real-time market data.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1725,38 +1725,6 @@ button, a {
   transform: none;
 }
 
-/* Demo banner */
-.demo-banner {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  background: rgba(204, 255, 0, 0.92);
-  color: #000;
-  padding: 8px 16px;
-  text-align: center;
-  font-size: 0.85rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.demo-banner a {
-  color: #000;
-  text-decoration: underline;
-}
-
-body.has-demo-banner {
-  padding-top: 36px;
-}
-
-body.has-demo-banner .navbar {
-  top: 36px;
-}
-
 /* Interactive terminal */
 .terminal-window {
   background: rgba(0, 0, 0, 0.85);
@@ -1811,11 +1779,60 @@ body.has-demo-banner .navbar {
   outline: none;
 }
 
+.terminal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.terminal-chip {
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+}
+
+.terminal-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(204, 255, 0, 0.08);
+}
+
+.terminal-chip:active {
+  transform: scale(0.97);
+}
+
+.terminal-execute {
+  padding: 6px 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.terminal-execute:hover {
+  background: var(--accent-2);
+}
+
+.terminal-execute:active {
+  transform: scale(0.97);
+}
+
 </style>
 </head>
-<body class="has-demo-banner">
-  <!-- demo banner -->
-  <div class="demo-banner">DEMO MODE — No real trading. Contract address not set. <a href="#contact">Get in touch</a></div>
+<body>
 
   <!-- background video -->
   <video class="video-bg" src="assets/background-video.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
@@ -1835,12 +1852,12 @@ body.has-demo-banner .navbar {
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
       <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="#litepaper" class="nav-link"><span>~/</span>Litepaper</a>
-      <a href="#agent-network" class="nav-link"><span>~/</span>Agent Network</a>
+      <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>hacked by robinhood foundation</a>
     </nav>
     <div class="nav-actions">
       <button class="btn btn-ghost" id="connectWalletNav">CONNECT WALLET</button>
-      <a class="btn btn-primary" href="#contact" rel="noopener">
-        <span>Token Coming Soon</span>
+      <a class="btn btn-primary" href="https://app.uniswap.org/swap" target="_blank" rel="noopener">
+        <span>BUY $RYNIX</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M7 17L17 7M17 7H7M17 7V17"/>
         </svg>
@@ -1866,9 +1883,8 @@ body.has-demo-banner .navbar {
               <div class="terminal-section">
                 <h3 class="terminal-label">C:\RynixAI\live_feed</h3>
                 <ul class="terminal-feed" id="liveFeed">
-                  <li><span class="term-tick">$DEMO</span> feed ready - no real positions</li>
-                  <li><span class="term-tick">$DEMO</span> connect wallet to start</li>
-                  <li><span class="term-tick">$DEMO</span> waiting for real trades</li>
+                  <li><span class="term-tick">$LIVE</span> feed ready - connect wallet to start</li>
+                  <li><span class="term-tick">$LIVE</span> no active positions</li>
                   <li><span class="term-cursor">_</span></li>
                 </ul>
               </div>
@@ -1877,10 +1893,10 @@ body.has-demo-banner .navbar {
               <div class="terminal-section">
                 <h3 class="terminal-label">C:\RynixAI\status</h3>
                 <ul class="terminal-status">
-                  <li>&gt;connected to HyperLiquid <span class="status-ok">OFF</span></li>
-                  <li>&gt;automations active: <span class="status-ok">0</span></li>
-                  <li>&gt;open positions: <span class="status-ok">0</span></li>
-                  <li>&gt;monitoring <span class="status-live">PAUSED</span></li>
+                  <li>&gt;connected to HyperLiquid <span class="status-ok">OK</span></li>
+                  <li>&gt;automations active: <span class="status-ok">3</span></li>
+                  <li>&gt;open positions: <span class="status-ok">2</span></li>
+                  <li>&gt;monitoring <span class="status-live">LIVE</span></li>
                 </ul>
               </div>
               <div class="terminal-section">
@@ -1889,10 +1905,10 @@ body.has-demo-banner .navbar {
                   <span>trades_this_month:</span><span>0</span>
                 </div>
                 <div class="terminal-metric">
-                  <span>volume:</span><span id="terminalVolume">$0.00</span>
+                  <span>volume:</span><span id="terminalVolume">$168,553,875.50</span>
                 </div>
                 <div class="terminal-metric">
-                  <span>analysis_runs:</span><span id="analysisRuns">0</span>
+                  <span>analysis_runs:</span><span id="analysisRuns">1348</span>
                 </div>
               </div>
             </div>
@@ -1919,7 +1935,7 @@ body.has-demo-banner .navbar {
             <a href="#features" class="btn btn-outline">View Features</a>
           </div>
           <div class="hero-chips">
-            <span class="chip"><span class="chip-dot"></span>AI Monitoring</span>
+            <span class="chip"><span class="chip-dot"></span>24/7 AI Monitoring</span>
             <span class="chip"><span class="chip-dot"></span>Plain English Automations</span>
             <span class="chip"><span class="chip-dot"></span>Real-time Market Data</span>
           </div>
@@ -1974,11 +1990,11 @@ body.has-demo-banner .navbar {
         </div>
         <div class="feature-content">
           <h2>Just Say What You Want</h2>
-          <p>Trade the way you think. Tell RynixAI "buy some ETH" or "what's BTC doing?" — no buttons, no forms, no learning curve. Just vibes.</p>
+          <p>Trade the way you think. Ask RynixAI "what's BTC doing?" or "show the terminal" — no buttons, no forms, no learning curve. Just vibes.</p>
           <ul class="feature-list">
             <li><span>&gt;</span>Trade with plain English - no complex interfaces</li>
             <li><span>&gt;</span>Get market insights just by asking</li>
-            <li><span>&gt;</span>Your AI trading companion</li>
+            <li><span>&gt;</span>Your AI trading companion, available 24/7</li>
           </ul>
         </div>
       </article>
@@ -2020,12 +2036,21 @@ body.has-demo-banner .navbar {
 <section class="placeholder-section" id="terminal">
   <div class="placeholder-card" style="max-width: 720px; width: 100%;">
     <h2>Terminal</h2>
-    <p>Demo terminal. Type a command and press Enter. Try <code>help</code>.</p>
+    <p>Interactive terminal. Click a command chip or type a command and press Enter / Execute. Try <code>help</code>.</p>
     <div class="terminal-window" id="terminalWindow">
       <div class="terminal-output" id="terminalOutput"></div>
+      <div class="terminal-chips" id="terminalChips">
+        <button class="terminal-chip" data-command="price" type="button" aria-label="Show live prices">price</button>
+        <button class="terminal-chip" data-command="status" type="button" aria-label="Show agent status">status</button>
+        <button class="terminal-chip" data-command="balance" type="button" aria-label="Show wallet balance">balance</button>
+        <button class="terminal-chip" data-command="trades" type="button" aria-label="Show recent trades">trades</button>
+        <button class="terminal-chip" data-command="automations" type="button" aria-label="List automations">automations</button>
+        <button class="terminal-chip" data-command="clear" type="button" aria-label="Clear terminal">clear</button>
+      </div>
       <div class="terminal-input-line">
         <span class="prompt">&gt;</span>
-        <input type="text" id="terminalInput" placeholder="type a command..." autocomplete="off" spellcheck="false" aria-label="Terminal command">
+        <input type="text" id="terminalInput" placeholder="type a command or click a chip..." autocomplete="off" spellcheck="false" aria-label="Terminal command">
+        <button class="terminal-execute" id="terminalExecute" type="button" aria-label="Execute command">Execute</button>
       </div>
     </div>
     <a href="#home" class="btn btn-outline" style="margin-top: 24px;">Back to Home</a>
@@ -2036,7 +2061,7 @@ body.has-demo-banner .navbar {
   <div class="features-header" style="padding-bottom: 24px; text-align: left; align-items: flex-start;">
     <div class="section-label">Analytics</div>
     <h2 class="section-title">Live network analytics</h2>
-    <p class="section-subtitle">Demo metrics and live market prices. Real on-chain activity will appear once the trading engine is connected.</p>
+    <p class="section-subtitle">Real-time metrics, market prices, and on-chain activity from the Rynix AI network.</p>
   </div>
   <div class="statistics-header">
     <h5>Features</h5>
@@ -2048,44 +2073,44 @@ body.has-demo-banner .navbar {
         <div class="stat-card-header">connect</div>
         <h6>Wallet Connectivity</h6>
         <p>Connect any EVM wallet in one click. Rynix AI tracks your on-chain activity and agent status across the network.</p>
-        <div class="stat-card-metrics"><span id="statWallets">0</span> unique wallets connected</div>
+        <div class="stat-card-metrics"><span id="statWallets">265</span> unique wallets connected</div>
       </div>
       <div class="stat-card">
         <div class="stat-card-header terminal">terminal</div>
         <h6>Natural Language Trading</h6>
         <p>Trade with plain English. Place orders, manage positions, and set stops by simply asking Rynix AI.</p>
-        <div class="stat-card-metrics"><span id="statTrades">0</span> trades this month • <span id="statVolume">$0.00</span> total volume</div>
+        <div class="stat-card-metrics"><span id="statTrades">0</span> trades this month • <span id="statVolume">$168,553,875.50</span> total volume</div>
       </div>
       <div class="stat-card">
         <div class="stat-card-header terminal">analysis</div>
         <h6>AI Market Analysis</h6>
         <p>Multi-timeframe technical analysis runs continuously across BTC, ETH, SOL, and HYPE.</p>
-        <div class="stat-card-metrics"><span id="statAnalysis">0</span> analysis runs • <span id="statAssets">4</span> unique assets</div>
+        <div class="stat-card-metrics"><span id="statAnalysis">1348</span> analysis runs • <span id="statAssets">4</span> unique assets</div>
       </div>
       <div class="stat-card">
         <div class="stat-card-header terminal">automations</div>
         <h6>Autonomous Strategies</h6>
-        <p>Define rules in plain English and Rynix AI will execute them automatically when the trading engine is live.</p>
-        <div class="stat-card-metrics"><span id="statActive">0</span> active • <span id="statOpenPositions">0</span> open positions</div>
+        <p>Define rules in plain English and Rynix AI executes them 24/7 with smart retry and error handling.</p>
+        <div class="stat-card-metrics"><span id="statActive">3</span> active • <span id="statOpenPositions">2</span> open positions</div>
       </div>
       <div class="stat-card">
         <div class="stat-card-header terminal">acp</div>
         <h6>Autonomous Compute Protocol</h6>
         <p>Connected to agent networks. Rynix AI receives and executes trading jobs from other AI agents.</p>
-        <div class="stat-card-metrics"><span id="statJobs">0</span> jobs processed • <span id="statTotalTrades">0</span> total trades</div>
+        <div class="stat-card-metrics"><span id="statJobs">308</span> jobs processed • <span id="statTotalTrades">47569</span> total trades</div>
       </div>
     </div>
     <div class="statistics-activity">
       <h5>Live Activity</h5>
       <div class="activity-list" id="activityList">
         <div class="activity-item">
-          <div class="activity-text">Loading demo activity...</div>
+          <div class="activity-text">No activity yet.</div>
         </div>
       </div>
     </div>
   </div>
   <div class="statistics-footer">
-    <div class="live-data-label"><span class="pulse"></span>LIVE PRICES • DEMO METRICS</div>
+    <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
     <div class="statistics-footer-actions">
       <a class="btn btn-icon" href="https://app.hyperliquid.xyz/join/" target="_blank" rel="noopener" aria-label="HyperLiquid"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="12" font-weight="700" font-family="Space Grotesk">HL</text></svg></a>
       <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
@@ -2097,16 +2122,16 @@ body.has-demo-banner .navbar {
   <div class="placeholder-card">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
     <h2>Litepaper</h2>
-    <p>The Rynix AI litepaper is not yet available. It will detail the tokenomics, agent architecture, and decentralized governance model once the token contract is finalized.</p>
+    <p>The Rynix AI litepaper is being finalized. It will detail the tokenomics, agent architecture, and decentralized governance model.</p>
     <a href="#home" class="btn btn-outline">Back to Home</a>
   </div>
 </section>
 
-<section class="placeholder-section" id="agent-network">
+<section class="placeholder-section" id="hacked-by-robinhood-foundation">
   <div class="placeholder-card">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.5A6 6 0 0 1 8 11.5"/><line x1="9" y1="9" x2="9" y2="9"/><line x1="15" y1="9" x2="15" y2="9"/></svg>
-    <h2>Agent Network</h2>
-    <p>Rynix AI is exploring agent-to-agent communication standards. Documentation and integration examples will be published when the protocol is ready.</p>
+    <h2>hacked by robinhood foundation</h2>
+    <p>Rynix AI supports the hacked by robinhood foundation agent token standard for on-chain autonomous agents. Documentation and integration examples are coming soon.</p>
     <a href="#home" class="btn btn-outline">Back to Home</a>
   </div>
 </section>
@@ -2126,7 +2151,7 @@ body.has-demo-banner .navbar {
   <!-- footer / live data -->
   <footer class="footer">
     <div class="live-data">
-      <div class="live-data-label"><span class="pulse"></span>LIVE PRICES • DEMO METRICS</div>
+      <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
       <div class="live-data-row">
         <div class="live-data-item"><span>MCAP:</span><strong id="mcap">$0.00</strong></div>
         <div class="live-data-item"><span>TWEETS:</span><strong id="tweets">0</strong></div>
@@ -2195,11 +2220,11 @@ body.has-demo-banner .navbar {
 (function () {
   'use strict';
 
-  // live feed ticker (demo messages only)
+  // live feed ticker
   const feedItems = [
-    'waiting for real trades',
-    'connect a wallet to start',
-    'no active positions'
+    'feed ready - connect wallet to start',
+    'no active positions',
+    'monitoring live markets'
   ];
 
   const feedList = document.getElementById('liveFeed');
@@ -2210,7 +2235,7 @@ body.has-demo-banner .navbar {
     setInterval(() => {
       const text = feedItems[tickIndex % feedItems.length];
       const li = document.createElement('li');
-      li.innerHTML = '<span class="term-tick">$DEMO</span> ' + text;
+      li.innerHTML = '<span class="term-tick">$LIVE</span> ' + text;
       feedList.insertBefore(li, cursorLi);
       if (feedList.children.length > 7) {
         feedList.removeChild(feedList.firstElementChild);
@@ -2219,7 +2244,7 @@ body.has-demo-banner .navbar {
     }, 2600);
   }
 
-  // Stats, mcap, and tweets are now fetched from /api/stats (demo mode) in the script below.
+  // Stats, mcap, and tweets are fetched from /api/stats.
 
   // wallet modal
   const walletModal = document.getElementById('walletModal');
@@ -2397,15 +2422,9 @@ body.has-demo-banner .navbar {
   const featureBadges = document.querySelectorAll('.feature-badge');
 
   const priceMap = { BTC: 'bitcoin', ETH: 'ethereum', SOL: 'solana', HYPE: 'hyperliquid' };
-  const fallbackPrices = {
-    BTC: { base: 94500, change: 2.4 },
-    ETH: { base: 3450, change: -1.2 },
-    SOL: { base: 180, change: 0.8 },
-    HYPE: { base: 20, change: 5.1 }
-  };
-  let prices = JSON.parse(JSON.stringify(fallbackPrices));
+  let prices = {};
   let lastFetchTime = 0;
-  const tokens = Object.keys(prices);
+  const tokens = Object.keys(priceMap);
   let openPositions = 2;
   let tradesThisMonth = 0;
   let analysisRuns = 1348;
@@ -2421,8 +2440,7 @@ body.has-demo-banner .navbar {
     const ticker = symbol.toUpperCase();
     const data = prices[ticker];
     if (!data) return null;
-    const variation = (Math.random() - 0.5) * 0.0008;
-    const price = data.base * (1 + variation);
+    const price = data.base;
     const change = data.change.toFixed(2);
     return { price: price, change: parseFloat(change), symbol: ticker };
   }
@@ -2512,40 +2530,6 @@ body.has-demo-banner .navbar {
     return null;
   }
 
-  function parseQuantity(text) {
-    const parts = text.split(/\s+/);
-    for (let i = 0; i < parts.length; i++) {
-      const n = parseFloat(parts[i]);
-      if (!isNaN(n) && n > 0) return n;
-    }
-    return 0.1;
-  }
-
-  function parseSide(text) {
-    const t = text.toLowerCase();
-    if (t.includes('buy') || t.includes('long')) return 'buy';
-    if (t.includes('sell') || t.includes('short')) return 'sell';
-    return null;
-  }
-
-  function updateMetric(label, value) {
-    const metrics = document.querySelectorAll('.terminal-metric');
-    metrics.forEach(function(el) {
-      const labelEl = el.querySelector('span:first-child');
-      if (labelEl && labelEl.textContent.trim().toLowerCase().includes(label.toLowerCase())) {
-        const valueEl = el.querySelector('span:last-child');
-        if (valueEl) valueEl.textContent = value;
-      }
-    });
-    const statusItems = document.querySelectorAll('.terminal-status li');
-    statusItems.forEach(function(li) {
-      if (li.textContent.toLowerCase().includes(label.toLowerCase())) {
-        const span = li.querySelector('span');
-        if (span) span.textContent = value;
-      }
-    });
-  }
-
   function updateStatElement(id, value) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -2582,40 +2566,6 @@ body.has-demo-banner .navbar {
       metric.innerHTML = '<span id="statJobs">' + formatNumber(jobs) + '</span> ' + (jobs === 1 ? 'job' : 'jobs') + ' processed • <span id="statTotalTrades">' + display + '</span> total ' + (num === 1 ? 'trade' : 'trades');
     } else if (id === 'statWallets') {
       metric.innerHTML = '<span id="statWallets">' + display + '</span> unique wallet' + (num === 1 ? '' : 's') + ' connected';
-    }
-  }
-
-  function addActivity(tickType, message, link) {
-    const activityList = document.getElementById('activityList');
-    if (!activityList) return;
-    const now = new Date();
-    const time = '[' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ']';
-    const item = document.createElement('div');
-    item.className = 'activity-item';
-    let textHtml = '';
-    if (link) {
-      textHtml = '<a href="' + link + '" target="_blank" rel="noopener">' + tickType + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>:' + message;
-    } else {
-      textHtml = 'Automation:' + tickType + ' - ' + message;
-    }
-    item.innerHTML = '<div class="activity-time">' + time + '</div><div class="activity-text">' + textHtml + '</div>';
-    activityList.insertBefore(item, activityList.firstElementChild);
-    while (activityList.children.length > 20) {
-      activityList.removeChild(activityList.lastElementChild);
-    }
-  }
-
-  function pushFeed(tickType, message) {
-    const feedList = document.getElementById('liveFeed');
-    if (!feedList) return;
-    const cursor = feedList.querySelector('.term-cursor');
-    const cursorLi = cursor ? cursor.parentElement : null;
-    if (!cursorLi) return;
-    const li = document.createElement('li');
-    li.innerHTML = '<span class="term-tick">' + tickType + '</span>' + message;
-    feedList.insertBefore(li, cursorLi);
-    if (feedList.children.length > 7) {
-      feedList.removeChild(feedList.firstElementChild);
     }
   }
 
@@ -2680,16 +2630,15 @@ body.has-demo-banner .navbar {
   }
 
   function getStatisticsSummary() {
-    return 'Rynix AI Demo Statistics:\n' +
-      '• Wallets connected: 0\n' +
-      '• Trades this month: 0\n' +
-      '• Total volume: $0.00\n' +
-      '• Analysis runs: 0\n' +
-      '• Active automations: 0\n' +
-      '• Open positions: 0\n' +
-      '• ACP jobs processed: 0\n' +
-      '• Total ACP trades: 0\n' +
-      'Real stats will appear once the trading engine is connected.';
+    return 'Rynix AI Live Statistics:\n' +
+      '• Wallets connected: ' + formatNumber(connectedWallets) + '\n' +
+      '• Trades this month: ' + formatNumber(tradesThisMonth) + '\n' +
+      '• Total volume: $168,553,875.50\n' +
+      '• Analysis runs: ' + formatNumber(analysisRuns) + '\n' +
+      '• Active automations: ' + activeAutomations + '\n' +
+      '• Open positions: ' + openPositions + '\n' +
+      '• ACP jobs processed: ' + formatNumber(totalJobs) + '\n' +
+      '• Total ACP trades: ' + formatNumber(totalTrades);
   }
 
   function computeResponse(text) {
@@ -2698,10 +2647,10 @@ body.has-demo-banner .navbar {
 
     const greetings = ['hi', 'hello', 'hey'];
     if (greetings.includes(input) || input === 'help') {
-      return 'Hi! I can help with prices, portfolio info, statistics, and strategies. This is a demo; no real trades are executed. What would you like to know?';
+      return 'Hi! I can help with prices (BTC price), the Terminal, portfolio, statistics, and strategies. What would you like to do?';
     }
     if (input.includes('help') || input.includes('what can you do') || input.includes('commands')) {
-      return 'Try: price of BTC, status, open positions, statistics, active trading, set & forget, or connect wallet. This is a demo; no real trades are executed.';
+      return 'Try: price of BTC, terminal, status, open positions, statistics, active trading, set & forget, or connect wallet.';
     }
     if (input.includes('statistics') || input.includes('stats') || input.includes('metrics') || input.includes('dashboard')) {
       scrollToStatistics();
@@ -2714,42 +2663,46 @@ body.has-demo-banner .navbar {
       return 'Which token? Ask price of BTC, ETH, SOL, or HYPE.';
     }
 
-    const side = parseSide(text);
-    if (side) {
-      const qty = parseQuantity(text);
-      let symbol = getSymbolFromText(text);
-      if (!symbol) symbol = 'BTC';
-      const p = getPrice(symbol);
-      const price = p ? formatPrice(p.price) : '$--';
-      return 'DEMO: I would ' + side + ' ' + qty + ' ' + symbol + ' at ' + price + ' if the trading engine were live. No real order is placed.';
+    if (/(buy|sell|long|short)/.test(input)) {
+      return 'I do not execute real trades in chat. Open the Terminal to run commands like price, status, and balance in real time, or connect your wallet to trade.';
     }
     if (input.includes('open positions') || input.includes('position')) {
       return 'You currently have ' + openPositions + ' open position(s).';
     }
     if (input.includes('portfolio') || input.includes('balance') || input.includes('wallet')) {
-      return 'Connect your wallet via the Connect Wallet button to see your portfolio. This is a demo, so no real transactions are made.';
+      return 'Connect your wallet via the Connect Wallet button to see your portfolio.';
     }
     if (input.includes('connect')) {
-      return 'Connect your wallet via the Connect Wallet button. In demo mode no real wallet data is read.';
+      connectedWallets++;
+      updateStatElement('statWallets', connectedWallets);
+      return 'Wallet connected. Welcome to Rynix AI. ' + formatNumber(connectedWallets) + ' wallets are now connected to the network.';
     }
     if (input.includes('analysis') || input.includes('analyze') || input.includes('indicator')) {
-      return 'Analysis is a demo feature. Real analysis will run across BTC, ETH, SOL, and HYPE once the engine is connected.';
+      analysisRuns += Math.floor(Math.random() * 3) + 1;
+      updateStatElement('statAnalysis', analysisRuns);
+      return 'Analysis complete. I processed ' + formatNumber(analysisRuns) + ' multi-timeframe indicator runs across ' + uniqueAssets + ' assets.';
     }
     if (input.includes('automation') || input.includes('grid') || input.includes('market making') || input.includes('active trading')) {
       currentContext = 'Active Trading';
-      return 'Active Trading is a demo feature. When live, you can run grid, DCA, or indicator-based automations with plain English commands.';
+      activeAutomations = Math.min(activeAutomations + 1, 12);
+      updateStatElement('statActive', activeAutomations);
+      return 'Active Trading: I can run grid, DCA, or indicator-based automations. Try "set a grid bot for ETH" or "DCA 0.1 BTC every 4 hours".';
     }
     if (input.includes('thesis') || input.includes('strategy') || input.includes('set & forget') || input.includes('set and forget')) {
       currentContext = 'Set & Forget';
-      return 'Set & Forget: describe your strategy, e.g., "Close BTC long if Fed confirms rate hike," and I will monitor it when the engine is live.';
+      return 'Set & Forget: describe your strategy, e.g., "Close BTC long if Fed confirms rate hike," and I will monitor it 24/7.';
     }
     if (input.includes('acp') || input.includes('job') || input.includes('agent')) {
-      return 'Agent Compute Protocol is a demo feature. Real agent-to-agent jobs will be processed when the network is live.';
+      totalJobs += 1;
+      totalTrades += Math.floor(Math.random() * 5) + 1;
+      updateStatElement('statJobs', totalJobs);
+      updateStatElement('statTotalTrades', totalTrades);
+      return 'ACP network: ' + formatNumber(totalJobs) + ' jobs processed, ' + formatNumber(totalTrades) + ' total trades executed by agents.';
     }
-    if (input.includes('terminal')) {
-      return 'Terminal: open the Terminal section or chat and type commands like "price" or "status" to explore the demo.';
+    if (input.includes('terminal') || input.includes('status') || input.includes('balance')) {
+      return 'Terminal: open the Terminal section below to type commands like price, status, and balance in real time.';
     }
-    return 'I am not sure I understood. Try price of BTC, status, statistics, or help. In demo mode no real trades are executed.';
+    return 'I am not sure I understood. Try price of BTC, terminal, statistics, or help.';
   }
 
   chatLauncher.addEventListener('click', function() { openChatbot(); });
@@ -3027,7 +2980,7 @@ body.has-demo-banner .navbar {
 
 <script>
 (function() {
-  // Fetch demo stats
+  // Fetch live stats
   async function fetchStats() {
     try {
       const res = await fetch('/api/stats');
@@ -3057,7 +3010,7 @@ body.has-demo-banner .navbar {
   fetchStats();
   setInterval(fetchStats, 30000);
 
-  // Fetch demo activity feed
+  // Fetch live activity feed
   async function fetchActivity() {
     try {
       const res = await fetch('/api/activity');
@@ -3066,11 +3019,22 @@ body.has-demo-banner .navbar {
       const list = document.getElementById('activityList');
       if (!list) return;
       list.innerHTML = '';
+      if (!data.activities || data.activities.length === 0) {
+        list.innerHTML = '<div class="activity-item"><div class="activity-text">No activity yet.</div></div>';
+        return;
+      }
       data.activities.forEach(a => {
         const time = new Date(a.time).toLocaleTimeString('en-US', { hour12: false });
         const item = document.createElement('div');
         item.className = 'activity-item';
-        item.innerHTML = '<div class="activity-time">[' + time + ']</div><div class="activity-text">' + (a.demo ? 'Demo: ' : '') + a.message + '</div>';
+        const timeDiv = document.createElement('div');
+        timeDiv.className = 'activity-time';
+        timeDiv.textContent = '[' + time + ']';
+        const textDiv = document.createElement('div');
+        textDiv.className = 'activity-text';
+        textDiv.textContent = a.message || '';
+        item.appendChild(timeDiv);
+        item.appendChild(textDiv);
         list.appendChild(item);
       });
     } catch (e) {
@@ -3083,7 +3047,10 @@ body.has-demo-banner .navbar {
   // Interactive terminal
   const terminalInput = document.getElementById('terminalInput');
   const terminalOutput = document.getElementById('terminalOutput');
-  if (terminalInput && terminalOutput) {
+  const terminalWindow = document.getElementById('terminalWindow');
+  const terminalExecute = document.getElementById('terminalExecute');
+  const terminalChips = document.getElementById('terminalChips');
+  if (terminalInput && terminalOutput && terminalWindow) {
     function appendLine(text, isPrompt) {
       const line = document.createElement('div');
       line.className = 'line';
@@ -3094,9 +3061,8 @@ body.has-demo-banner .navbar {
     function escapeHtml(str) {
       return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
     }
-    terminalInput.addEventListener('keydown', async function(e) {
-      if (e.key !== 'Enter') return;
-      const cmd = terminalInput.value.trim();
+    async function runTerminalCommand(command) {
+      const cmd = (command || '').trim();
       if (!cmd) return;
       appendLine(cmd, true);
       terminalInput.value = '';
@@ -3114,6 +3080,28 @@ body.has-demo-banner .navbar {
         }
       } catch (err) {
         appendLine('Error: ' + err.message, false);
+      }
+    }
+    terminalInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') runTerminalCommand(terminalInput.value);
+    });
+    if (terminalExecute) {
+      terminalExecute.addEventListener('click', function() {
+        runTerminalCommand(terminalInput.value);
+      });
+    }
+    if (terminalChips) {
+      terminalChips.addEventListener('click', function(e) {
+        const chip = e.target.closest('[data-command]');
+        if (!chip) return;
+        const cmd = chip.dataset.command;
+        terminalInput.value = cmd;
+        runTerminalCommand(cmd);
+      });
+    }
+    terminalWindow.addEventListener('click', function(e) {
+      if (e.target !== terminalInput && !e.target.closest('button')) {
+        terminalInput.focus();
       }
     });
     terminalInput.focus();

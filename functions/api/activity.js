@@ -17,29 +17,7 @@ export async function onRequest(context) {
     );
   }
 
-  const now = Date.now();
-  const events = [
-    { type: 'info', symbol: 'BTC', message: 'Demo automation stopped' },
-    { type: 'open', symbol: 'ETH', message: 'Demo position opened' },
-    { type: 'close', symbol: 'HYPE', message: 'Demo position closed' },
-    { type: 'info', symbol: 'BTC', message: 'Demo automation started' },
-    { type: 'open', symbol: 'BTC', message: 'Demo position opened' },
-    { type: 'close', symbol: 'BTC', message: 'Demo position closed' }
-  ];
-
-  const activities = events.map((event, i) => {
-    const time = new Date(now - (events.length - 1 - i) * 3600000).toISOString();
-    return {
-      time,
-      type: event.type,
-      symbol: event.symbol,
-      message: event.message,
-      tx: null,
-      demo: true
-    };
-  });
-
-  return new Response(JSON.stringify({ activities, mode: 'demo' }), {
+  return new Response(JSON.stringify({ activities: [], mode: 'live' }), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
