@@ -499,7 +499,7 @@
         totalTrades++;
         analysisRuns++;
         updateMetric('open positions', openPositions);
-        updateMetric('trades this month', tradesThisMonth);
+        updateMetric('trades_this_month', tradesThisMonth);
         updateStatElement('statTrades', tradesThisMonth);
         updateStatElement('statOpenPositions', openPositions);
         updateStatElement('statAnalysis', analysisRuns);
@@ -517,7 +517,7 @@
         totalTrades++;
         analysisRuns++;
         updateMetric('open positions', openPositions);
-        updateMetric('trades this month', tradesThisMonth);
+        updateMetric('trades_this_month', tradesThisMonth);
         updateStatElement('statTrades', tradesThisMonth);
         updateStatElement('statOpenPositions', openPositions);
         updateStatElement('statAnalysis', analysisRuns);
