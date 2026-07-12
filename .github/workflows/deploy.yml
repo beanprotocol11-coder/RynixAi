@@ -12,6 +12,8 @@ jobs:
     permissions:
       contents: read
       deployments: write
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 5d03731e12b93ff46e23c27165d1421c
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,5 +22,4 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy . --project-name rynixai --branch main
