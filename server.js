@@ -162,8 +162,8 @@ app.get('/api/stats', (req, res) => {
     active: 3,
     open_positions: 2,
     jobs_processed: 308,
-    mcap: 0,
-    tweets: 0,
+    mcap: 122326.13,
+    tweets: 1934,
     updated_at: new Date().toISOString()
   });
 });
