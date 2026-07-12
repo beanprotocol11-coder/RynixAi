@@ -316,12 +316,42 @@ body {
    -------------------------------------------------------------------------- */
 
 .hero {
-  padding: 80px 32px 100px;
-  max-width: var(--max-width);
-  margin: 0 auto;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding: 100px 32px 120px;
+  background: #000;
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 0;
+  background: #000;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.78) 100%),
+    radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.7) 80%);
 }
 
 .hero-grid {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 56px;
@@ -360,6 +390,7 @@ body {
   margin: 0;
   letter-spacing: -0.03em;
   color: var(--text);
+  text-shadow: 0 4px 30px rgba(0,0,0,0.85);
 }
 
 .hero-title .accent {
@@ -369,10 +400,11 @@ body {
 
 .hero-tagline {
   font-size: clamp(1.15rem, 2.2vw, 1.6rem);
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.85);
   margin: 0;
   font-weight: 400;
   max-width: 560px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.8);
 }
 
 .hero-actions {
@@ -429,6 +461,15 @@ body {
   padding: 16px 20px;
   background: rgba(255,255,255,0.03);
   border-bottom: 1px solid var(--border-2);
+}
+
+.terminal-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  margin-left: auto;
+  object-fit: cover;
+  animation: logo3d 6s ease-in-out infinite;
 }
 
 .terminal-dots {
@@ -531,6 +572,13 @@ body {
 @keyframes pulseText {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
+}
+
+@keyframes logo3d {
+  0%, 100% { transform: perspective(600px) rotateY(0deg) scale(1); }
+  25% { transform: perspective(600px) rotateY(12deg) scale(1.05); }
+  50% { transform: perspective(600px) rotateY(0deg) scale(1); }
+  75% { transform: perspective(600px) rotateY(-12deg) scale(1.05); }
 }
 
 .terminal-metric {
@@ -1425,6 +1473,14 @@ body {
   gap: 10px;
 }
 
+.chatbot-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  object-fit: cover;
+  animation: logo3d 6s ease-in-out infinite;
+}
+
 .chatbot-header .status-dot {
   width: 8px;
   height: 8px;
@@ -1716,12 +1772,15 @@ body {
   <main>
     <!-- hero -->
     <section class="hero" id="home">
+      <video class="hero-video" src="assets/hero-video.mp4" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+      <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-grid">
         <!-- terminal card -->
         <div class="terminal-card">
           <div class="terminal-header">
             <div class="terminal-dots"><span></span><span></span><span></span></div>
             <div class="terminal-title">C:\RynixAI\live_feed</div>
+            <img class="terminal-logo" src="logo.png" alt="Rynix AI" width="22" height="22">
           </div>
           <div class="terminal-body">
             <div class="terminal-col">
@@ -2289,7 +2348,7 @@ body {
 
 <div class='chatbot-window' id='chatbotWindow' aria-hidden='true' role='dialog' aria-label='Rynix AI Chat'>
   <div class='chatbot-header'>
-    <h3><span class='status-dot'></span>Rynix AI Chat</h3>
+    <h3><img class='chatbot-logo' src='logo.png' alt='Rynix AI' width='26' height='26'><span class='status-dot'></span>Rynix AI Chat</h3>
     <button class='chatbot-close' id='chatbotClose' aria-label='Close chat'>&times;</button>
   </div>
   <div class='chatbot-messages' id='chatbotMessages'></div>
@@ -2303,7 +2362,10 @@ body {
   </form>
 </div>
 
-<script>
+<!-- chatbot moved to external scripts -->
+<script src="chatbot-locales.js"></script>
+<script src="chatbot.js"></script>
+<!--
 (function() {
   'use strict';
 
@@ -2734,7 +2796,7 @@ body {
   fetchPrices();
   setInterval(fetchPrices, 60000);
 })();
-</script>
+-->
 
 <script>
 (function () {
