@@ -47,7 +47,7 @@ async function fetchHyperliquidPrices() {
     const result = {};
 
     for (const symbol of HYPERLIQUID_SYMBOLS) {
-      if (data[symbol] && typeof data[symbol] === 'string' || typeof data[symbol] === 'number') {
+      if (data[symbol] && (typeof data[symbol] === 'string' || typeof data[symbol] === 'number')) {
         const price = parseFloat(data[symbol]);
         if (isValidPrice(price)) {
           result[symbol] = { price: price };
