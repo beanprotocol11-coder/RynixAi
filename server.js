@@ -28,6 +28,10 @@ const CACHE_TTL = 60 * 1000; // 60 seconds
 
 app.use(express.static(path.join(__dirname)));
 
+app.get('/statistics', (req, res) => {
+  res.sendFile(path.join(__dirname, 'statistics.html'));
+});
+
 function getKrakenResult(data) {
   const result = {};
   for (const [symbol, config] of Object.entries(priceSources)) {

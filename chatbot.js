@@ -412,8 +412,7 @@
   }
 
   function scrollToStatistics() {
-    const stats = document.getElementById('statistics');
-    if (stats) stats.scrollIntoView({ behavior: 'smooth' });
+    window.location.assign('/statistics');
   }
 
   function getStatisticsSummary() {
@@ -553,9 +552,8 @@
       return t(lang, 'portfolio');
     }
     if (_has('connect')) {
-      connectedWallets++;
-      updateStatElement('statWallets', connectedWallets);
-      return t(lang, 'connect', { n: connectedWallets });
+      document.dispatchEvent(new CustomEvent('rynix:open-wallet-modal'));
+      return t(lang, 'connectPrompt');
     }
     if (_has('analysis')) {
       analysisRuns += Math.floor(Math.random() * 3) + 1;
@@ -631,6 +629,12 @@
     isRestoring = false;
     chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
   }
+
+  window.RynixAI = {
+    ask: computeResponse,
+    openChat: openChatbot,
+    openStatistics: scrollToStatistics
+  };
 
   chatLauncher.addEventListener('click', function () { openChatbot(); });
   chatbotClose.addEventListener('click', closeChatbot);

@@ -954,6 +954,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 100px 32px;
+  scroll-margin-top: 84px;
 }
 
 .statistics-header {
@@ -1503,6 +1504,30 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   border-color: var(--accent);
 }
 
+.wallet-option-copy {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.wallet-option-copy small {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+}
+
+.wallet-option.detected {
+  border-color: rgba(204,255,0,0.45);
+}
+
+.wallet-option.detected .wallet-option-copy small {
+  color: var(--accent);
+}
+
 .wallet-option img {
   width: 30px;
   height: 30px;
@@ -1510,6 +1535,47 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   object-fit: contain;
   background: #ffffff;
   padding: 2px;
+}
+
+.wallet-status {
+  display: none;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: -8px 0 18px;
+  padding: 12px 14px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.wallet-status.visible {
+  display: flex;
+}
+
+.wallet-status.success {
+  color: var(--accent);
+  border-color: rgba(204,255,0,0.4);
+}
+
+.wallet-status.error {
+  color: #ff8a8a;
+  border-color: rgba(255,96,96,0.35);
+}
+
+.wallet-status a {
+  flex: 0 0 auto;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -2125,6 +2191,16 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     max-height: 100%;
     border-radius: 0;
   }
+  .modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-content {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    border-radius: 22px 22px 0 0;
+    padding: 28px 20px 24px;
+  }
 }
 
 </style>
@@ -2139,7 +2215,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     <nav class="nav-links">
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
-      <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
+      <a href="/statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
       <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>Robinhood Chain</a>
     </nav>
@@ -2374,6 +2450,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     <div class="section-label">Analytics</div>
     <h2 class="section-title">Live network analytics</h2>
     <p class="section-subtitle">Real-time metrics, market prices, and on-chain activity from the Rynix AI network.</p>
+    <a class="btn btn-primary btn-sm" href="/statistics">Open statistics page</a>
   </div>
   <div class="statistics-header">
     <h5>Features</h5>
@@ -2543,43 +2620,47 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     <div class="modal-content">
       <button class="modal-close" aria-label="Close">&times;</button>
       <h3 id="walletModalTitle">Connect Wallet</h3>
-      <p>Choose a wallet to connect to Rynix AI.</p>
+      <p>Choose a wallet. On mobile, Rynix opens the wallet's secure in-app browser.</p>
+      <div class="wallet-status" id="walletStatus" role="status" aria-live="polite">
+        <span id="walletStatusText"></span>
+        <a id="walletStatusAction" href="#" target="_blank" rel="noopener">Open wallet</a>
+      </div>
       <div class="wallet-options">
         <button class="wallet-option" data-wallet="brave">
-          <img src="https://api.iconify.design/mdi/shield-check.svg?color=%23ff6600" alt="Brave Wallet" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>Brave Wallet</span>
+          <img src="assets/wallets/brave.svg" alt="Brave Wallet" width="28" height="28">
+          <span class="wallet-option-copy"><span>Brave Wallet</span><small>Built into Brave</small></span>
         </button>
         <button class="wallet-option" data-wallet="metamask">
-          <img src="https://api.iconify.design/token-branded/metamask.svg" alt="MetaMask" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>MetaMask</span>
+          <img src="assets/wallets/metamask.svg" alt="MetaMask" width="28" height="28">
+          <span class="wallet-option-copy"><span>MetaMask</span><small>Extension or mobile app</small></span>
         </button>
         <button class="wallet-option" data-wallet="bitget">
-          <img src="https://api.iconify.design/token-branded/bitget.svg" alt="Bitget Wallet" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>Bitget Wallet</span>
+          <img src="assets/wallets/bitget.svg" alt="Bitget Wallet" width="28" height="28">
+          <span class="wallet-option-copy"><span>Bitget Wallet</span><small>Extension or mobile app</small></span>
         </button>
         <button class="wallet-option" data-wallet="coinbase">
-          <img src="https://api.iconify.design/token-branded/coinbase.svg" alt="Coinbase Wallet" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>Coinbase Wallet</span>
+          <img src="assets/wallets/coinbase.svg" alt="Coinbase Wallet" width="28" height="28">
+          <span class="wallet-option-copy"><span>Coinbase Wallet</span><small>Extension or mobile app</small></span>
         </button>
         <button class="wallet-option" data-wallet="trust">
-          <img src="https://api.iconify.design/token-branded/trust.svg" alt="Trust Wallet" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>Trust Wallet</span>
+          <img src="assets/wallets/trust.svg" alt="Trust Wallet" width="28" height="28">
+          <span class="wallet-option-copy"><span>Trust Wallet</span><small>Extension or mobile app</small></span>
         </button>
         <button class="wallet-option" data-wallet="tokenpocket">
-          <img src="https://api.iconify.design/token-branded/token-pocket.svg" alt="TokenPocket" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>TokenPocket</span>
+          <img src="assets/wallets/tokenpocket.svg" alt="TokenPocket" width="28" height="28">
+          <span class="wallet-option-copy"><span>TokenPocket</span><small>Extension or mobile app</small></span>
         </button>
         <button class="wallet-option" data-wallet="okx">
-          <img src="https://api.iconify.design/token-branded/okx.svg" alt="OKX Wallet" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>OKX Wallet</span>
+          <img src="assets/wallets/okx.svg" alt="OKX Wallet" width="28" height="28">
+          <span class="wallet-option-copy"><span>OKX Wallet</span><small>Extension or mobile app</small></span>
         </button>
         <button class="wallet-option" data-wallet="phantom">
-          <img src="https://api.iconify.design/token-branded/phantom.svg" alt="Phantom" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>Phantom</span>
+          <img src="assets/wallets/phantom.svg" alt="Phantom" width="28" height="28">
+          <span class="wallet-option-copy"><span>Phantom</span><small>Multichain EVM wallet</small></span>
         </button>
         <button class="wallet-option" data-wallet="walletconnect">
-          <img src="https://api.iconify.design/token-branded/wallet-connect.svg" alt="WalletConnect" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
-          <span>WalletConnect</span>
+          <img src="assets/wallets/walletconnect.svg" alt="WalletConnect" width="28" height="28">
+          <span class="wallet-option-copy"><span>WalletConnect</span><small>Choose a compatible wallet</small></span>
         </button>
       </div>
     </div>
@@ -2651,13 +2732,28 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
   // wallet modal
   const walletModal = document.getElementById('walletModal');
+  const walletStatus = document.getElementById('walletStatus');
+  const walletStatusText = document.getElementById('walletStatusText');
+  const walletStatusAction = document.getElementById('walletStatusAction');
   const connectButtons = [document.getElementById('connectWalletNav'), document.getElementById('connectWalletHero')];
+  const announcedProviders = [];
+  const isMobileWalletBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  window.addEventListener('eip6963:announceProvider', event => {
+    const detail = event.detail;
+    if (!detail || !detail.provider || announcedProviders.some(item => item.provider === detail.provider)) return;
+    announcedProviders.push(detail);
+    updateDetectedWallets();
+  });
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
 
   function openModal() {
     if (!walletModal) return;
     walletModal.classList.add('open');
     walletModal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    hideWalletStatus();
+    updateDetectedWallets();
   }
 
   function closeModal() {
@@ -2669,6 +2765,89 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
   function truncateAddress(addr) {
     return addr.slice(0, 6) + '...' + addr.slice(-4);
+  }
+
+  function showWalletStatus(message, type, action) {
+    if (!walletStatus || !walletStatusText || !walletStatusAction) return;
+    walletStatusText.textContent = message;
+    walletStatus.className = 'wallet-status visible' + (type ? ' ' + type : '');
+    if (action && action.href) {
+      walletStatusAction.href = action.href;
+      walletStatusAction.textContent = action.label || 'Open wallet';
+      walletStatusAction.style.display = '';
+    } else {
+      walletStatusAction.style.display = 'none';
+    }
+  }
+
+  function hideWalletStatus() {
+    if (!walletStatus) return;
+    walletStatus.className = 'wallet-status';
+  }
+
+  function normalizeProvider(candidate) {
+    if (!candidate) return null;
+    if (candidate.ethereum && typeof candidate.ethereum.request === 'function') return candidate.ethereum;
+    return typeof candidate.request === 'function' ? candidate : null;
+  }
+
+  function getInjectedProviders() {
+    const providers = announcedProviders.slice();
+    const legacy = window.ethereum && Array.isArray(window.ethereum.providers)
+      ? window.ethereum.providers
+      : [window.ethereum];
+    legacy.concat([
+      window.braveEthereum,
+      window.bitgetWallet,
+      window.coinbaseWalletExtension,
+      window.trustwallet,
+      window.tokenpocket,
+      window.okxwallet,
+      window.phantom && window.phantom.ethereum
+    ]).forEach(provider => {
+      const normalized = normalizeProvider(provider);
+      if (normalized && !providers.some(item => item.provider === normalized)) {
+        providers.push({ provider: normalized, info: {} });
+      }
+    });
+    return providers;
+  }
+
+  function providerMatches(walletId, entry) {
+    const provider = entry.provider;
+    const info = entry.info || {};
+    const identity = ((info.rdns || '') + ' ' + (info.name || '')).toLowerCase();
+    const otherWallet = provider.isBraveWallet || provider.isBitKeep || provider.isBitgetWallet ||
+      provider.isCoinbaseWallet || provider.isTrust || provider.isTrustWallet ||
+      provider.isTokenPocket || provider.isOKExWallet || provider.isOKXWallet || provider.isPhantom;
+    if (walletId === 'brave') return provider.isBraveWallet || identity.includes('brave');
+    if (walletId === 'metamask') return (provider.isMetaMask || identity.includes('metamask')) && !otherWallet;
+    if (walletId === 'bitget') return provider.isBitKeep || provider.isBitgetWallet || identity.includes('bitget') || identity.includes('bitkeep');
+    if (walletId === 'coinbase') return provider.isCoinbaseWallet || identity.includes('coinbase');
+    if (walletId === 'trust') return provider.isTrust || provider.isTrustWallet || identity.includes('trust');
+    if (walletId === 'tokenpocket') return provider.isTokenPocket || identity.includes('tokenpocket') || identity.includes('token pocket');
+    if (walletId === 'okx') return provider.isOKExWallet || provider.isOKXWallet || identity.includes('okx') || identity.includes('okex');
+    if (walletId === 'phantom') return provider.isPhantom || identity.includes('phantom');
+    return false;
+  }
+
+  function getWalletProvider(walletId) {
+    const providers = getInjectedProviders();
+    if (walletId === 'walletconnect') return null;
+    const match = providers.find(entry => providerMatches(walletId, entry));
+    if (match) return match.provider;
+    if (walletId === 'brave' && navigator.brave && window.ethereum) return normalizeProvider(window.braveEthereum || window.ethereum);
+    return null;
+  }
+
+  function updateDetectedWallets() {
+    if (!walletModal) return;
+    walletModal.querySelectorAll('.wallet-option').forEach(option => {
+      const provider = getWalletProvider(option.dataset.wallet);
+      option.classList.toggle('detected', Boolean(provider));
+      const status = option.querySelector('small');
+      if (provider && status) status.textContent = 'Detected — tap to connect';
+    });
   }
 
   async function callWalletBackend(type, address) {
@@ -2708,40 +2887,85 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   }
 
   async function connectWallet(walletId) {
+    const dappUrl = window.location.origin + window.location.pathname;
+    const encodedDappUrl = encodeURIComponent(dappUrl);
+    const tokenPocketParams = encodeURIComponent(JSON.stringify({ url: dappUrl, chain: 'ETH', source: 'Rynix AI' }));
     const walletConfig = {
-      brave: { name: 'Brave Wallet', install: 'https://brave.com/wallet/', provider: () => (window.ethereum && window.ethereum.isBraveWallet ? window.ethereum : null) },
-      metamask: { name: 'MetaMask', install: 'https://metamask.io/download/', provider: () => (window.ethereum && !window.ethereum.isBraveWallet ? window.ethereum : null) },
-      bitget: { name: 'Bitget Wallet', install: 'https://web3.bitget.com/en/wallet/download', provider: () => (window.bitgetWallet && window.bitgetWallet.ethereum) || window.bitgetWallet || (window.ethereum && window.ethereum.isBitgetWallet && window.ethereum) },
-      coinbase: { name: 'Coinbase Wallet', install: 'https://www.coinbase.com/wallet/downloads', provider: () => window.coinbaseWalletExtension || (window.ethereum && window.ethereum.isCoinbaseWallet && window.ethereum) },
-      trust: { name: 'Trust Wallet', install: 'https://trustwallet.com/download', provider: () => window.trustwallet || (window.ethereum && window.ethereum.isTrustWallet && window.ethereum) },
-      tokenpocket: { name: 'TokenPocket', install: 'https://www.tokenpocket.pro/en/download/app', provider: () => window.tokenpocket || (window.ethereum && window.ethereum.isTokenPocket && window.ethereum) },
-      okx: { name: 'OKX Wallet', install: 'https://www.okx.com/web3', provider: () => window.okxwallet || (window.ethereum && (window.ethereum.isOKExWallet || window.ethereum.isOKXWallet) && window.ethereum) },
-      phantom: { name: 'Phantom', install: 'https://phantom.app/download', provider: () => (window.phantom && window.phantom.ethereum) || (window.ethereum && window.ethereum.isPhantom && window.ethereum) },
-      walletconnect: { name: 'WalletConnect', install: 'https://walletconnect.com/', provider: () => null }
+      brave: {
+        name: 'Brave Wallet',
+        install: 'https://brave.com/wallet/',
+        mobile: 'https://brave.com/wallet/',
+        missing: 'Brave Wallet is not active. Enable it from Brave menu → Wallet, then return and tap again.'
+      },
+      metamask: {
+        name: 'MetaMask',
+        install: 'https://metamask.io/download/',
+        mobile: 'https://link.metamask.io/dapp/' + window.location.host + window.location.pathname
+      },
+      bitget: {
+        name: 'Bitget Wallet',
+        install: 'https://web3.bitget.com/en/wallet-download',
+        mobile: 'https://bkcode.vip?version=1.0&action=DApp&actionID=' + Date.now() + '&dappName=Rynix%20AI&url=' + encodedDappUrl
+      },
+      coinbase: {
+        name: 'Coinbase Wallet',
+        install: 'https://www.coinbase.com/wallet/downloads',
+        mobile: 'https://go.cb-w.com/dapp?cb_url=' + encodedDappUrl
+      },
+      trust: {
+        name: 'Trust Wallet',
+        install: 'https://trustwallet.com/download',
+        mobile: 'https://link.trustwallet.com/open_url?coin_id=60&url=' + encodedDappUrl
+      },
+      tokenpocket: {
+        name: 'TokenPocket',
+        install: 'https://www.tokenpocket.pro/en/download/app',
+        mobile: 'tpdapp://open?params=' + tokenPocketParams
+      },
+      okx: {
+        name: 'OKX Wallet',
+        install: 'https://www.okx.com/download',
+        mobile: 'okx://wallet/dapp/url?dappUrl=' + encodedDappUrl
+      },
+      phantom: {
+        name: 'Phantom',
+        install: 'https://phantom.com/download',
+        mobile: 'https://phantom.app/ul/browse/' + encodedDappUrl + '?ref=' + encodeURIComponent(window.location.origin)
+      },
+      walletconnect: {
+        name: 'WalletConnect',
+        install: 'https://walletconnect.com/explorer?type=wallet',
+        mobile: 'https://walletconnect.com/explorer?type=wallet',
+        missing: 'Choose a WalletConnect-compatible wallet, then open Rynix AI from its dapp browser.'
+      }
     };
 
     const config = walletConfig[walletId];
     if (!config) return;
 
-    if (walletId === 'walletconnect') {
-      window.open(config.install, '_blank', 'noopener,noreferrer');
-      closeModal();
+    const provider = getWalletProvider(walletId);
+    if (walletId === 'walletconnect' && !provider) {
+      showWalletStatus(config.missing, '', { href: config.mobile, label: 'Choose wallet' });
+      window.open(config.mobile, '_blank', 'noopener,noreferrer');
       return;
     }
 
-    const provider = config.provider();
     if (!provider) {
-      if (config.install) {
-        const proceed = confirm(`${config.name} is not detected. Open the install page?`);
-        if (proceed) window.open(config.install, '_blank', 'noopener,noreferrer');
-      } else {
-        alert(`${config.name} is not detected. Please install the extension.`);
+      const target = isMobileWalletBrowser ? config.mobile : config.install;
+      const label = isMobileWalletBrowser ? 'Open app' : 'Install';
+      showWalletStatus(
+        config.missing || (config.name + ' is not detected. Open the wallet, then connect from its secure dapp browser.'),
+        '',
+        { href: target, label: label }
+      );
+      if (isMobileWalletBrowser && target) {
+        window.location.href = target;
       }
-      closeModal();
       return;
     }
 
     try {
+      showWalletStatus('Waiting for approval in ' + config.name + '…');
       const accounts = await provider.request({ method: 'eth_requestAccounts' });
       const address = accounts[0];
       if (!address) throw new Error('No account returned');
@@ -2751,10 +2975,15 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
       updateWalletUI(address, config.name);
       persistWallet(walletId, address, config.name);
-      closeModal();
+      showWalletStatus(config.name + ' connected: ' + truncateAddress(address), 'success');
+      setTimeout(closeModal, 900);
     } catch (err) {
       console.error(`${config.name} connection error:`, err);
-      alert(`Could not connect to ${config.name}. ${err.message || ''}`);
+      const rejected = err && (err.code === 4001 || /reject|denied|cancel/i.test(err.message || ''));
+      showWalletStatus(
+        rejected ? 'Connection request was cancelled.' : ('Could not connect to ' + config.name + '. ' + (err.message || 'Try again.')),
+        'error'
+      );
     }
   }
 
@@ -2777,6 +3006,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       });
     });
   }
+  document.addEventListener('rynix:open-wallet-modal', openModal);
 
   // mobile menu
   const menuBtn = document.querySelector('.mobile-menu-btn');
@@ -2807,15 +3037,15 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
   }
 
-  function runTerminalCommand(rawCommand) {
+  async function runTerminalCommand(rawCommand) {
     const command = rawCommand.trim().toLowerCase();
     if (!command) return;
-    appendTerminalLine('$ ' + command, 'command');
+    appendTerminalLine('$ ' + rawCommand.trim(), 'command');
 
     if (command === 'clear') {
       terminalOutput.textContent = '';
     } else if (command === 'help') {
-      appendTerminalLine('Commands: status, market, statistics, automations, hyperliquid, chat, home, clear');
+      appendTerminalLine('Commands: status, market, statistics, wallet, automations, hyperliquid, chat, home, clear. You can also ask in natural language.');
     } else if (command === 'status') {
       appendTerminalLine('Hyperliquid: OK | automations: ACTIVE | monitoring: LIVE | verification: ANCHORED');
     } else if (command === 'market') {
@@ -2826,9 +3056,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         return symbol + ' ' + (price ? price.textContent : '$--') + ' ' + (change ? change.textContent : '--');
       }).join(' | ');
       appendTerminalLine(summary);
-    } else if (command === 'statistics') {
-      document.getElementById('statistics').scrollIntoView({ behavior: 'smooth' });
-      appendTerminalLine('Opening live network analytics...');
+    } else if (command === 'statistics' || command === 'stats' || command === 'statistik') {
+      appendTerminalLine('Opening the Rynix AI statistics page...');
+      window.location.assign('/statistics');
     } else if (command === 'automations') {
       appendTerminalLine('3 automations active | 2 open positions | monitoring 24/7');
     } else if (command === 'hyperliquid') {
@@ -2836,13 +3066,22 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       window.open('https://app.hyperliquid.xyz/trade', '_blank', 'noopener,noreferrer');
     } else if (command === 'chat') {
       appendTerminalLine('Opening Rynix AI command assistant...');
-      const launcher = document.getElementById('chatLauncher');
-      if (launcher) launcher.click();
+      if (window.RynixAI && window.RynixAI.openChat) window.RynixAI.openChat();
+      else {
+        const launcher = document.getElementById('chatLauncher');
+        if (launcher) launcher.click();
+      }
+    } else if (command === 'wallet' || command === 'connect' || command === 'connect wallet') {
+      appendTerminalLine('Choose a wallet to connect securely.');
+      openModal();
     } else if (command === 'home') {
       document.getElementById('home').scrollIntoView({ behavior: 'smooth' });
       appendTerminalLine('Returning to Rynix AI home...');
+    } else if (window.RynixAI && typeof window.RynixAI.ask === 'function') {
+      const response = await Promise.resolve(window.RynixAI.ask(rawCommand.trim()));
+      appendTerminalLine(response || 'Command completed.');
     } else {
-      appendTerminalLine('Unknown command. Type "help" for available commands.');
+      appendTerminalLine('Rynix AI is still loading. Please run the command again.');
     }
   }
 
