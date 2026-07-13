@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rynix AI | Live Terminal</title>
+  <meta name="description" content="Rynix AI live terminal — real-time market data, automations, and command-line trading.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo.png">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-2: #050505;
+      --surface: #0a0a0a;
+      --surface-2: #0f0f0f;
+      --border: #1a1a1a;
+      --border-2: #262626;
+      --border-3: #333333;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --text-dim: #555555;
+      --accent: #ccff00;
+      --accent-2: #e5ff4d;
+      --accent-dim: #1a3300;
+      --danger: #ff4444;
+      --radius: 18px;
+      --radius-sm: 10px;
+      --font-body: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection { background: var(--accent); color: var(--bg); }
+
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:active, a:active { transform: scale(0.97); opacity: 0.85; }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-logo { width: 42px; height: 42px; border-radius: 12px; }
+    .brand-text { font-weight: 700; letter-spacing: 0.1em; font-size: 1.15rem; }
+
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-link {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+      position: relative;
+    }
+    .nav-link span { color: var(--accent); font-family: var(--font-mono); }
+    .nav-link:hover, .nav-link.active { color: var(--text); }
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.25s ease;
+    }
+    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+
+    .nav-actions { display: flex; align-items: center; gap: 14px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 26px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.2s ease;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(204,255,0,0.22); }
+    .btn-primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-2); }
+    .btn-outline { background: transparent; color: var(--accent); border-color: var(--accent); }
+    .btn-outline:hover { background: rgba(204,255,0,0.08); }
+    .btn-sm { padding: 9px 18px; font-size: 0.85rem; }
+
+    .mobile-menu-btn {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+    }
+    .mobile-menu-btn span { display: block; width: 24px; height: 2px; background: var(--text); border-radius: 2px; }
+
+    .terminal-page {
+      min-height: calc(100vh - 77px);
+      display: flex;
+      flex-direction: column;
+      padding: 32px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .terminal-page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .terminal-page-header h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .terminal-page-header h1 .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .terminal-wrap {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 24px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .terminal-card {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--border-2);
+    }
+
+    .terminal-dots { display: flex; gap: 8px; }
+    .terminal-dots span { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dots span:nth-child(1) { background: #ff5f57; }
+    .terminal-dots span:nth-child(2) { background: #febc2e; }
+    .terminal-dots span:nth-child(3) { background: var(--accent); }
+
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .terminal-status-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .terminal-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .terminal-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+
+    .terminal-output .line {
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0 0 4px;
+    }
+
+    .terminal-output .tick {
+      color: var(--accent);
+      font-weight: 700;
+      margin-right: 8px;
+      text-shadow: 0 0 8px rgba(204,255,0,0.35);
+    }
+
+    .terminal-output .error { color: var(--danger); }
+    .terminal-output .success { color: var(--accent); }
+    .terminal-output .info { color: #7aa2ff; }
+
+    .terminal-input {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-2);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .terminal-input .prompt {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .terminal-input input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .terminal-input input::placeholder { color: var(--text-dim); }
+
+    .terminal-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .terminal-panel {
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .terminal-panel h3 {
+      margin: 0 0 16px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .terminal-metric {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .terminal-metric span:last-child {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .terminal-status-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+
+    .terminal-status-list li { margin-bottom: 6px; }
+    .terminal-status-list .ok { color: var(--accent); font-weight: 700; }
+    .terminal-status-list .live { color: var(--danger); font-weight: 700; animation: pulse 1.6s ease-in-out infinite; }
+
+    .ticker-mini {
+      display: grid;
+      gap: 10px;
+    }
+
+    .ticker-mini-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .ticker-mini-item .symbol {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .ticker-mini-item .price {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .ticker-mini-item .change {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .change.up { color: var(--accent); }
+    .change.down { color: var(--danger); }
+
+    .footer {
+      max-width: 1200px;
+      margin: 24px auto 0;
+      padding: 24px 32px;
+      border-top: 1px solid var(--border-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 1em;
+      background: var(--accent);
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    @keyframes blink { 50% { opacity: 0; } }
+
+    @media (max-width: 900px) {
+      .nav-actions { display: none; }
+      .mobile-menu-btn { display: flex; }
+      .nav-links {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        flex-direction: column;
+        padding: 24px 32px;
+        gap: 18px;
+        transform: translateY(-150%);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+      .nav-links.open {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .terminal-wrap { grid-template-columns: 1fr; }
+      .terminal-sidebar { flex-direction: row; flex-wrap: wrap; }
+      .terminal-panel { flex: 1; min-width: 260px; }
+    }
+
+    @media (max-width: 640px) {
+      .navbar, .terminal-page, .footer { padding-left: 20px; padding-right: 20px; }
+      .terminal-page { padding-top: 24px; padding-bottom: 24px; }
+      .terminal-sidebar { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <a class="brand" href="index.html" aria-label="Rynix AI home">
+      <img class="brand-logo" src="logo.png" alt="Rynix AI">
+      <span class="brand-text">RYNIX AI</span>
+    </a>
+    <nav class="nav-links">
+      <a href="index.html" class="nav-link"><span>~/</span>Home</a>
+      <a href="terminal.html" class="nav-link active"><span>~/</span>Terminal</a>
+      <a href="index.html#statistics" class="nav-link"><span>~/</span>Statistics</a>
+      <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
+      <a href="index.html#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>hacked by robinhood foundation</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-outline btn-sm" href="index.html">Back to Home</a>
+    </div>
+    <button class="mobile-menu-btn" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <main class="terminal-page">
+    <div class="terminal-page-header">
+      <h1><span class="dot"></span>Live Terminal</h1>
+      <div>
+        <span class="btn btn-sm" style="cursor: default; background: transparent; color: var(--text-muted); border-color: var(--border-2); font-family: var(--font-mono); font-size: 0.75rem;">
+          v1.3.1.252
+        </span>
+      </div>
+    </div>
+
+    <div class="terminal-wrap">
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <div class="terminal-dots"><span></span><span></span><span></span></div>
+          <div class="terminal-title">C:\RynixAI\terminal.exe</div>
+          <div class="terminal-status-badge"><span class="dot"></span>LIVE</div>
+        </div>
+        <div class="terminal-body">
+          <div class="terminal-output" id="terminalOutput"></div>
+          <form class="terminal-input" id="terminalForm">
+            <div class="prompt">C:\RynixAI&gt;</div>
+            <input type="text" id="terminalInput" placeholder="Type a command (help, price BTC, buy 0.1 ETH...)" autocomplete="off" autofocus>
+          </form>
+        </div>
+      </div>
+
+      <div class="terminal-sidebar">
+        <div class="terminal-panel">
+          <h3>Market</h3>
+          <div class="ticker-mini" id="tickerMini">
+            <div class="ticker-mini-item"><span class="symbol">BTC/USD</span><span class="price">--</span><span class="change">--</span></div>
+            <div class="ticker-mini-item"><span class="symbol">ETH/USD</span><span class="price">--</span><span class="change">--</span></div>
+            <div class="ticker-mini-item"><span class="symbol">SOL/USD</span><span class="price">--</span><span class="change">--</span></div>
+            <div class="ticker-mini-item"><span class="symbol">HYPE/USD</span><span class="price">--</span><span class="change">--</span></div>
+          </div>
+        </div>
+
+        <div class="terminal-panel">
+          <h3>Status</h3>
+          <ul class="terminal-status-list">
+            <li>&gt; HyperLiquid <span class="ok">OK</span></li>
+            <li>&gt; Automations <span class="ok">3</span></li>
+            <li>&gt; Positions <span id="openPositions">2</span></li>
+            <li>&gt; Monitoring <span class="live">LIVE</span></li>
+          </ul>
+        </div>
+
+        <div class="terminal-panel">
+          <h3>Help</h3>
+          <ul class="terminal-status-list" style="font-size: 0.72rem;">
+            <li>price &lt;symbol&gt;</li>
+            <li>buy &lt;qty&gt; &lt;symbol&gt;</li>
+            <li>sell &lt;qty&gt; &lt;symbol&gt;</li>
+            <li>portfolio</li>
+            <li>status / clear</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div>&copy; 2026 Rynix AI. Live terminal.</div>
+    <div style="font-family: var(--font-mono); font-size: 0.75rem;">LIVE DATA ACTIVE</div>
+  </footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    const output = document.getElementById('terminalOutput');
+    const form = document.getElementById('terminalForm');
+    const input = document.getElementById('terminalInput');
+    const tickerMini = document.getElementById('tickerMini');
+    const openPositionsEl = document.getElementById('openPositions');
+    const menuBtn = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.querySelector('.nav-links');
+
+    if (menuBtn && navLinks) {
+      menuBtn.addEventListener('click', () => {
+        const open = navLinks.classList.toggle('open');
+        menuBtn.setAttribute('aria-expanded', String(open));
+      });
+    }
+
+    const feedItems = [
+      'Started - BTC Ichimoku Cloud Strategy',
+      'Stopped - BTC Trend Momentum v1.2',
+      'CLOSE - BTC position closed',
+      'OPEN - ETH position opened',
+      'CLOSE - HYPE position closed',
+      'OPEN - SOL position opened',
+      'Started - ETH Grid Strategy',
+      'Stopped - HYPE Momentum v1.1',
+      'OPEN - BTC position opened',
+      'Analysis complete - BTC 4h RSI 58'
+    ];
+
+    let prices = {
+      BTC: { base: 63000, change: -1.5 },
+      ETH: { base: 1780, change: -1.0 },
+      SOL: { base: 76, change: 0.3 },
+      HYPE: { base: 65, change: -2.6 }
+    };
+    let openPositions = 2;
+    let tickIndex = 0;
+
+    function formatPrice(n) {
+      return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function formatTime() {
+      const now = new Date();
+      return '[' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ']';
+    }
+
+    function printLine(text, type) {
+      const line = document.createElement('div');
+      line.className = 'line' + (type ? ' ' + type : '');
+      if (typeof text === 'string') {
+        line.textContent = text;
+      } else {
+        line.appendChild(text);
+      }
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function printTick(type, message) {
+      const span = document.createElement('span');
+      span.className = 'tick';
+      span.textContent = type;
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.appendChild(span);
+      line.appendChild(document.createTextNode(message));
+      output.appendChild(line);
+      output.scrollTop = output.scrollHeight;
+    }
+
+    function printHeader() {
+      printLine('Rynix AI Terminal [v1.3.1.252]');
+      printLine('Connected to HyperLiquid. Type \'help\' for commands.');
+      printLine('');
+    }
+
+    function getSymbolFromText(text) {
+      const clean = text.replace(/[$,]/g, ' ').toUpperCase();
+      const aliases = {
+        BTC: [/\bBTC\b/, /\bBITCOIN\b/, /\bXBT\b/],
+        ETH: [/\bETH\b/, /\bETHEREUM\b/, /\bETHER\b/],
+        SOL: [/\bSOL\b/, /\bSOLANA\b/],
+        HYPE: [/\bHYPE\b/, /\bHYPERLIQUID\b/]
+      };
+      for (const symbol of Object.keys(aliases)) {
+        for (const re of aliases[symbol]) {
+          if (re.test(clean)) return symbol;
+        }
+      }
+      return null;
+    }
+
+    function parseQuantity(text) {
+      const m = text.match(/(\d+[\d,.]*\d+|\d+)/);
+      if (m) {
+        let str = m[1];
+        const parts = str.split(',');
+        if (parts.length === 2) {
+          if (parts[1].length === 3) str = parts[0] + parts[1];
+          else str = parts[0] + '.' + parts[1];
+        }
+        const n = parseFloat(str);
+        if (!isNaN(n) && n > 0) return n;
+      }
+      return 0.1;
+    }
+
+    function getPrice(symbol) {
+      const data = prices[symbol.toUpperCase()];
+      if (!data) return null;
+      const variation = (Math.random() - 0.5) * 0.0008;
+      return { price: data.base * (1 + variation), change: data.change, symbol: symbol.toUpperCase() };
+    }
+
+    function updatePrices() {
+      fetch('/api/prices')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data) return;
+          for (const symbol of Object.keys(prices)) {
+            if (data[symbol] && typeof data[symbol].price === 'number') {
+              prices[symbol] = { base: data[symbol].price, change: data[symbol].change24h || 0 };
+            }
+          }
+          renderTicker();
+        })
+        .catch(err => console.warn('Price fetch failed', err));
+    }
+
+    function renderTicker() {
+      if (!tickerMini) return;
+      const symbols = ['BTC', 'ETH', 'SOL', 'HYPE'];
+      const items = tickerMini.querySelectorAll('.ticker-mini-item');
+      symbols.forEach((symbol, i) => {
+        const p = getPrice(symbol);
+        if (!p || !items[i]) return;
+        const priceEl = items[i].querySelector('.price');
+        const changeEl = items[i].querySelector('.change');
+        if (priceEl) priceEl.textContent = formatPrice(p.price);
+        if (changeEl) {
+          const sign = p.change >= 0 ? '+' : '';
+          changeEl.textContent = sign + p.change.toFixed(2) + '%';
+          changeEl.className = 'change ' + (p.change >= 0 ? 'up' : 'down');
+        }
+      });
+    }
+
+    function liveTick() {
+      const text = feedItems[tickIndex % feedItems.length];
+      const tickType = text.includes('OPEN') ? '$OPEN' : text.includes('CLOSE') ? '$CLOSE' : text.includes('Stopped') ? '$AUTO' : '$AUTO';
+      printTick(tickType, text.replace(/^\w+ - /, ''));
+      if (output.children.length > 100) {
+        output.removeChild(output.firstElementChild);
+      }
+      tickIndex++;
+    }
+
+    function handleCommand(raw) {
+      const line = document.createElement('div');
+      line.className = 'line';
+      const prompt = document.createElement('span');
+      prompt.className = 'tick';
+      prompt.textContent = 'C:\\RynixAI>';
+      line.appendChild(prompt);
+      line.appendChild(document.createTextNode(' ' + raw));
+      output.appendChild(line);
+
+      const inputText = raw.trim();
+      const lower = inputText.toLowerCase();
+      if (!inputText) return;
+
+      if (lower === 'help') {
+        printLine('');
+        printLine('Available commands:', 'info');
+        printLine('  price <symbol>        - Show live price for BTC, ETH, SOL, HYPE');
+        printLine('  buy <qty> <symbol>    - Simulate a buy order');
+        printLine('  sell <qty> <symbol>   - Simulate a sell order');
+        printLine('  portfolio             - Show demo portfolio');
+        printLine('  status                - Show network status');
+        printLine('  clear                 - Clear terminal output');
+        printLine('  exit                  - Return to home');
+        printLine('');
+        return;
+      }
+
+      if (lower === 'clear') {
+        output.innerHTML = '';
+        return;
+      }
+
+      if (lower === 'exit') {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      if (lower === 'status') {
+        printLine('HyperLiquid: OK', 'success');
+        printLine('Automations: 3 active');
+        printLine('Open positions: ' + openPositions);
+        printLine('Monitoring: LIVE', 'success');
+        return;
+      }
+
+      if (lower === 'portfolio') {
+        const total = 25000 + (getPrice('BTC')?.price || 0) * 0.25 + (getPrice('ETH')?.price || 0) * 1.5 + (getPrice('SOL')?.price || 0) * 50 + (getPrice('HYPE')?.price || 0) * 100;
+        printLine('Demo Portfolio', 'info');
+        printLine('  BTC 0.25   ' + formatPrice((getPrice('BTC')?.price || 0) * 0.25));
+        printLine('  ETH 1.5    ' + formatPrice((getPrice('ETH')?.price || 0) * 1.5));
+        printLine('  SOL 50     ' + formatPrice((getPrice('SOL')?.price || 0) * 50));
+        printLine('  HYPE 100   ' + formatPrice((getPrice('HYPE')?.price || 0) * 100));
+        printLine('  Cash       ' + formatPrice(25000));
+        printLine('  Total      ' + formatPrice(total), 'success');
+        return;
+      }
+
+      if (lower.startsWith('price')) {
+        const symbol = getSymbolFromText(inputText) || 'BTC';
+        const p = getPrice(symbol);
+        if (!p) {
+          printLine('Unknown symbol. Try BTC, ETH, SOL, HYPE.', 'error');
+          return;
+        }
+        const changeStr = (p.change >= 0 ? '+' : '') + p.change.toFixed(2) + '%';
+        printLine(symbol + ' is trading at ' + formatPrice(p.price) + ' (24h ' + changeStr + ')', 'info');
+        return;
+      }
+
+      if (lower.startsWith('buy') || lower.startsWith('sell')) {
+        const symbol = getSymbolFromText(inputText) || 'BTC';
+        const qty = parseQuantity(inputText);
+        const p = getPrice(symbol);
+        const price = p ? formatPrice(p.price) : '$--';
+        if (lower.startsWith('buy')) {
+          openPositions++;
+          printTick('$OPEN', 'Bought ' + qty + ' ' + symbol + ' at ' + price);
+        } else {
+          if (openPositions > 0) openPositions--;
+          printTick('$CLOSE', 'Sold ' + qty + ' ' + symbol + ' at ' + price);
+        }
+        if (openPositionsEl) openPositionsEl.textContent = openPositions;
+        return;
+      }
+
+      printLine('Command not recognized. Type \'help\' for available commands.', 'error');
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const text = input.value;
+      if (!text.trim()) return;
+      handleCommand(text);
+      input.value = '';
+      input.focus();
+    });
+
+    printHeader();
+    updatePrices();
+    renderTicker();
+    setInterval(liveTick, 2600);
+    setInterval(updatePrices, 60000);
+
+    const liveStart = new Date();
+    printTick('$AUTO', 'Terminal started at ' + liveStart.toLocaleTimeString());
+  })();
+  </script>
+
+</body>
+</html>
