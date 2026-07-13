@@ -5,11 +5,18 @@ const fetch = require('node-fetch');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const priceMap = {
-  BTC: 'bitcoin',
-  ETH: 'ethereum',
-  SOL: 'solana',
-  HYPE: 'hyperliquid'
+const priceSources = {
+  BTC: { kraken: 'XBTUSD', cg: 'bitcoin' },
+  ETH: { kraken: 'ETHUSD', cg: 'ethereum' },
+  SOL: { kraken: 'SOLUSD', cg: 'solana' },
+  HYPE: { kraken: 'HYPEUSD', cg: 'hyperliquid' }
+};
+
+const FALLBACK_PRICES = {
+  BTC: { price: 62750, change24h: -1.5 },
+  ETH: { price: 1776, change24h: -1.0 },
+  SOL: { price: 76.4, change24h: 0.3 },
+  HYPE: { price: 65.1, change24h: -2.6 }
 };
 
 let cache = {
@@ -21,6 +28,61 @@ const CACHE_TTL = 60 * 1000; // 60 seconds
 
 app.use(express.static(path.join(__dirname)));
 
+function getKrakenResult(data) {
+  const result = {};
+  for (const [symbol, config] of Object.entries(priceSources)) {
+    const key = Object.keys(data).find(k => k.includes(config.kraken.replace('USD', '')) || k.includes(symbol));
+    if (!key) continue;
+    const ticker = data[key];
+    const last = parseFloat(ticker.c[0]);
+    const open = parseFloat(ticker.o);
+    if (!isNaN(last) && !isNaN(open) && open !== 0) {
+      result[symbol] = {
+        price: last,
+        change24h: ((last - open) / open) * 100
+      };
+    }
+  }
+  return result;
+}
+
+function getCoinGeckoResult(data) {
+  const result = {};
+  for (const [symbol, config] of Object.entries(priceSources)) {
+    const id = config.cg;
+    if (data[id] && typeof data[id].usd === 'number') {
+      result[symbol] = {
+        price: data[id].usd,
+        change24h: data[id].usd_24h_change || 0
+      };
+    }
+  }
+  return result;
+}
+
+async function fetchKrakenPrices() {
+  const pairs = Object.values(priceSources).map(s => s.kraken).join(',');
+  const response = await fetch('https://api.kraken.com/0/public/Ticker?pair=' + pairs, {
+    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; RynixAI/1.0)' },
+    timeout: 10000
+  });
+  if (!response.ok) throw new Error('Kraken API error: ' + response.status);
+  const data = await response.json();
+  if (data.error && data.error.length) throw new Error('Kraken API error: ' + data.error.join(', '));
+  return getKrakenResult(data.result);
+}
+
+async function fetchCoinGeckoPrices() {
+  const ids = Object.values(priceSources).map(s => s.cg).join(',');
+  const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', {
+    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; RynixAI/1.0)' },
+    timeout: 10000
+  });
+  if (!response.ok) throw new Error('CoinGecko API error: ' + response.status);
+  const data = await response.json();
+  return getCoinGeckoResult(data);
+}
+
 app.get('/api/prices', async (req, res) => {
   const now = Date.now();
   if (cache.data && now - cache.updatedAt < CACHE_TTL) {
@@ -28,40 +90,30 @@ app.get('/api/prices', async (req, res) => {
   }
 
   try {
-    const ids = Object.values(priceMap).join(',');
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', {
-      headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; RynixAI/1.0)' },
-      timeout: 10000
-    });
-
-    if (!response.ok) {
-      throw new Error('CoinGecko API error: ' + response.status);
+    const result = await fetchKrakenPrices();
+    if (Object.keys(result).length === Object.keys(priceSources).length) {
+      cache = { data: result, updatedAt: now };
+      return res.json(result);
     }
-
-    const data = await response.json();
-    const result = {};
-
-    for (const [symbol, id] of Object.entries(priceMap)) {
-      if (data[id] && typeof data[id].usd === 'number') {
-        result[symbol] = {
-          price: data[id].usd,
-          change24h: data[id].usd_24h_change || 0
-        };
-      }
-    }
-
-    cache = { data: result, updatedAt: now };
-    res.json(result);
   } catch (error) {
-    console.error('Price proxy error:', error.message);
-    if (cache.data) {
-      return res.json(cache.data);
-    }
-    res.status(500).json({
-      error: 'Unable to fetch prices',
-      details: error.message
-    });
+    console.error('Kraken fetch error:', error.message);
   }
+
+  try {
+    const result = await fetchCoinGeckoPrices();
+    if (Object.keys(result).length > 0) {
+      cache = { data: result, updatedAt: now };
+      return res.json(result);
+    }
+  } catch (error) {
+    console.error('CoinGecko fetch error:', error.message);
+  }
+
+  if (cache.data) {
+    return res.json(cache.data);
+  }
+
+  res.json(FALLBACK_PRICES);
 });
 
 app.get('/api/wallet', (req, res) => {
