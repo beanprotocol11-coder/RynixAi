@@ -389,25 +389,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   gap: 24px;
 }
 
-.hero-brand-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.hero-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  object-fit: cover;
-  background: #000;
-}
-
 .hero-title {
   font-size: clamp(2.5rem, 6.5vw, 4.8rem);
   font-weight: 700;
@@ -1253,6 +1234,11 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
 .partner-logo.dex {
   height: 34px;
+}
+
+.partner-logo.hyperliquid {
+  height: 34px;
+  border-radius: 50%;
 }
 
 /* --------------------------------------------------------------------------
@@ -2138,6 +2124,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </a>
     <nav class="nav-links">
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
+      <a href="features.html" class="nav-link"><span>~/</span>Features</a>
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
       <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
@@ -2216,10 +2203,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
         <!-- hero text -->
         <div class="hero-text">
-          <div class="hero-brand-label">
-            <img class="hero-logo" src="logo.png" alt="Rynix AI">
-            <span>RYNIX AI</span>
-          </div>
           <h1 class="hero-title"><span class="accent">Vibe trading</span> is here.</h1>
           <p class="hero-tagline">Think it. Say it. Trade it.</p>
           <div class="hero-actions">
@@ -2232,7 +2215,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
               <span id="connectWalletHeroText">Connect Wallet</span>
             </button>
             <a href="#terminal" class="btn btn-outline">Open Terminal</a>
-            <a href="#features" class="btn btn-outline">View Features</a>
+            <a href="features.html" class="btn btn-outline">View Features</a>
           </div>
           <div class="hero-chips">
             <span class="chip"><span class="chip-dot"></span>24/7 AI Monitoring</span>
@@ -2472,7 +2455,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
 <section class="placeholder-section" id="hacked-by-robinhood-foundation">
   <div class="placeholder-card foundation-card">
-    <img class="foundation-logo" src="assets/robinhood-chain-logo.png" alt="Robinhood Chain Foundation logo">
+    <img class="foundation-logo" src="assets/robinhood-logo.png" alt="Robinhood Foundation logo">
     <h2>hacked by robinhood chain foundation</h2>
     <p>Rynix AI verification records are sealed, publicly auditable, and anchored to Robinhood Chain for transparent on-chain proof.</p>
     <div class="foundation-actions">
@@ -2532,6 +2515,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         </a>
         <a class="partner-link" href="https://dexscreener.com" target="_blank" rel="noopener" aria-label="DexScreener">
           <img class="partner-logo dex" src="assets/dexscreener-icon.png" alt="DexScreener" height="34">
+        </a>
+        <a class="partner-link" href="https://hyperliquid.xyz" target="_blank" rel="noopener" aria-label="Hyperliquid">
+          <img class="partner-logo hyperliquid" src="assets/hyperliquid-logo.jpg" alt="Hyperliquid" height="34">
         </a>
       </div>
     </div>
