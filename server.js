@@ -30,7 +30,7 @@ app.get('/api/prices', async (req, res) => {
   try {
     const ids = Object.values(priceMap).join(',');
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', {
-      headers: { 'Accept': 'application/json' },
+      headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; RynixAI/1.0)' },
       timeout: 10000
     });
 
