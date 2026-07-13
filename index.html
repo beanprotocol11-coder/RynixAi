@@ -46,6 +46,10 @@
   box-sizing: border-box;
 }
 
+a, button:not(:disabled) {
+  cursor: pointer;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -345,19 +349,14 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   overflow: hidden;
 }
 
-.hero-logo-bg {
-  width: min(80vh, 70vw);
-  max-width: 900px;
-  height: auto;
-  opacity: 0.14;
-  filter: drop-shadow(0 0 80px rgba(255, 204, 0, 0.35));
-  animation: heroLogoPulse 8s ease-in-out infinite;
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
   pointer-events: none;
-}
-
-@keyframes heroLogoPulse {
-  0%, 100% { transform: scale(1); opacity: 0.12; }
-  50% { transform: scale(1.04); opacity: 0.18; }
 }
 
 .hero-overlay {
@@ -366,8 +365,8 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   pointer-events: none;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.78) 40%, rgba(0,0,0,0.94) 100%),
-    radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.92) 80%);
+    linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.32) 45%, rgba(0,0,0,0.62) 100%),
+    radial-gradient(ellipse at center, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.65) 80%);
 }
 
 .hero-grid {
@@ -1969,10 +1968,10 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </a>
     <nav class="nav-links">
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
-      <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
+      <a href="#" class="nav-link" data-open-terminal><span>~/</span>Terminal</a>
       <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
-      <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>hacked by robinhood foundation</a>
+      <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>hacked by robinhood chain foundation</a>
     </nav>
     <div class="nav-actions">
       <button class="btn btn-ghost" id="connectWalletNav">CONNECT WALLET</button>
@@ -1992,7 +1991,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     <!-- hero -->
     <section class="hero" id="home">
       <div class="hero-background" aria-hidden="true">
-        <img class="hero-logo-bg" src="assets/logo-hero.png" alt="Rynix AI logo" aria-hidden="true">
+        <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="assets/logo-hero.png">
+          <source src="assets/hero-video.mp4" type="video/mp4">
+        </video>
       </div>
       <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-grid">
@@ -2161,14 +2162,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </section>
   
 <!-- single-page placeholder sections -->
-<section class="placeholder-section" id="terminal">
-  <div class="placeholder-card">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8l4 4-4 4"/><line x1="12" y1="16" x2="18" y2="16"/></svg>
-    <h2>Terminal</h2>
-    <p>The Rynix AI terminal is launching soon. Manage automations, view open positions, and execute trades in a single command-line style interface.</p>
-    <a href="#home" class="btn btn-outline">Back to Home</a>
-  </div>
-</section>
+<!-- Terminal is now the live chatbot; placeholder removed -->
 
 <section class="statistics-section" id="statistics">
   <div class="features-header" style="padding-bottom: 24px; text-align: left; align-items: flex-start;">
@@ -2252,7 +2246,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   <div class="statistics-footer">
     <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
     <div class="statistics-footer-actions">
-      <a class="btn btn-icon" href="https://app.hyperliquid.xyz/join/" target="_blank" rel="noopener" aria-label="HyperLiquid"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><text x="2" y="18" font-size="12" font-weight="700" font-family="Space Grotesk">HL</text></svg></a>
+      <a class="btn btn-icon" href="https://hyperliquid.org/" target="_blank" rel="noopener" aria-label="HyperLiquid">
+          <img src="assets/hyperliquid-logo.jpg" alt="HyperLiquid" style="width:22px;height:22px;object-fit:cover;border-radius:6px;">
+        </a>
       <a class="btn btn-icon" href="https://x.com/rynixai_" target="_blank" rel="noopener" aria-label="X"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
     </div>
   </div>
@@ -2270,9 +2266,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
 <section class="placeholder-section" id="hacked-by-robinhood-foundation">
   <div class="placeholder-card">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.5A6 6 0 0 1 8 11.5"/><line x1="9" y1="9" x2="9" y2="9"/><line x1="15" y1="9" x2="15" y2="9"/></svg>
-    <h2>hacked by robinhood foundation</h2>
-    <p>Rynix AI supports the hacked by robinhood foundation agent token standard for on-chain autonomous agents. Documentation and integration examples are coming soon.</p>
+    <img src="assets/robinhood-chain-foundation-logo.png" alt="Robinhood Chain Foundation" style="display:block;margin:0 auto 24px;width:120px;height:120px;border-radius:24px;object-fit:cover;border:1px solid var(--border-2);">
+    <h2>hacked by robinhood chain foundation</h2>
+    <p>Rynix AI supports the hacked by robinhood chain foundation agent token standard for on-chain autonomous agents.</p>
     <a href="#home" class="btn btn-outline">Back to Home</a>
   </div>
 </section>
@@ -2602,6 +2598,14 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     menuBtn.addEventListener('click', () => {
       const open = navLinks.classList.toggle('open');
       menuBtn.setAttribute('aria-expanded', String(open));
+    });
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        if (navLinks.classList.contains('open')) {
+          navLinks.classList.remove('open');
+          menuBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
     });
   }
 

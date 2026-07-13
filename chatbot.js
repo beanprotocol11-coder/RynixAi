@@ -654,6 +654,21 @@
     if (e.key === 'Escape' && chatbotWindow.classList.contains('open')) closeChatbot();
   });
 
+  // Terminal nav/button opens the chatbot terminal directly
+  const terminalToggles = document.querySelectorAll('[data-open-terminal]');
+  terminalToggles.forEach(function (toggle) {
+    toggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      openChatbot();
+      const navLinks = document.querySelector('.nav-links');
+      const menuBtn = document.querySelector('.mobile-menu-btn');
+      if (navLinks && navLinks.classList.contains('open')) {
+        navLinks.classList.remove('open');
+        if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+
   updatePriceTicker();
   restoreHistory();
   fetchPrices();
