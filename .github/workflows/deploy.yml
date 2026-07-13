@@ -12,12 +12,19 @@ jobs:
     permissions:
       contents: read
       deployments: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 5d03731e12b93ff46e23c27165d1421c
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set production branch to match deploy branch
+        run: |
+          curl -sS -X PATCH "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/rynixai" \
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"production_branch": "devin/cloudflare-pages-deploy"}'
+
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler@4.86.0 pages deploy . --project-name rynixai
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 5d03731e12b93ff46e23c27165d1421c
+        run: npx wrangler@4.86.0 pages deploy . --project-name rynixai --branch devin/cloudflare-pages-deploy
