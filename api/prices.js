@@ -28,28 +28,61 @@ async function fetchHyperliquidPrices() {
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const response = await fetch('https://api.hyperliquid.xyz/info', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'allMids' }),
-      signal: controller.signal
-    });
+    const [midsResponse, ctxsResponse] = await Promise.all([
+      fetch('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'allMids' }),
+        signal: controller.signal
+      }),
+      fetch('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
+        signal: controller.signal
+      })
+    ]);
 
     clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      throw new Error('Hyperliquid API error: ' + response.status);
+    if (!midsResponse.ok) {
+      throw new Error('Hyperliquid allMids API error: ' + midsResponse.status);
+    }
+    if (!ctxsResponse.ok) {
+      throw new Error('Hyperliquid metaAndAssetCtxs API error: ' + ctxsResponse.status);
     }
 
-    const data = await response.json();
+    const midsData = await midsResponse.json();
+    const [meta, assetCtxs] = await ctxsResponse.json();
+
+    const symbolToIndex = {};
+    if (meta && Array.isArray(meta.universe)) {
+      for (let i = 0; i < meta.universe.length; i++) {
+        symbolToIndex[meta.universe[i].name] = i;
+      }
+    }
+
     const result = {};
 
     for (const symbol of HYPERLIQUID_SYMBOLS) {
-      if (data[symbol] && (typeof data[symbol] === 'string' || typeof data[symbol] === 'number')) {
-        const price = parseFloat(data[symbol]);
-        if (isValidPrice(price)) {
-          result[symbol] = { price: price };
-        }
+      const mid = midsData[symbol];
+      const price = mid && (typeof mid === 'string' || typeof mid === 'number') ? parseFloat(mid) : null;
+
+      const ctxIndex = symbolToIndex[symbol];
+      const ctx = typeof ctxIndex === 'number' ? assetCtxs[ctxIndex] : null;
+      const markPx = ctx && typeof ctx.markPx === 'string' ? parseFloat(ctx.markPx) : null;
+      const prevDayPx = ctx && typeof ctx.prevDayPx === 'string' ? parseFloat(ctx.prevDayPx) : null;
+
+      const entry = {};
+      if (isValidPrice(price)) {
+        entry.price = price;
+      }
+      if (isValidPrice(markPx) && isValidPrice(prevDayPx) && prevDayPx > 0) {
+        entry.change24h = ((markPx - prevDayPx) / prevDayPx) * 100;
+      }
+
+      if (Object.keys(entry).length > 0) {
+        result[symbol] = entry;
       }
     }
 
@@ -106,7 +139,9 @@ function mergePriceData(hyperliquidData, coinGeckoData) {
     if (!hl && !cg) continue;
 
     const price = hl && isValidPrice(hl.price) ? hl.price : (cg && isValidPrice(cg.price) ? cg.price : null);
-    const change24h = cg && typeof cg.change24h === 'number' ? cg.change24h : 0;
+    const change24h =
+      hl && typeof hl.change24h === 'number' ? hl.change24h :
+      (cg && typeof cg.change24h === 'number' ? cg.change24h : 0);
 
     if (isValidPrice(price)) {
       result[symbol] = {
