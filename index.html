@@ -1255,6 +1255,10 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   height: 34px;
 }
 
+.partner-logo.hyperliquid {
+  height: 30px;
+}
+
 /* --------------------------------------------------------------------------
    3D logo footer
    -------------------------------------------------------------------------- */
@@ -1736,6 +1740,14 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   flex-wrap: wrap;
 }
 
+.robinhood-logo {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  margin: 0 auto 24px;
+}
+
 #contact {
   max-width: var(--max-width);
   margin: 0 auto;
@@ -1887,6 +1899,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   font-size: 0.95rem;
   line-height: 1.55;
   word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .chatbot-message.user {
@@ -1903,6 +1916,23 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   color: var(--text);
   border: 1px solid var(--border-2);
   border-bottom-left-radius: 4px;
+}
+
+.chatbot-message.bot.chart {
+  max-width: 96%;
+  padding: 10px;
+  background: var(--surface);
+}
+
+.chatbot-chart {
+  width: 100%;
+  display: block;
+}
+
+.chatbot-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .chatbot-typing {
@@ -2138,7 +2168,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </a>
     <nav class="nav-links">
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
-      <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
+      <a href="terminal.html" class="nav-link"><span>~/</span>Terminal</a>
       <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
       <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>Robinhood Chain</a>
@@ -2231,7 +2261,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
               </svg>
               <span id="connectWalletHeroText">Connect Wallet</span>
             </button>
-            <a href="#terminal" class="btn btn-outline">Open Terminal</a>
+            <a href="terminal.html" class="btn btn-outline">Open Terminal</a>
             <a href="#features" class="btn btn-outline">View Features</a>
           </div>
           <div class="hero-chips">
@@ -2472,11 +2502,11 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
 <section class="placeholder-section" id="hacked-by-robinhood-foundation">
   <div class="placeholder-card foundation-card">
-    <img class="foundation-logo" src="assets/robinhood-chain-logo.png" alt="Robinhood Chain Foundation logo">
-    <h2>hacked by robinhood chain foundation</h2>
-    <p>Rynix AI verification records are sealed, publicly auditable, and anchored to Robinhood Chain for transparent on-chain proof.</p>
+    <img class="robinhood-logo" src="assets/robinhood-logo.svg" alt="Robinhood">
+    <h2>hacked by robinhood foundation</h2>
+    <p>Rynix AI supports the hacked by robinhood foundation agent token standard for on-chain autonomous agents. Documentation and integration examples are coming soon.</p>
     <div class="foundation-actions">
-      <a href="#terminal" class="btn btn-primary">Open Verification Terminal</a>
+      <a href="terminal.html" class="btn btn-primary">Open Terminal</a>
       <a href="#home" class="btn btn-outline">Back to Home</a>
     </div>
   </div>
@@ -2532,6 +2562,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         </a>
         <a class="partner-link" href="https://dexscreener.com" target="_blank" rel="noopener" aria-label="DexScreener">
           <img class="partner-logo dex" src="assets/dexscreener-icon.png" alt="DexScreener" height="34">
+        </a>
+        <a class="partner-link" href="https://hyperliquid.xyz" target="_blank" rel="noopener" aria-label="Hyperliquid">
+          <img class="partner-logo hyperliquid" src="assets/hyperliquid-logo.jpg" alt="Hyperliquid" height="30">
         </a>
       </div>
     </div>
