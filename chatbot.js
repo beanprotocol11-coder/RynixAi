@@ -249,6 +249,19 @@
     return null;
   }
 
+  async function fetchWithTimeout(url, options, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    try {
+      const response = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+      clearTimeout(timer);
+      return response;
+    } catch (err) {
+      clearTimeout(timer);
+      throw err;
+    }
+  }
+
   async function fetchPrices() {
     const now = Date.now();
     if (now - lastFetchTime < 15000) return;
@@ -256,7 +269,7 @@
 
     let data = null;
     try {
-      const proxyResponse = await fetch('/api/prices', { timeout: 10000 });
+      const proxyResponse = await fetchWithTimeout('/api/prices', {}, 10000);
       if (proxyResponse.ok) data = await proxyResponse.json();
     } catch (err) {
       console.warn('Proxy unavailable, falling back to CoinGecko:', err);
@@ -265,7 +278,7 @@
     if (!data) {
       try {
         const ids = Object.values(priceMap).join(',');
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
+        const response = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', {}, 10000);
         if (!response.ok) throw new Error('Network response was not ok');
         const cgData = await response.json();
         data = {};
