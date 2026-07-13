@@ -79,17 +79,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   opacity: 0.85;
 }
 
-/* Background 3D space grid */
-.grid-bg {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background: #000;
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
-}
-
 /* --------------------------------------------------------------------------
    Typography helpers
    -------------------------------------------------------------------------- */
@@ -345,12 +334,11 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   background: #000;
 }
 
-.hero-video {
+.hero-lines {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   pointer-events: none;
   z-index: 0;
   background: #000;
@@ -1250,6 +1238,95 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   height: 34px;
 }
 
+/* --------------------------------------------------------------------------
+   3D logo footer
+   -------------------------------------------------------------------------- */
+
+.footer-3d {
+  position: relative;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 120px 32px;
+  background: #000;
+  border-top: 1px solid var(--border-2);
+}
+
+.footer-3d-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(204, 255, 0, 0.08) 0%, transparent 55%);
+  animation: logoGlow 6s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.logo-3d-stage {
+  position: relative;
+  width: min(380px, 60vw);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+}
+
+.logo-3d-img {
+  width: 70%;
+  height: auto;
+  filter: drop-shadow(0 0 28px rgba(204, 255, 0, 0.55));
+  animation: logoFloat3D 8s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+@keyframes logoFloat3D {
+  0%, 100% { transform: translateY(0) rotateY(-15deg) rotateX(5deg); }
+  50% { transform: translateY(-18px) rotateY(15deg) rotateX(-5deg); }
+}
+
+.orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(204, 255, 0, 0.22);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateZ(-40px) scale(0.92);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.logo-3d-active .orbit-ring {
+  opacity: 1;
+  transform: translateZ(-40px) scale(1);
+}
+
+.orbit-ring.r1 {
+  inset: 5%;
+  animation: ringSpin1 24s linear infinite;
+}
+
+.orbit-ring.r2 {
+  inset: -5%;
+  animation: ringSpin2 34s linear infinite reverse;
+}
+
+.orbit-ring.r3 {
+  inset: 18%;
+  border-style: solid;
+  opacity: 0.1;
+  animation: ringSpin3 18s linear infinite;
+}
+
+@keyframes ringSpin1 { to { transform: translateZ(-40px) scale(1) rotateZ(360deg); } }
+@keyframes ringSpin2 { to { transform: translateZ(-40px) scale(1) rotateZ(-360deg); } }
+@keyframes ringSpin3 { to { transform: translateZ(-40px) scale(1) rotateZ(360deg); } }
+
 .live-data {
   display: flex;
   flex-direction: column;
@@ -1868,9 +1945,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 </style>
 </head>
 <body>
-  <!-- background grid overlay -->
-  <canvas id="spaceGrid" class="grid-bg" aria-hidden="true"></canvas>
-
   <!-- nav -->
   <header class="navbar">
     <a class="brand" href="#home" aria-label="Rynix AI home">
@@ -1901,7 +1975,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   <main>
     <!-- hero -->
     <section class="hero" id="home">
-      <video class="hero-video" src="assets/hero-video.mp4?v=2" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+      <canvas id="heroLines" class="hero-lines" aria-hidden="true"></canvas>
       <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-grid">
         <!-- terminal card -->
@@ -2195,6 +2269,17 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   </div>
 </section>
 </main>
+
+  <!-- 3D logo at end -->
+  <section class="footer-3d" aria-label="Rynix AI 3D logo">
+    <div class="footer-3d-glow" aria-hidden="true"></div>
+    <div class="logo-3d-stage">
+      <div class="orbit-ring r1" aria-hidden="true"></div>
+      <div class="orbit-ring r2" aria-hidden="true"></div>
+      <div class="orbit-ring r3" aria-hidden="true"></div>
+      <img class="logo-3d-img" src="assets/logo-3d.png" alt="Rynix AI 3D logo">
+    </div>
+  </section>
 
   <!-- footer / live data -->
   <footer class="footer">
@@ -3096,88 +3181,105 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     el.addEventListener('pointercancel', onPointerCancel);
   });
 
-  // 3D space grid background
-  const spaceGrid = document.getElementById('spaceGrid');
-  if (spaceGrid) {
-    const sgCtx = spaceGrid.getContext('2d');
-    let sgW, sgH, sgFov, sgCamY, sgHorizon, sgMaxZ, sgGrid, sgOffset, sgSpeed;
+  // Hero smooth-line background
+  const heroLines = document.getElementById('heroLines');
+  if (heroLines) {
+    const hlCtx = heroLines.getContext('2d');
+    let hlW, hlH, hlDpr = Math.min(window.devicePixelRatio || 1, 2);
+    let hlTime = 0;
 
-    function resizeSpaceGrid() {
-      sgW = spaceGrid.width = window.innerWidth;
-      sgH = spaceGrid.height = window.innerHeight;
-      sgFov = sgW / 2;
-      sgCamY = sgH / 2 / sgFov;
-      sgHorizon = sgH / 2;
-      sgMaxZ = 30;
-      sgGrid = 0.5;
-      sgSpeed = 0.04;
+    const heroLinesConfig = [
+      { amp: 0.12, freq: 0.008, speed: 0.8, y: 0.35, phase: 0, alpha: 0.35, width: 1.5 },
+      { amp: 0.08, freq: 0.012, speed: 1.1, y: 0.50, phase: 1.2, alpha: 0.45, width: 2.0 },
+      { amp: 0.10, freq: 0.006, speed: 0.6, y: 0.65, phase: 2.4, alpha: 0.30, width: 1.5 },
+      { amp: 0.06, freq: 0.015, speed: 1.4, y: 0.42, phase: 0.8, alpha: 0.25, width: 1.0 },
+      { amp: 0.09, freq: 0.009, speed: 0.9, y: 0.58, phase: 3.6, alpha: 0.35, width: 1.5 },
+    ];
+
+    function resizeHeroLines() {
+      const hero = heroLines.parentElement;
+      const w = hero.clientWidth;
+      const h = hero.clientHeight;
+      hlDpr = Math.min(window.devicePixelRatio || 1, 2);
+      heroLines.width = Math.floor(w * hlDpr);
+      heroLines.height = Math.floor(h * hlDpr);
+      heroLines.style.width = w + 'px';
+      heroLines.style.height = h + 'px';
+      hlCtx.setTransform(hlDpr, 0, 0, hlDpr, 0, 0);
+      hlW = w;
+      hlH = h;
     }
 
-    function projectSpaceGrid(x, z) {
-      const scale = sgFov / z;
-      return [sgW / 2 + x * scale, sgHorizon + sgCamY * scale];
-    }
+    function drawHeroLines() {
+      hlCtx.clearRect(0, 0, hlW, hlH);
+      hlCtx.fillStyle = '#000';
+      hlCtx.fillRect(0, 0, hlW, hlH);
 
-    function drawSpaceGrid() {
-      sgCtx.fillStyle = '#000';
-      sgCtx.fillRect(0, 0, sgW, sgH);
-      sgCtx.strokeStyle = 'rgba(204,255,0,0.12)';
-      sgCtx.lineWidth = 1;
+      hlTime += 0.008;
 
-      sgOffset = (sgOffset + sgSpeed) % sgGrid;
-      const zSteps = Math.ceil(sgMaxZ / sgGrid);
+      for (const cfg of heroLinesConfig) {
+        const y0 = hlH * cfg.y;
+        const amp = hlH * cfg.amp;
+        const alpha = cfg.alpha;
+        const grad = hlCtx.createLinearGradient(0, 0, hlW, 0);
+        grad.addColorStop(0, 'rgba(204,255,0,0)');
+        grad.addColorStop(0.25, 'rgba(204,255,0,' + (alpha * 0.6) + ')');
+        grad.addColorStop(0.5, 'rgba(204,255,0,' + alpha + ')');
+        grad.addColorStop(0.75, 'rgba(204,255,0,' + (alpha * 0.6) + ')');
+        grad.addColorStop(1, 'rgba(204,255,0,0)');
 
-      // horizontal lines (depth)
-      for (let i = 0; i < zSteps; i++) {
-        const z = sgOffset + i * sgGrid;
-        if (z <= 0.1) continue;
-        const scale = sgFov / z;
-        const xVisible = (sgW / 2) / scale;
-        const xStart = Math.floor(-xVisible / sgGrid) * sgGrid;
-        const xEnd = Math.ceil(xVisible / sgGrid) * sgGrid;
-        let first = true;
-        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
-          const [sx, sy] = projectSpaceGrid(x, z);
-          if (first) {
-            first = false;
-            sgCtx.beginPath();
-            sgCtx.moveTo(sx, sy);
-          } else {
-            sgCtx.lineTo(sx, sy);
-          }
+        hlCtx.lineWidth = cfg.width;
+        hlCtx.strokeStyle = grad;
+        hlCtx.lineCap = 'round';
+        hlCtx.lineJoin = 'round';
+        hlCtx.shadowBlur = 8;
+        hlCtx.shadowColor = 'rgba(204,255,0,' + alpha + ')';
+
+        hlCtx.beginPath();
+        for (let x = 0; x <= hlW; x += 4) {
+          const t = x * cfg.freq + hlTime * cfg.speed + cfg.phase;
+          const y = y0 + Math.sin(t) * amp + Math.sin(t * 1.7 + cfg.phase) * (amp * 0.35);
+          if (x === 0) hlCtx.moveTo(x, y);
+          else hlCtx.lineTo(x, y);
         }
-        sgCtx.stroke();
+        hlCtx.stroke();
       }
 
-      // vertical lines (width)
-      for (let i = 0; i < zSteps - 1; i++) {
-        const z = sgOffset + i * sgGrid;
-        if (z <= 0.1) continue;
-        const zNext = z + sgGrid;
-        const scale = sgFov / z;
-        const xVisible = (sgW / 2) / scale;
-        const scaleNext = sgFov / zNext;
-        const xVisibleNext = (sgW / 2) / scaleNext;
-        const xStart = Math.min(Math.floor(-xVisible / sgGrid) * sgGrid, Math.floor(-xVisibleNext / sgGrid) * sgGrid);
-        const xEnd = Math.max(Math.ceil(xVisible / sgGrid) * sgGrid, Math.ceil(xVisibleNext / sgGrid) * sgGrid);
-        for (let x = xStart; x <= xEnd + sgGrid; x += sgGrid) {
-          const [sx, sy] = projectSpaceGrid(x, z);
-          const [sx2, sy2] = projectSpaceGrid(x, zNext);
-          sgCtx.beginPath();
-          sgCtx.moveTo(sx, sy);
-          sgCtx.lineTo(sx2, sy2);
-          sgCtx.stroke();
-        }
-      }
-
-      requestAnimationFrame(drawSpaceGrid);
+      hlCtx.shadowBlur = 0;
+      requestAnimationFrame(drawHeroLines);
     }
 
-    resizeSpaceGrid();
-    sgOffset = 0;
-    window.addEventListener('resize', resizeSpaceGrid);
-    requestAnimationFrame(drawSpaceGrid);
+    resizeHeroLines();
+    window.addEventListener('resize', resizeHeroLines);
+    requestAnimationFrame(drawHeroLines);
   }
+
+  // 3D Rynix logo footer effect
+  const footer3d = document.querySelector('.footer-3d');
+  const logo3dStage = document.querySelector('.logo-3d-stage');
+  if (footer3d && logo3dStage && !window.matchMedia('(pointer: coarse)').matches) {
+    footer3d.addEventListener('mousemove', function(e) {
+      const rect = footer3d.getBoundingClientRect();
+      const ry = ((e.clientX - rect.left) / rect.width - 0.5) * 24;
+      const rx = ((e.clientY - rect.top) / rect.height - 0.5) * -18;
+      logo3dStage.style.transform = 'perspective(1000px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+    }, { passive: true });
+    footer3d.addEventListener('mouseleave', function() {
+      logo3dStage.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+    }, { passive: true });
+  }
+
+  // IntersectionObserver for 3D logo rings
+  const logo3dObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('logo-3d-active');
+        logo3dObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+  if (logo3dStage) logo3dObserver.observe(logo3dStage);
+
 })();
 </script>
 
