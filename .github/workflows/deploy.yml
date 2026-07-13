@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler@4.86.0 pages deploy . --project-name rynixai --branch main
+        run: npx wrangler@4.86.0 pages deploy . --project-name rynixai
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 5d03731e12b93ff46e23c27165d1421c
