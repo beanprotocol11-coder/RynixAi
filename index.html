@@ -2833,7 +2833,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
   function getWalletProvider(walletId) {
     const providers = getInjectedProviders();
-    if (walletId === 'walletconnect') return normalizeProvider(window.ethereum) || (providers[0] && providers[0].provider);
+    if (walletId === 'walletconnect') return null;
     const match = providers.find(entry => providerMatches(walletId, entry));
     if (match) return match.provider;
     if (walletId === 'brave' && navigator.brave && window.ethereum) return normalizeProvider(window.braveEthereum || window.ethereum);
