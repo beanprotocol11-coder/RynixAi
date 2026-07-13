@@ -1255,95 +1255,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   height: 34px;
 }
 
-/* --------------------------------------------------------------------------
-   3D logo footer
-   -------------------------------------------------------------------------- */
-
-.footer-3d {
-  position: relative;
-  min-height: 80vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 120px 32px;
-  background: #000;
-  border-top: 1px solid var(--border-2);
-}
-
-.footer-3d-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(204, 255, 0, 0.08) 0%, transparent 55%);
-  animation: logoGlow 6s ease-in-out infinite alternate;
-}
-
-@keyframes logoGlow {
-  0% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-
-.logo-3d-stage {
-  position: relative;
-  width: min(380px, 60vw);
-  aspect-ratio: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform-style: preserve-3d;
-  transition: transform 0.15s ease-out;
-}
-
-.logo-3d-img {
-  width: 70%;
-  height: auto;
-  filter: drop-shadow(0 0 28px rgba(204, 255, 0, 0.55));
-  animation: logoFloat3D 8s ease-in-out infinite;
-  transform-style: preserve-3d;
-}
-
-@keyframes logoFloat3D {
-  0%, 100% { transform: translateY(0) rotateY(-15deg) rotateX(5deg); }
-  50% { transform: translateY(-18px) rotateY(15deg) rotateX(-5deg); }
-}
-
-.orbit-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px dashed rgba(204, 255, 0, 0.22);
-  pointer-events: none;
-  opacity: 0;
-  transform: translateZ(-40px) scale(0.92);
-  transition: opacity 0.8s ease, transform 0.8s ease;
-}
-
-.logo-3d-active .orbit-ring {
-  opacity: 1;
-  transform: translateZ(-40px) scale(1);
-}
-
-.orbit-ring.r1 {
-  inset: 5%;
-  animation: ringSpin1 24s linear infinite;
-}
-
-.orbit-ring.r2 {
-  inset: -5%;
-  animation: ringSpin2 34s linear infinite reverse;
-}
-
-.orbit-ring.r3 {
-  inset: 18%;
-  border-style: solid;
-  opacity: 0.1;
-  animation: ringSpin3 18s linear infinite;
-}
-
-@keyframes ringSpin1 { to { transform: translateZ(-40px) scale(1) rotateZ(360deg); } }
-@keyframes ringSpin2 { to { transform: translateZ(-40px) scale(1) rotateZ(-360deg); } }
-@keyframes ringSpin3 { to { transform: translateZ(-40px) scale(1) rotateZ(360deg); } }
-
 .live-data {
   display: flex;
   flex-direction: column;
@@ -2138,6 +2049,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </a>
     <nav class="nav-links">
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
+      <a href="docs/features.html" class="nav-link"><span>~/</span>Features</a>
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
       <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
@@ -2232,7 +2144,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
               <span id="connectWalletHeroText">Connect Wallet</span>
             </button>
             <a href="#terminal" class="btn btn-outline">Open Terminal</a>
-            <a href="#features" class="btn btn-outline">View Features</a>
+            <a href="docs/features.html" class="btn btn-outline">View Features</a>
           </div>
           <div class="hero-chips">
             <span class="chip"><span class="chip-dot"></span>24/7 AI Monitoring</span>
@@ -2494,17 +2406,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 </section>
 </main>
 
-  <!-- 3D logo at end -->
-  <section class="footer-3d" aria-label="Rynix AI 3D logo">
-    <div class="footer-3d-glow" aria-hidden="true"></div>
-    <div class="logo-3d-stage">
-      <div class="orbit-ring r1" aria-hidden="true"></div>
-      <div class="orbit-ring r2" aria-hidden="true"></div>
-      <div class="orbit-ring r3" aria-hidden="true"></div>
-      <img class="logo-3d-img" src="assets/logo-3d.png" alt="Rynix AI 3D logo">
-    </div>
-  </section>
-
   <!-- footer / live data -->
   <footer class="footer">
     <div class="footer-main">
@@ -2532,6 +2433,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         </a>
         <a class="partner-link" href="https://dexscreener.com" target="_blank" rel="noopener" aria-label="DexScreener">
           <img class="partner-logo dex" src="assets/dexscreener-icon.png" alt="DexScreener" height="34">
+        </a>
+        <a class="partner-link" href="https://app.hyperliquid.xyz/trade" target="_blank" rel="noopener" aria-label="Hyperliquid">
+          <img class="partner-logo" src="assets/hyperliquid-logo.jpg" alt="Hyperliquid" height="34" style="border-radius:6px;object-fit:cover">
         </a>
       </div>
     </div>
@@ -3519,32 +3423,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     el.addEventListener('pointerleave', onPointerLeave);
     el.addEventListener('pointercancel', onPointerCancel);
   });
-
-  // 3D Rynix logo footer effect
-  const footer3d = document.querySelector('.footer-3d');
-  const logo3dStage = document.querySelector('.logo-3d-stage');
-  if (footer3d && logo3dStage && !window.matchMedia('(pointer: coarse)').matches) {
-    footer3d.addEventListener('mousemove', function(e) {
-      const rect = footer3d.getBoundingClientRect();
-      const ry = ((e.clientX - rect.left) / rect.width - 0.5) * 24;
-      const rx = ((e.clientY - rect.top) / rect.height - 0.5) * -18;
-      logo3dStage.style.transform = 'perspective(1000px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
-    }, { passive: true });
-    footer3d.addEventListener('mouseleave', function() {
-      logo3dStage.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-    }, { passive: true });
-  }
-
-  // IntersectionObserver for 3D logo rings
-  const logo3dObserver = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('logo-3d-active');
-        logo3dObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.2 });
-  if (logo3dStage) logo3dObserver.observe(logo3dStage);
 
 })();
 </script>

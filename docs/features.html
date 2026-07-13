@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rynix AI | Features</title>
+  <meta name="description" content="Rynix AI features — AI chat trading, autonomous automations, and set-and-forget strategies for on-chain execution.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="../logo.png">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-2: #050505;
+      --bg-3: #080808;
+      --surface: #0a0a0a;
+      --surface-2: #0f0f0f;
+      --border: #1a1a1a;
+      --border-2: #262626;
+      --border-3: #333333;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --accent: #ccff00;
+      --accent-2: #e5ff4d;
+      --accent-glow: rgba(204, 255, 0, 0.35);
+      --radius: 18px;
+      --radius-sm: 10px;
+      --font-body: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, monospace;
+      --max-width: 1200px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-2);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .back-link {
+      font-size: 0.9rem;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--border-2);
+      padding: 10px 18px;
+      border-radius: 10px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .back-link:hover { background: rgba(204,255,0,0.08); border-color: var(--accent); }
+    main { max-width: var(--max-width); margin: 0 auto; padding: 64px 24px 120px; }
+    .hero-lite {
+      text-align: center;
+      margin-bottom: 72px;
+    }
+    .hero-lite .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+    .hero-lite .label::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent);
+    }
+    .hero-lite h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+    .hero-lite p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1.05rem;
+    }
+    .features-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 64px;
+    }
+    .feature-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 56px;
+      align-items: center;
+      padding: 48px;
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .feature-row:hover {
+      border-color: var(--border-3);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+    }
+    .feature-row-reverse { direction: rtl; }
+    .feature-row-reverse > * { direction: ltr; }
+    .feature-image-wrap {
+      position: relative;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border-2);
+      min-height: 280px;
+      background: var(--bg-2);
+    }
+    .feature-image {
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    .feature-chat {
+      background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+    }
+    .feature-chat::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      opacity: 0.5;
+    }
+    .feature-chat::after {
+      content: "Hi, what should I trade today?";
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      right: 24px;
+      padding: 16px 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-2);
+      border-radius: 14px 14px 14px 4px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--text);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .feature-automations {
+      background: linear-gradient(135deg, #0a0a0a 0%, #0f1500 100%);
+    }
+    .feature-automations::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        rgba(204,255,0,0.05) 0px,
+        rgba(204,255,0,0.05) 1px,
+        transparent 1px,
+        transparent 30px
+      );
+    }
+    .feature-automations::after {
+      content: "Automations active: 3";
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      padding: 8px 16px;
+      background: rgba(204,255,0,0.1);
+      border: 1px solid rgba(204,255,0,0.15);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+    .feature-thesis {
+      background: linear-gradient(135deg, #0a0a0a 0%, #151200 100%);
+    }
+    .feature-thesis::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 70% 30%, rgba(204,255,0,0.08) 0%, transparent 50%);
+    }
+    .feature-thesis::after {
+      content: "Strategy: BTC Macro Hedge";
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      padding: 8px 16px;
+      background: rgba(204,255,0,0.08);
+      border: 1px solid rgba(204,255,0,0.15);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+    .feature-content h2 {
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
+      margin: 0 0 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .feature-content p {
+      color: var(--text-muted);
+      margin: 0 0 24px;
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+    .feature-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .feature-list li span {
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+    footer {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border-2);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    @media (max-width: 900px) {
+      .feature-row,
+      .feature-row-reverse {
+        grid-template-columns: 1fr;
+        direction: ltr;
+      }
+    }
+    @media (max-width: 600px) {
+      header { padding: 14px 20px; }
+      main { padding: 44px 20px 80px; }
+      .feature-row { padding: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="../index.html">
+      <img src="../logo.png" alt="Rynix AI">
+      <span>RYNIX AI</span>
+    </a>
+    <a class="back-link" href="../index.html">&larr; Back to Home</a>
+  </header>
+
+  <main>
+    <div class="hero-lite">
+      <div class="label">Experience Rynix</div>
+      <h1>Three ways to trade with Rynix AI</h1>
+      <p>From plain-english chat to autonomous strategies, Rynix AI makes on-chain execution as simple as speaking your mind.</p>
+    </div>
+
+    <div class="features-grid">
+      <article class="feature-row">
+        <div class="feature-image-wrap">
+          <div class="feature-image feature-chat" role="img" aria-label="AI chat interface preview"></div>
+        </div>
+        <div class="feature-content">
+          <h2>Just Say What You Want</h2>
+          <p>Trade the way you think. Tell RynixAI "buy some ETH" or "what's BTC doing?" — no buttons, no forms, no learning curve. Just vibes.</p>
+          <ul class="feature-list">
+            <li><span>&gt;</span>Trade with plain English - no complex interfaces</li>
+            <li><span>&gt;</span>Get market insights just by asking</li>
+            <li><span>&gt;</span>Your AI trading companion, available 24/7</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="feature-row feature-row-reverse">
+        <div class="feature-image-wrap">
+          <div class="feature-image feature-automations" role="img" aria-label="Active automations preview"></div>
+        </div>
+        <div class="feature-content">
+          <h2>Automate Your Edge</h2>
+          <p>Set up market making, grid strategies, or technical rules. "Exit after 2 consecutive 4h closes below the 21 EMA" — RynixAI monitors and executes around the clock.</p>
+          <ul class="feature-list">
+            <li><span>&gt;</span>AI interprets your conditions intelligently</li>
+            <li><span>&gt;</span>Supports price, indicator, and time-based triggers</li>
+            <li><span>&gt;</span>Smart execution with retry and error handling</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="feature-row">
+        <div class="feature-image-wrap">
+          <div class="feature-image feature-thesis" role="img" aria-label="Set and forget strategy preview"></div>
+        </div>
+        <div class="feature-content">
+          <h2>Explain Your Thesis, Walk Away</h2>
+          <p>Brief RynixAI on your game plan: "Put 20% of margin in BTC, but sell everything if the Fed confirms a rate hike." Go live your life while your strategy runs.</p>
+          <ul class="feature-list">
+            <li><span>&gt;</span>Understands news, events, and macro conditions</li>
+            <li><span>&gt;</span>Portfolio-aware position sizing</li>
+            <li><span>&gt;</span>Monitors markets while you do other things</li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2026 Rynix AI. All rights reserved.
+  </footer>
+</body>
+</html>
