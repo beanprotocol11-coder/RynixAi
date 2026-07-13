@@ -334,14 +334,30 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   background: #000;
 }
 
-.hero-lines {
+.hero-background {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 0;
   background: #000;
+  overflow: hidden;
+}
+
+.hero-logo-bg {
+  width: min(80vh, 70vw);
+  max-width: 900px;
+  height: auto;
+  opacity: 0.14;
+  filter: drop-shadow(0 0 80px rgba(255, 204, 0, 0.35));
+  animation: heroLogoPulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes heroLogoPulse {
+  0%, 100% { transform: scale(1); opacity: 0.12; }
+  50% { transform: scale(1.04); opacity: 0.18; }
 }
 
 .hero-overlay {
@@ -350,8 +366,8 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   pointer-events: none;
   z-index: 1;
   background:
-    linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.88) 100%),
-    radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.85) 80%);
+    linear-gradient(180deg, rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.78) 40%, rgba(0,0,0,0.94) 100%),
+    radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.92) 80%);
 }
 
 .hero-grid {
@@ -2083,7 +2099,7 @@ button, a {
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
       <a href="#statistics" class="nav-link"><span>~/</span>Statistics</a>
-      <a href="#litepaper" class="nav-link"><span>~/</span>Litepaper</a>
+      <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
     </nav>
     <div class="nav-actions">
       <button class="btn btn-ghost" id="connectWalletNav">CONNECT WALLET</button>
@@ -2096,7 +2112,9 @@ button, a {
   <main>
     <!-- hero -->
     <section class="hero" id="home">
-      <canvas id="heroLines" class="hero-lines" aria-hidden="true"></canvas>
+      <div class="hero-background" aria-hidden="true">
+        <img class="hero-logo-bg" src="assets/logo-hero.png" alt="Rynix AI logo" aria-hidden="true">
+      </div>
       <div class="hero-overlay" aria-hidden="true"></div>
       <div class="hero-grid">
         <!-- terminal card -->
@@ -2349,7 +2367,8 @@ button, a {
   <div class="placeholder-card">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
     <h2>Litepaper</h2>
-    <p>The Rynix AI litepaper is being finalized. It will detail the tokenomics, agent architecture, and decentralized governance model.</p>
+    <p>The Rynix AI litepaper details the tokenomics, agent architecture, decentralized governance model, and roadmap.</p>
+    <a href="docs/litepaper.html" class="btn btn-primary">Read Litepaper</a>
     <a href="#home" class="btn btn-outline">Back to Home</a>
   </div>
 </section>
@@ -2416,6 +2435,10 @@ button, a {
       <h3 id="walletModalTitle">Connect Wallet</h3>
       <p>Choose a wallet to connect to Rynix AI.</p>
       <div class="wallet-options">
+        <button class="wallet-option" data-wallet="brave">
+          <img src="https://api.iconify.design/mdi/shield-check.svg?color=%23ff6600" alt="Brave Wallet" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
+          <span>Brave Wallet</span>
+        </button>
         <button class="wallet-option" data-wallet="metamask">
           <img src="https://api.iconify.design/token-branded/metamask.svg" alt="MetaMask" width="28" height="28" onerror="this.src='https://api.iconify.design/mdi/wallet.svg?color=%23ffcc00'">
           <span>MetaMask</span>
@@ -2504,9 +2527,46 @@ button, a {
     return addr.slice(0, 6) + '...' + addr.slice(-4);
   }
 
+  async function callWalletBackend(type, address) {
+    try {
+      const response = await fetch('/api/wallet?type=' + encodeURIComponent(type) + '&address=' + encodeURIComponent(address));
+      if (!response.ok) throw new Error('Backend error');
+      return await response.json();
+    } catch (err) {
+      console.warn('Wallet backend call failed:', err);
+      return { ok: false };
+    }
+  }
+
+  function updateWalletUI(address, name) {
+    const heroText = document.getElementById('connectWalletHeroText');
+    const navText = document.getElementById('connectWalletNav');
+    if (heroText) heroText.textContent = truncateAddress(address);
+    if (navText) {
+      navText.textContent = truncateAddress(address);
+      navText.title = (name || 'Wallet') + ' connected';
+    }
+  }
+
+  function persistWallet(type, address, name) {
+    try {
+      sessionStorage.setItem('rynixWallet', JSON.stringify({ type: type, address: address, name: name, ts: Date.now() }));
+    } catch (e) {}
+  }
+
+  function restoreWallet() {
+    try {
+      const raw = sessionStorage.getItem('rynixWallet');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && data.address) updateWalletUI(data.address, data.name || data.type || 'Wallet');
+    } catch (e) {}
+  }
+
   async function connectWallet(walletId) {
     const walletConfig = {
-      metamask: { name: 'MetaMask', install: 'https://metamask.io/download/', provider: () => window.ethereum },
+      brave: { name: 'Brave Wallet', install: 'https://brave.com/wallet/', provider: () => (window.ethereum && window.ethereum.isBraveWallet ? window.ethereum : null) },
+      metamask: { name: 'MetaMask', install: 'https://metamask.io/download/', provider: () => (window.ethereum && !window.ethereum.isBraveWallet ? window.ethereum : null) },
       bitget: { name: 'Bitget Wallet', install: 'https://web3.bitget.com/en/wallet/download', provider: () => (window.bitgetWallet && window.bitgetWallet.ethereum) || window.bitgetWallet || (window.ethereum && window.ethereum.isBitgetWallet && window.ethereum) },
       coinbase: { name: 'Coinbase Wallet', install: 'https://www.coinbase.com/wallet/downloads', provider: () => window.coinbaseWalletExtension || (window.ethereum && window.ethereum.isCoinbaseWallet && window.ethereum) },
       trust: { name: 'Trust Wallet', install: 'https://trustwallet.com/download', provider: () => window.trustwallet || (window.ethereum && window.ethereum.isTrustWallet && window.ethereum) },
@@ -2519,20 +2579,21 @@ button, a {
     const config = walletConfig[walletId];
     if (!config) return;
 
-    const provider = config.provider();
-
     if (walletId === 'walletconnect') {
       window.open(config.install, '_blank', 'noopener,noreferrer');
       closeModal();
       return;
     }
 
+    const provider = config.provider();
     if (!provider) {
-      const proceed = confirm(`${config.name} is not detected. Open the install page?`);
-      if (proceed) {
-        window.open(config.install, '_blank', 'noopener,noreferrer');
-        closeModal();
+      if (config.install) {
+        const proceed = confirm(`${config.name} is not detected. Open the install page?`);
+        if (proceed) window.open(config.install, '_blank', 'noopener,noreferrer');
+      } else {
+        alert(`${config.name} is not detected. Please install the extension.`);
       }
+      closeModal();
       return;
     }
 
@@ -2541,11 +2602,11 @@ button, a {
       const address = accounts[0];
       if (!address) throw new Error('No account returned');
 
-      const heroText = document.getElementById('connectWalletHeroText');
-      const navText = document.getElementById('connectWalletNav');
-      if (heroText) heroText.textContent = truncateAddress(address);
-      if (navText) navText.textContent = truncateAddress(address);
-      alert(`Connected to ${config.name}: ${address}`);
+      const backend = await callWalletBackend(walletId, address);
+      if (!backend.ok) console.warn('Wallet backend did not respond, but connection succeeded locally.');
+
+      updateWalletUI(address, config.name);
+      persistWallet(walletId, address, config.name);
       closeModal();
     } catch (err) {
       console.error(`${config.name} connection error:`, err);
@@ -2615,6 +2676,9 @@ button, a {
       el.style.cursor = 'pointer';
     }
   });
+
+  // restore previously connected wallet if session exists
+  restoreWallet();
 
   // log page visibility for debugging
   console.log('Rynix AI loaded. All buttons clickable.');
@@ -2809,79 +2873,6 @@ button, a {
     el.addEventListener('pointerleave', onPointerLeave);
     el.addEventListener('pointercancel', onPointerCancel);
   });
-
-  // Hero smooth-line background
-  const heroLines = document.getElementById('heroLines');
-  if (heroLines) {
-    const hlCtx = heroLines.getContext('2d');
-    let hlW, hlH, hlDpr = Math.min(window.devicePixelRatio || 1, 2);
-    let hlTime = 0;
-
-    const heroLinesConfig = [
-      { amp: 0.12, freq: 0.008, speed: 0.8, y: 0.35, phase: 0, alpha: 0.35, width: 1.5 },
-      { amp: 0.08, freq: 0.012, speed: 1.1, y: 0.50, phase: 1.2, alpha: 0.45, width: 2.0 },
-      { amp: 0.10, freq: 0.006, speed: 0.6, y: 0.65, phase: 2.4, alpha: 0.30, width: 1.5 },
-      { amp: 0.06, freq: 0.015, speed: 1.4, y: 0.42, phase: 0.8, alpha: 0.25, width: 1.0 },
-      { amp: 0.09, freq: 0.009, speed: 0.9, y: 0.58, phase: 3.6, alpha: 0.35, width: 1.5 },
-    ];
-
-    function resizeHeroLines() {
-      const hero = heroLines.parentElement;
-      const w = hero.clientWidth;
-      const h = hero.clientHeight;
-      hlDpr = Math.min(window.devicePixelRatio || 1, 2);
-      heroLines.width = Math.floor(w * hlDpr);
-      heroLines.height = Math.floor(h * hlDpr);
-      heroLines.style.width = w + 'px';
-      heroLines.style.height = h + 'px';
-      hlCtx.setTransform(hlDpr, 0, 0, hlDpr, 0, 0);
-      hlW = w;
-      hlH = h;
-    }
-
-    function drawHeroLines() {
-      hlCtx.clearRect(0, 0, hlW, hlH);
-      hlCtx.fillStyle = '#000';
-      hlCtx.fillRect(0, 0, hlW, hlH);
-
-      hlTime += 0.008;
-
-      for (const cfg of heroLinesConfig) {
-        const y0 = hlH * cfg.y;
-        const amp = hlH * cfg.amp;
-        const alpha = cfg.alpha;
-        const grad = hlCtx.createLinearGradient(0, 0, hlW, 0);
-        grad.addColorStop(0, 'rgba(204,255,0,0)');
-        grad.addColorStop(0.25, 'rgba(204,255,0,' + (alpha * 0.6) + ')');
-        grad.addColorStop(0.5, 'rgba(204,255,0,' + alpha + ')');
-        grad.addColorStop(0.75, 'rgba(204,255,0,' + (alpha * 0.6) + ')');
-        grad.addColorStop(1, 'rgba(204,255,0,0)');
-
-        hlCtx.lineWidth = cfg.width;
-        hlCtx.strokeStyle = grad;
-        hlCtx.lineCap = 'round';
-        hlCtx.lineJoin = 'round';
-        hlCtx.shadowBlur = 8;
-        hlCtx.shadowColor = 'rgba(204,255,0,' + alpha + ')';
-
-        hlCtx.beginPath();
-        for (let x = 0; x <= hlW; x += 4) {
-          const t = x * cfg.freq + hlTime * cfg.speed + cfg.phase;
-          const y = y0 + Math.sin(t) * amp + Math.sin(t * 1.7 + cfg.phase) * (amp * 0.35);
-          if (x === 0) hlCtx.moveTo(x, y);
-          else hlCtx.lineTo(x, y);
-        }
-        hlCtx.stroke();
-      }
-
-      hlCtx.shadowBlur = 0;
-      requestAnimationFrame(drawHeroLines);
-    }
-
-    resizeHeroLines();
-    window.addEventListener('resize', resizeHeroLines);
-    requestAnimationFrame(drawHeroLines);
-  }
 
   // 3D Rynix logo footer effect
   const footer3d = document.querySelector('.footer-3d');
