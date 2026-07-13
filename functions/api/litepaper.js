@@ -1,146 +1,16 @@
-const express = require('express');
-const path = require('path');
-const fetch = require('node-fetch');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-const priceSources = {
-  BTC: { kraken: 'XBTUSD', cg: 'bitcoin' },
-  ETH: { kraken: 'ETHUSD', cg: 'ethereum' },
-  SOL: { kraken: 'SOLUSD', cg: 'solana' },
-  HYPE: { kraken: 'HYPEUSD', cg: 'hyperliquid' }
-};
-
-const FALLBACK_PRICES = {
-  BTC: { price: 62750, change24h: -1.5 },
-  ETH: { price: 1776, change24h: -1.0 },
-  SOL: { price: 76.4, change24h: 0.3 },
-  HYPE: { price: 65.1, change24h: -2.6 }
-};
-
-let cache = {
-  data: null,
-  updatedAt: 0
-};
-
-const CACHE_TTL = 60 * 1000; // 60 seconds
-
-app.use(express.static(path.join(__dirname)));
-
-function getKrakenResult(data) {
-  const result = {};
-  for (const [symbol, config] of Object.entries(priceSources)) {
-    const key = Object.keys(data).find(k => k.includes(config.kraken.replace('USD', '')) || k.includes(symbol));
-    if (!key) continue;
-    const ticker = data[key];
-    const last = parseFloat(ticker.c[0]);
-    const open = parseFloat(ticker.o);
-    if (!isNaN(last) && !isNaN(open) && open !== 0) {
-      result[symbol] = {
-        price: last,
-        change24h: ((last - open) / open) * 100
-      };
-    }
-  }
-  return result;
-}
-
-function getCoinGeckoResult(data) {
-  const result = {};
-  for (const [symbol, config] of Object.entries(priceSources)) {
-    const id = config.cg;
-    if (data[id] && typeof data[id].usd === 'number') {
-      result[symbol] = {
-        price: data[id].usd,
-        change24h: data[id].usd_24h_change || 0
-      };
-    }
-  }
-  return result;
-}
-
-async function fetchKrakenPrices() {
-  const pairs = Object.values(priceSources).map(s => s.kraken).join(',');
-  const response = await fetch('https://api.kraken.com/0/public/Ticker?pair=' + pairs, {
-    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; RynixAI/1.0)' },
-    timeout: 10000
+export async function onRequest(context) {
+  const request = context.request;
+  const headers = new Headers({
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
   });
-  if (!response.ok) throw new Error('Kraken API error: ' + response.status);
-  const data = await response.json();
-  if (data.error && data.error.length) throw new Error('Kraken API error: ' + data.error.join(', '));
-  return getKrakenResult(data.result);
-}
 
-async function fetchCoinGeckoPrices() {
-  const ids = Object.values(priceSources).map(s => s.cg).join(',');
-  const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', {
-    headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; RynixAI/1.0)' },
-    timeout: 10000
-  });
-  if (!response.ok) throw new Error('CoinGecko API error: ' + response.status);
-  const data = await response.json();
-  return getCoinGeckoResult(data);
-}
-
-app.get('/api/prices', async (req, res) => {
-  const now = Date.now();
-  if (cache.data && now - cache.updatedAt < CACHE_TTL) {
-    return res.json(cache.data);
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers });
   }
 
-  try {
-    const result = await fetchKrakenPrices();
-    if (Object.keys(result).length === Object.keys(priceSources).length) {
-      cache = { data: result, updatedAt: now };
-      return res.json(result);
-    }
-  } catch (error) {
-    console.error('Kraken fetch error:', error.message);
-  }
-
-  try {
-    const result = await fetchCoinGeckoPrices();
-    if (Object.keys(result).length > 0) {
-      cache = { data: result, updatedAt: now };
-      return res.json(result);
-    }
-  } catch (error) {
-    console.error('CoinGecko fetch error:', error.message);
-  }
-
-  if (cache.data) {
-    return res.json(cache.data);
-  }
-
-  res.json(FALLBACK_PRICES);
-});
-
-app.get('/api/wallet', (req, res) => {
-  const type = req.query.type || 'unknown';
-  const address = req.query.address || '';
-  const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
-
-  if (!isValidAddress && type !== 'unknown') {
-    return res.status(400).json({ ok: false, error: 'Invalid EVM address' });
-  }
-
-  if (type === 'unknown' || !address) {
-    return res.status(400).json({ ok: false, error: 'Missing type or address' });
-  }
-
-  const token = 'rynix_' + Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
-
-  res.json({
-    ok: true,
-    type,
-    address,
-    token,
-    timestamp: Date.now()
-  });
-});
-
-app.get('/api/litepaper', (req, res) => {
   const data = {
     title: "Rynix AI Litepaper",
     updatedAt: Date.now(),
@@ -225,9 +95,6 @@ app.get('/api/litepaper', (req, res) => {
       }
     ]
   };
-  res.json(data);
-});
 
-app.listen(PORT, () => {
-  console.log('Rynix AI server running on port ' + PORT);
-});
+  return new Response(JSON.stringify(data), { status: 200, headers });
+}

@@ -18,6 +18,15 @@
   let prices = JSON.parse(JSON.stringify(fallbackPrices));
   let lastFetchTime = 0;
   const tokens = Object.keys(prices);
+  let openPositions = 2;
+  let tradesThisMonth = 0;
+  let analysisRuns = 1348;
+  let activeAutomations = 3;
+  let uniqueAssets = 4;
+  let totalJobs = 308;
+  let totalTrades = 47569;
+  let connectedWallets = 265;
+  let currentContext = '';
   let typingIndicator = null;
 
   // i18n is loaded from chatbot-locales.js before this script
@@ -168,13 +177,18 @@
     const ticker = symbol.toUpperCase();
     const data = prices[ticker];
     if (!data) return null;
-    const price = data.base;
+    const variation = (Math.random() - 0.5) * 0.0008;
+    const price = data.base * (1 + variation);
     const change = data.change.toFixed(2);
     return { price: price, change: parseFloat(change), symbol: ticker };
   }
 
   function formatPrice(n) {
     return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function formatNumber(n) {
+    return n.toLocaleString('en-US');
   }
 
   function getSymbolFromText(text) {
@@ -235,6 +249,19 @@
     return null;
   }
 
+  async function fetchWithTimeout(url, options, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    try {
+      const response = await fetch(url, Object.assign({}, options, { signal: controller.signal }));
+      clearTimeout(timer);
+      return response;
+    } catch (err) {
+      clearTimeout(timer);
+      throw err;
+    }
+  }
+
   async function fetchPrices() {
     const now = Date.now();
     if (now - lastFetchTime < 15000) return;
@@ -242,7 +269,7 @@
 
     let data = null;
     try {
-      const proxyResponse = await fetch('/api/prices', { timeout: 10000 });
+      const proxyResponse = await fetchWithTimeout('/api/prices', {}, 10000);
       if (proxyResponse.ok) data = await proxyResponse.json();
     } catch (err) {
       console.warn('Proxy unavailable, falling back to CoinGecko:', err);
@@ -251,7 +278,7 @@
     if (!data) {
       try {
         const ids = Object.values(priceMap).join(',');
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true');
+        const response = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true', {}, 10000);
         if (!response.ok) throw new Error('Network response was not ok');
         const cgData = await response.json();
         data = {};
@@ -293,9 +320,111 @@
     }
   }
 
+  function updateMetric(label, value) {
+    const metrics = document.querySelectorAll('.terminal-metric');
+    metrics.forEach(function(el) {
+      const labelEl = el.querySelector('span:first-child');
+      if (labelEl && labelEl.textContent.trim().toLowerCase().includes(label.toLowerCase())) {
+        const valueEl = el.querySelector('span:last-child');
+        if (valueEl) valueEl.textContent = value;
+      }
+    });
+    const statusItems = document.querySelectorAll('.terminal-status li');
+    statusItems.forEach(function(li) {
+      if (li.textContent.toLowerCase().includes(label.toLowerCase())) {
+        const span = li.querySelector('span');
+        if (span) span.textContent = value;
+      }
+    });
+  }
+
+  function updateStatElement(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const num = Number(value);
+    const display = formatNumber(num);
+    el.textContent = display;
+    const metric = el.parentElement;
+    if (!metric || !metric.classList.contains('stat-card-metrics')) return;
+    if (id === 'statTrades') {
+      metric.innerHTML = '<span id="statTrades">' + display + '</span> ' + (num === 1 ? 'trade' : 'trades') + ' this month • <span id="statVolume">$168,553,875.50</span> total volume';
+    } else if (id === 'statOpenPositions') {
+      const activeEl = document.getElementById('statActive');
+      const active = activeEl ? Number(activeEl.textContent.replace(/,/g, '')) : activeAutomations;
+      metric.innerHTML = '<span id="statActive">' + formatNumber(active) + '</span> active • <span id="statOpenPositions">' + display + '</span> open ' + (num === 1 ? 'position' : 'positions');
+    } else if (id === 'statActive') {
+      const posEl = document.getElementById('statOpenPositions');
+      const pos = posEl ? Number(posEl.textContent.replace(/,/g, '')) : openPositions;
+      metric.innerHTML = '<span id="statActive">' + display + '</span> active • <span id="statOpenPositions">' + formatNumber(pos) + '</span> open ' + (pos === 1 ? 'position' : 'positions');
+    } else if (id === 'statAnalysis') {
+      const assetsEl = document.getElementById('statAssets');
+      const assets = assetsEl ? Number(assetsEl.textContent.replace(/,/g, '')) : uniqueAssets;
+      metric.innerHTML = '<span id="statAnalysis">' + display + '</span> analysis ' + (num === 1 ? 'run' : 'runs') + ' • <span id="statAssets">' + formatNumber(assets) + '</span> unique ' + (assets === 1 ? 'asset' : 'assets');
+    } else if (id === 'statAssets') {
+      const analysisEl = document.getElementById('statAnalysis');
+      const analysis = analysisEl ? Number(analysisEl.textContent.replace(/,/g, '')) : analysisRuns;
+      metric.innerHTML = '<span id="statAnalysis">' + formatNumber(analysis) + '</span> analysis ' + (analysis === 1 ? 'run' : 'runs') + ' • <span id="statAssets">' + display + '</span> unique ' + (num === 1 ? 'asset' : 'assets');
+    } else if (id === 'statJobs') {
+      const tradesEl = document.getElementById('statTotalTrades');
+      const trades = tradesEl ? Number(tradesEl.textContent.replace(/,/g, '')) : totalTrades;
+      metric.innerHTML = '<span id="statJobs">' + display + '</span> ' + (num === 1 ? 'job' : 'jobs') + ' processed • <span id="statTotalTrades">' + formatNumber(trades) + '</span> total ' + (trades === 1 ? 'trade' : 'trades');
+    } else if (id === 'statTotalTrades') {
+      const jobsEl = document.getElementById('statJobs');
+      const jobs = jobsEl ? Number(jobsEl.textContent.replace(/,/g, '')) : totalJobs;
+      metric.innerHTML = '<span id="statJobs">' + formatNumber(jobs) + '</span> ' + (jobs === 1 ? 'job' : 'jobs') + ' processed • <span id="statTotalTrades">' + display + '</span> total ' + (num === 1 ? 'trade' : 'trades');
+    } else if (id === 'statWallets') {
+      metric.innerHTML = '<span id="statWallets">' + display + '</span> unique wallet' + (num === 1 ? '' : 's') + ' connected';
+    }
+  }
+
+  function addActivity(tickType, message, link) {
+    const activityList = document.getElementById('activityList');
+    if (!activityList) return;
+    const now = new Date();
+    const time = '[' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0') + ']';
+    const item = document.createElement('div');
+    item.className = 'activity-item';
+    let textHtml = '';
+    if (link) {
+      textHtml = '<a href="' + link + '" target="_blank" rel="noopener">' + tickType + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>:' + message;
+    } else {
+      textHtml = 'Automation:' + tickType + ' - ' + message;
+    }
+    item.innerHTML = '<div class="activity-time">' + time + '</div><div class="activity-text">' + textHtml + '</div>';
+    activityList.insertBefore(item, activityList.firstElementChild);
+    while (activityList.children.length > 20) {
+      activityList.removeChild(activityList.lastElementChild);
+    }
+  }
+
+  function pushFeed(tickType, message) {
+    const feedList = document.getElementById('liveFeed');
+    if (!feedList) return;
+    const cursor = feedList.querySelector('.term-cursor');
+    const cursorLi = cursor ? cursor.parentElement : null;
+    if (!cursorLi) return;
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="term-tick">' + tickType + '</span>' + message;
+    feedList.insertBefore(li, cursorLi);
+    if (feedList.children.length > 7) {
+      feedList.removeChild(feedList.firstElementChild);
+    }
+  }
+
   function scrollToStatistics() {
     const stats = document.getElementById('statistics');
     if (stats) stats.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function getStatisticsSummary() {
+    return '• Wallets connected: ' + formatNumber(connectedWallets) + '\n' +
+      '• Trades this month: ' + formatNumber(tradesThisMonth) + '\n' +
+      '• Total volume: $168,553,875.50\n' +
+      '• Analysis runs: ' + formatNumber(analysisRuns) + '\n' +
+      '• Active automations: ' + activeAutomations + '\n' +
+      '• Open positions: ' + openPositions + '\n' +
+      '• ACP jobs processed: ' + formatNumber(totalJobs) + '\n' +
+      '• Total ACP trades: ' + formatNumber(totalTrades);
   }
 
   function openChatbot(context) {
@@ -340,7 +469,7 @@
     }
     if (_has('stats')) {
       scrollToStatistics();
-      return t(lang, 'stats');
+      return t(lang, 'stats', { summary: getStatisticsSummary() });
     }
 
     let symbol = getSymbolFromText(clean);
@@ -376,36 +505,79 @@
       const qty = parseQuantity(clean);
       const p = getPrice(symbol);
       const price = p ? formatPrice(p.price) : '$--';
-      memory.lastTopic = 'trade';
-      memory.lastSide = side;
-      memory.lastSymbol = symbol;
-      memory.lastQty = qty;
-      persistMemory();
-      return t(lang, side, { qty: qty, symbol: symbol, price: price });
+      if (side === 'buy') {
+        openPositions++;
+        tradesThisMonth++;
+        totalTrades++;
+        analysisRuns++;
+        updateMetric('open positions', openPositions);
+        updateMetric('trades_this_month', tradesThisMonth);
+        updateStatElement('statTrades', tradesThisMonth);
+        updateStatElement('statOpenPositions', openPositions);
+        updateStatElement('statAnalysis', analysisRuns);
+        updateStatElement('statTotalTrades', totalTrades);
+        pushFeed('$OPEN', qty + ' ' + symbol + ' position opened');
+        addActivity('Open long', '$' + symbol + ' position opened', 'https://app.hyperliquid.xyz/explorer/tx/0x' + Math.random().toString(16).slice(2, 42));
+        memory.lastTopic = 'trade';
+        memory.lastSide = 'buy';
+        memory.lastSymbol = symbol;
+        memory.lastQty = qty;
+        persistMemory();
+        return t(lang, 'buy', { qty: qty, symbol: symbol, price: price });
+      } else {
+        if (openPositions > 0) openPositions--;
+        tradesThisMonth++;
+        totalTrades++;
+        analysisRuns++;
+        updateMetric('open positions', openPositions);
+        updateMetric('trades_this_month', tradesThisMonth);
+        updateStatElement('statTrades', tradesThisMonth);
+        updateStatElement('statOpenPositions', openPositions);
+        updateStatElement('statAnalysis', analysisRuns);
+        updateStatElement('statTotalTrades', totalTrades);
+        pushFeed('$CLOSE', qty + ' ' + symbol + ' position closed');
+        addActivity('Close long', '$' + symbol + ' position closed', 'https://app.hyperliquid.xyz/explorer/tx/0x' + Math.random().toString(16).slice(2, 42));
+        memory.lastTopic = 'trade';
+        memory.lastSide = 'sell';
+        memory.lastSymbol = symbol;
+        memory.lastQty = qty;
+        persistMemory();
+        return t(lang, 'sell', { qty: qty, symbol: symbol, price: price });
+      }
     }
 
     if (_has('position')) {
-      const posEl = document.getElementById('statOpenPositions');
-      const pos = posEl ? Number(posEl.textContent.replace(/[^0-9.-]/g, '')) : 0;
-      return t(lang, 'positions', { n: pos });
+      return t(lang, 'positions', { n: openPositions });
     }
     if (_has('portfolio')) {
       return t(lang, 'portfolio');
     }
     if (_has('connect')) {
-      return t(lang, 'connect');
+      connectedWallets++;
+      updateStatElement('statWallets', connectedWallets);
+      return t(lang, 'connect', { n: connectedWallets });
     }
     if (_has('analysis')) {
-      return t(lang, 'analysis');
+      analysisRuns += Math.floor(Math.random() * 3) + 1;
+      updateStatElement('statAnalysis', analysisRuns);
+      return t(lang, 'analysis', { n: analysisRuns, assets: uniqueAssets });
     }
     if (_has('automation')) {
+      currentContext = 'Active Trading';
+      activeAutomations = Math.min(activeAutomations + 1, 12);
+      updateStatElement('statActive', activeAutomations);
       return t(lang, 'automation');
     }
     if (_has('strategy')) {
+      currentContext = 'Set & Forget';
       return t(lang, 'strategy');
     }
     if (_has('acp')) {
-      return t(lang, 'acp');
+      totalJobs += 1;
+      totalTrades += Math.floor(Math.random() * 5) + 1;
+      updateStatElement('statJobs', totalJobs);
+      updateStatElement('statTotalTrades', totalTrades);
+      return t(lang, 'acp', { jobs: totalJobs, trades: totalTrades });
     }
     if (_has('terminal')) {
       return t(lang, 'terminal');

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rynix AI | Litepaper</title>
+  <meta name="description" content="Rynix AI Litepaper — technical overview, architecture, tokenomics, and governance of the autonomous on-chain trading protocol.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="../logo.png">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-2: #050505;
+      --surface: #0a0a0a;
+      --surface-2: #0f0f0f;
+      --border: #1a1a1a;
+      --border-2: #262626;
+      --text: #ffffff;
+      --text-muted: #888888;
+      --accent: #ccff00;
+      --accent-2: #ffcc00;
+      --font-body: "Space Grotesk", system-ui, sans-serif;
+      --font-mono: "Source Code Pro", ui-monospace, monospace;
+      --max-width: 800px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-2);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .brand img { width: 32px; height: 32px; border-radius: 8px; }
+    .back-link {
+      font-size: 0.9rem;
+      color: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--border-2);
+      padding: 10px 18px;
+      border-radius: 10px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+    .back-link:hover { background: rgba(204,255,0,0.08); border-color: var(--accent); }
+    main {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 64px 24px 120px;
+    }
+    .hero-lite {
+      text-align: center;
+      margin-bottom: 72px;
+    }
+    .hero-lite .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+    .hero-lite .label::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent);
+    }
+    .hero-lite h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+    .hero-lite p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      font-size: 1.05rem;
+    }
+    .litepaper-section {
+      padding: 32px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .litepaper-section:last-child { border-bottom: none; }
+    .litepaper-section h2 {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-2);
+      margin: 0 0 16px;
+    }
+    .litepaper-section h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 0 14px;
+      letter-spacing: -0.02em;
+    }
+    .litepaper-section p {
+      color: var(--text-muted);
+      margin: 0 0 18px;
+    }
+    .litepaper-section ul {
+      margin: 0 0 18px;
+      padding-left: 22px;
+      color: var(--text-muted);
+    }
+    .litepaper-section li { margin-bottom: 8px; }
+    .litepaper-section strong { color: var(--text); }
+    .error {
+      padding: 16px;
+      border: 1px solid var(--border-2);
+      border-radius: 12px;
+      color: var(--text-muted);
+      background: var(--surface-2);
+    }
+    footer {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border-2);
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    @media (max-width: 600px) {
+      header { padding: 14px 20px; }
+      main { padding: 44px 20px 80px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="../index.html">
+      <img src="../logo.png" alt="Rynix AI">
+      <span>RYNIX AI</span>
+    </a>
+    <a class="back-link" href="../index.html">← Back to Home</a>
+  </header>
+
+  <main id="litepaper">
+    <div class="hero-lite">
+      <div class="label">Official Document</div>
+      <h1>Rynix AI Litepaper</h1>
+      <p>Technical overview of the autonomous on-chain intelligence layer for HyperLiquid and EVM trading.</p>
+    </div>
+    <div id="litepaperContent">
+      <p class="error">Loading litepaper content...</p>
+    </div>
+  </main>
+
+  <footer>
+    © 2026 Rynix AI. All rights reserved.
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const fallback = {
+        sections: [
+          {
+            title: "Abstract",
+            heading: "What is Rynix AI?",
+            body: [
+              "Rynix AI is an autonomous, natural-language powered trading interface for the HyperLiquid ecosystem and broader EVM markets. Users describe what they want to do in plain English and Rynix AI translates intent into on-chain actions, monitors positions, and executes strategies around the clock.",
+              "The protocol combines an LLM intent layer, a deterministic execution engine, and an autonomous compute network (ACP) so that trades, automations, and theses can run without manual intervention."
+            ],
+            bullets: [
+              "Vibe trading: think it, say it, trade it.",
+              "24/7 autonomous monitoring and execution.",
+              "Portfolio-aware risk management and retry logic."
+            ]
+          },
+          {
+            title: "Architecture",
+            heading: "Agent + Execution Stack",
+            body: [
+              "Rynix AI is split into three layers: the Intent Layer, the Agent Layer, and the Execution Layer.",
+              "The Intent Layer parses natural language, identifies assets, quantities, and conditions, then outputs a structured trading plan. The Agent Layer validates the plan against market data, user portfolio, and risk parameters. The Execution Layer signs and submits transactions through HyperLiquid, EVM wallets, or whitelisted DEX aggregators."
+            ],
+            bullets: [
+              "Intent parsing: symbol detection, quantity extraction, side classification.",
+              "Live price feeds: CoinGecko, HyperLiquid, and on-chain oracles.",
+              "Secure execution: wallet signatures, smart retries, error handling."
+            ]
+          },
+          {
+            title: "Autonomous Compute Protocol",
+            heading: "ACP Network",
+            body: [
+              "The Autonomous Compute Protocol (ACP) allows Rynix AI agents to receive jobs from other agents, DAOs, and protocols. A job is a structured request containing a trading objective, constraints, and settlement rules.",
+              "Agent nodes validate job feasibility, execute according to the defined rules, and submit proof of execution. The network is designed to be permissioned during the launch phase and progressively decentralised."
+            ],
+            bullets: [
+              "Job queue for cross-agent tasks.",
+              "Proof-of-execution and reputation scoring.",
+              "Settlement via smart contracts or HyperLiquid clearing."
+            ]
+          },
+          {
+            title: "Tokenomics",
+            heading: "$RYNIX Token",
+            body: [
+              "The $RYNIX token is the native utility and governance token of the Rynix AI ecosystem. It is used to pay execution fees, access premium agent strategies, stake for ACP node eligibility, and vote on protocol upgrades.",
+              "A portion of protocol fees is directed to the treasury and used to reward stakers, operators, and contributors."
+            ],
+            bullets: [
+              "Total supply: 1,000,000,000 $RYNIX.",
+              "Fee sharing for stakers and node operators.",
+              "Governance over agent parameters and fee schedules."
+            ]
+          },
+          {
+            title: "Governance",
+            heading: "Decentralised Governance",
+            body: [
+              "Rynix AI governance is token-weighted. $RYNIX holders can propose and vote on protocol upgrades, new agent strategies, fee changes, and treasury allocations.",
+              "The protocol starts with a core team multisig and transitions to on-chain governance as the agent network matures."
+            ],
+            bullets: [
+              "On-chain proposals and voting.",
+              "Multisig guardrails during the launch phase.",
+              "Transparent treasury and fee distribution."
+            ]
+          },
+          {
+            title: "Roadmap",
+            heading: "Development Timeline",
+            body: [
+              "The Rynix AI roadmap is split into four phases: Launch, Expansion, Autonomy, and Decentralisation."
+            ],
+            bullets: [
+              "Phase 1 — Launch: chatbot trading, price feeds, wallet integration, and litepaper.",
+              "Phase 2 — Expansion: terminal UI, advanced automations, multi-asset support, and ACP beta.",
+              "Phase 3 — Autonomy: full self-custody automations, strategy marketplace, and agent-to-agent jobs.",
+              "Phase 4 — Decentralisation: on-chain governance, permissionless ACP nodes, and DAO treasury."
+            ]
+          }
+        ]
+      };
+
+      const container = document.getElementById('litepaperContent');
+
+      function render(data) {
+        const sections = data && data.sections ? data.sections : fallback.sections;
+        container.innerHTML = sections.map(function (s) {
+          return '<section class="litepaper-section">' +
+            '<h2>' + escapeHtml(s.title) + '</h2>' +
+            '<h3>' + escapeHtml(s.heading) + '</h3>' +
+            (s.body ? s.body.map(function(p){ return '<p>' + escapeHtml(p) + '</p>'; }).join('') : '') +
+            (s.bullets ? '<ul>' + s.bullets.map(function(b){ return '<li>' + escapeHtml(b) + '</li>'; }).join('') + '</ul>' : '') +
+          '</section>';
+        }).join('');
+      }
+
+      function escapeHtml(text) {
+        return String(text)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      fetch('../api/litepaper')
+        .then(function (res) { return res.json(); })
+        .then(function (data) { render(data); })
+        .catch(function (err) {
+          console.warn('Litepaper backend unavailable, using embedded content:', err);
+          render(fallback);
+        });
+    })();
+  </script>
+</body>
+</html>
