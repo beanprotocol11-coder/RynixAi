@@ -5,4 +5,5 @@ node_modules/
 *.log
 .vercel
 .wrangler/
+.dev.vars
 dist/
