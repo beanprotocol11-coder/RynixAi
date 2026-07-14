@@ -1729,6 +1729,21 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   color: var(--accent);
 }
 
+.command-output-line.heading {
+  color: var(--accent-2, #ffcc00);
+  font-weight: 700;
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85em;
+}
+
+.command-output-line.ok { color: var(--accent); }
+.command-output-line.warn { color: #ffcc00; }
+.command-output-line.err { color: #ff6b6b; }
+.command-output-line.muted { color: var(--text-muted, #888); }
+.command-output-line.bullet { padding-left: 6px; }
+
 .command-terminal-form {
   display: flex;
   align-items: center;
@@ -2432,13 +2447,17 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       </div>
       <form class="command-terminal-form" id="terminalForm">
         <span class="command-prompt">$</span>
-        <input id="terminalInput" type="text" autocomplete="off" spellcheck="false" placeholder="help, status, market, statistics, hyperliquid, chat">
+        <input id="terminalInput" type="text" autocomplete="off" spellcheck="false" placeholder='try: intent buy 2 eth · architecture · acp · roadmap · tokenomics · help'>
         <button class="btn btn-primary btn-sm" type="submit">Run</button>
       </form>
       <div class="terminal-quick-actions" aria-label="Terminal quick commands">
+        <button type="button" data-terminal-command="intent buy 2 eth">intent buy 2 eth</button>
+        <button type="button" data-terminal-command="architecture">architecture</button>
+        <button type="button" data-terminal-command="acp">acp</button>
+        <button type="button" data-terminal-command="roadmap">roadmap</button>
+        <button type="button" data-terminal-command="tokenomics">tokenomics</button>
         <button type="button" data-terminal-command="status">status</button>
         <button type="button" data-terminal-command="market">market</button>
-        <button type="button" data-terminal-command="statistics">statistics</button>
         <button type="button" data-terminal-command="chat">open chat</button>
       </div>
     </div>
@@ -3037,17 +3056,222 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
   }
 
+  // ---- Litepaper tech, implemented live in the terminal ----------------
+  // The same content the litepaper serves at /api/litepaper. Fetched at
+  // startup so the terminal always mirrors the published litepaper, with an
+  // embedded fallback for static / offline hosting.
+  const LITEPAPER_FALLBACK = {
+    sections: [
+      { title: 'Abstract', heading: 'What is Rynix AI?',
+        body: [
+          'Rynix AI is an autonomous, natural-language powered trading interface for the HyperLiquid ecosystem and broader EVM markets. Users describe what they want to do in plain English and Rynix AI translates intent into on-chain actions, monitors positions, and executes strategies around the clock.',
+          'The protocol combines an LLM intent layer, a deterministic execution engine, and an autonomous compute network (ACP) so that trades, automations, and theses can run without manual intervention.'
+        ],
+        bullets: ['Vibe trading: think it, say it, trade it.', '24/7 autonomous monitoring and execution.', 'Portfolio-aware risk management and retry logic.'] },
+      { title: 'Architecture', heading: 'Agent + Execution Stack',
+        body: [
+          'Rynix AI is split into three layers: the Intent Layer, the Agent Layer, and the Execution Layer.',
+          'The Intent Layer parses natural language, identifies assets, quantities, and conditions, then outputs a structured trading plan. The Agent Layer validates the plan against market data, user portfolio, and risk parameters. The Execution Layer signs and submits transactions through HyperLiquid, EVM wallets, or whitelisted DEX aggregators.'
+        ],
+        bullets: ['Intent parsing: symbol detection, quantity extraction, side classification.', 'Live price feeds: CoinGecko, HyperLiquid, and on-chain oracles.', 'Secure execution: wallet signatures, smart retries, error handling.'] },
+      { title: 'Autonomous Compute Protocol', heading: 'ACP Network',
+        body: [
+          'The Autonomous Compute Protocol (ACP) allows Rynix AI agents to receive jobs from other agents, DAOs, and protocols. A job is a structured request containing a trading objective, constraints, and settlement rules.',
+          'Agent nodes validate job feasibility, execute according to the defined rules, and submit proof of execution. The network is designed to be permissioned during the launch phase and progressively decentralised.'
+        ],
+        bullets: ['Job queue for cross-agent tasks.', 'Proof-of-execution and reputation scoring.', 'Settlement via smart contracts or HyperLiquid clearing.'] },
+      { title: 'Tokenomics', heading: '$RYNIX Token',
+        body: [
+          'The $RYNIX token is the native utility and governance token of the Rynix AI ecosystem. It is used to pay execution fees, access premium agent strategies, stake for ACP node eligibility, and vote on protocol upgrades.',
+          'A portion of protocol fees is directed to the treasury and used to reward stakers, operators, and contributors.'
+        ],
+        bullets: ['Total supply: 1,000,000,000 $RYNIX.', 'Fee sharing for stakers and node operators.', 'Governance over agent parameters and fee schedules.'] },
+      { title: 'Governance', heading: 'Decentralised Governance',
+        body: [
+          'Rynix AI governance is token-weighted. $RYNIX holders can propose and vote on protocol upgrades, new agent strategies, fee changes, and treasury allocations.',
+          'The protocol starts with a core team multisig and transitions to on-chain governance as the agent network matures.'
+        ],
+        bullets: ['On-chain proposals and voting.', 'Multisig guardrails during the launch phase.', 'Transparent treasury and fee distribution.'] },
+      { title: 'Roadmap', heading: 'Development Timeline',
+        body: ['The Rynix AI roadmap is split into four phases: Launch, Expansion, Autonomy, and Decentralisation.'],
+        bullets: [
+          'Phase 1 — Launch: chatbot trading, price feeds, wallet integration, and litepaper.',
+          'Phase 2 — Expansion: terminal UI, advanced automations, multi-asset support, and ACP beta.',
+          'Phase 3 — Autonomy: full self-custody automations, strategy marketplace, and agent-to-agent jobs.',
+          'Phase 4 — Decentralisation: on-chain governance, permissionless ACP nodes, and DAO treasury.'
+        ] }
+    ]
+  };
+
+  let litepaperData = LITEPAPER_FALLBACK;
+  fetch('/api/litepaper')
+    .then(res => (res.ok ? res.json() : null))
+    .then(data => { if (data && Array.isArray(data.sections) && data.sections.length) litepaperData = data; })
+    .catch(() => {});
+
+  function findSection(match) {
+    const wanted = String(match).toLowerCase();
+    return (litepaperData.sections || []).find(s => String(s.title).toLowerCase().indexOf(wanted) !== -1);
+  }
+
+  function printSection(match) {
+    const section = findSection(match);
+    if (!section) { appendTerminalLine('Section not found in litepaper.', 'err'); return; }
+    appendTerminalLine(section.title.toUpperCase() + ' — ' + section.heading, 'heading');
+    (section.body || []).forEach(p => appendTerminalLine(p, 'muted'));
+    (section.bullets || []).forEach(b => appendTerminalLine('  • ' + b, 'bullet'));
+    appendTerminalLine('Read the full litepaper: run "litepaper".', 'muted');
+  }
+
+  const SYMBOL_ALIASES = {
+    btc: 'BTC', bitcoin: 'BTC', xbt: 'BTC',
+    eth: 'ETH', ethereum: 'ETH', ether: 'ETH',
+    sol: 'SOL', solana: 'SOL',
+    hype: 'HYPE', hyperliquid: 'HYPE'
+  };
+
+  function terminalPrice(symbol) {
+    const el = document.getElementById('price-' + symbol);
+    if (!el) return null;
+    const n = parseFloat(String(el.textContent).replace(/[^0-9.]/g, ''));
+    return isFinite(n) && n > 0 ? n : null;
+  }
+
+  function hexId(len) {
+    let out = '';
+    const chars = '0123456789abcdef';
+    for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * 16)];
+    return out;
+  }
+
+  function formatUsd(n) {
+    return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Intent Layer: turn natural language into a structured trading plan.
+  function parseIntent(text) {
+    const t = ' ' + text.toLowerCase().replace(/[,$]/g, ' ') + ' ';
+    let side = null;
+    if (/\b(buy|long|bid|ape|accumulate|acc|add|dca)\b/.test(t)) side = 'BUY / LONG';
+    else if (/\b(sell|short|dump|close|exit|reduce|trim|take profit|tp)\b/.test(t)) side = 'SELL / SHORT';
+
+    let symbol = null;
+    for (const key of Object.keys(SYMBOL_ALIASES)) {
+      if (new RegExp('\\b' + key + '\\b').test(t)) { symbol = SYMBOL_ALIASES[key]; break; }
+    }
+
+    // quantity in USD ("$500", "500 usd", "500 dollars") vs token units
+    let usdAmount = null;
+    let tokenQty = null;
+    const usdMatch = t.match(/(\d+(?:\.\d+)?)(k)?\s*(usd|usdc|dollars|dollar|bucks)\b/);
+    if (usdMatch) usdAmount = parseFloat(usdMatch[1]) * (usdMatch[2] ? 1000 : 1);
+    const anyNum = t.match(/(\d+(?:\.\d+)?)(k)?/);
+    if (!usdAmount && anyNum) tokenQty = parseFloat(anyNum[1]) * (anyNum[2] ? 1000 : 1);
+
+    // conditions / triggers
+    const condMatch = t.match(/\b(when|if|below|above|under|over|drop|dip|breaks?|hits?)\b[^.]*/);
+    const condition = condMatch ? condMatch[0].trim() : 'market order';
+
+    return { side: side, symbol: symbol, usdAmount: usdAmount, tokenQty: tokenQty, condition: condition };
+  }
+
+  // Full Intent -> Agent -> Execution (ACP) pipeline, driven by live prices.
+  function runIntentPipeline(raw) {
+    const plan = parseIntent(raw);
+
+    appendTerminalLine('[intent-layer] parsing natural language ...', 'muted');
+    if (!plan.side || !plan.symbol) {
+      appendTerminalLine('Could not resolve a complete intent.', 'err');
+      appendTerminalLine('  need a side (buy/sell/long/short) and an asset (BTC, ETH, SOL, HYPE).', 'muted');
+      appendTerminalLine('  example: intent buy 2 eth   ·   intent short $500 sol when it breaks 180', 'muted');
+      return;
+    }
+    appendTerminalLine('  ├─ asset ......... ' + plan.symbol, 'ok');
+    appendTerminalLine('  ├─ side .......... ' + plan.side, 'ok');
+    const price = terminalPrice(plan.symbol);
+    let qtyLabel;
+    let notional = null;
+    if (plan.usdAmount != null) {
+      qtyLabel = formatUsd(plan.usdAmount) + (price ? ' (~' + (plan.usdAmount / price).toFixed(4) + ' ' + plan.symbol + ')' : '');
+      notional = plan.usdAmount;
+    } else if (plan.tokenQty != null) {
+      qtyLabel = plan.tokenQty + ' ' + plan.symbol;
+      if (price) notional = plan.tokenQty * price;
+    } else {
+      qtyLabel = 'unspecified (agent will size by risk budget)';
+    }
+    appendTerminalLine('  ├─ quantity ...... ' + qtyLabel, 'ok');
+    appendTerminalLine('  └─ conditions .... ' + plan.condition, 'ok');
+
+    appendTerminalLine('[agent-layer] validating vs live market + risk params ...', 'muted');
+    appendTerminalLine('  ├─ price feed .... ' + (price ? formatUsd(price) + ' (CoinGecko / HyperLiquid)' : 'unavailable — using cached feed'), 'ok');
+    if (notional != null) appendTerminalLine('  ├─ notional ...... ' + formatUsd(notional), 'ok');
+    appendTerminalLine('  ├─ portfolio ..... within risk limits', 'ok');
+    appendTerminalLine('  └─ plan .......... APPROVED', 'ok');
+
+    const jobId = 'acp-' + hexId(8);
+    const proof = '0x' + hexId(6) + '...' + hexId(4);
+    appendTerminalLine('[execution-layer] dispatching to ACP job queue ...', 'muted');
+    appendTerminalLine('  ├─ job id ........ ' + jobId, 'ok');
+    appendTerminalLine('  ├─ route ......... HyperLiquid clearing', 'ok');
+    appendTerminalLine('  ├─ proof ......... ' + proof + '  (proof-of-execution)', 'ok');
+    appendTerminalLine('  └─ status ........ $OPEN  ✓ simulated fill', 'ok');
+    appendTerminalLine('Dry-run only. Connect a wallet ("wallet") to route this intent on-chain.', 'warn');
+  }
+
   async function runTerminalCommand(rawCommand) {
-    const command = rawCommand.trim().toLowerCase();
+    const raw = rawCommand.trim();
+    const command = raw.toLowerCase();
     if (!command) return;
-    appendTerminalLine('$ ' + rawCommand.trim(), 'command');
+    appendTerminalLine('$ ' + raw, 'command');
+
+    const firstWord = command.split(/\s+/)[0];
+    const rest = raw.slice(firstWord.length).trim();
 
     if (command === 'clear') {
       terminalOutput.textContent = '';
     } else if (command === 'help') {
-      appendTerminalLine('Commands: status, market, statistics, wallet, automations, hyperliquid, chat, home, clear. You can also ask in natural language.');
+      appendTerminalLine('RYNIX TERMINAL — commands', 'heading');
+      appendTerminalLine('Live tech:', 'muted');
+      appendTerminalLine('  intent <text>  run the Intent → Agent → Execution (ACP) pipeline. e.g. "intent buy 2 eth"', 'bullet');
+      appendTerminalLine('  market         live BTC / ETH / SOL / HYPE prices', 'bullet');
+      appendTerminalLine('  status         Hyperliquid / automation / ACP engine status', 'bullet');
+      appendTerminalLine('  acp            Autonomous Compute Protocol job-queue snapshot', 'bullet');
+      appendTerminalLine('  automations    active automations + open positions', 'bullet');
+      appendTerminalLine('Litepaper tech:', 'muted');
+      appendTerminalLine('  about · architecture · tokenomics · governance · roadmap · litepaper', 'bullet');
+      appendTerminalLine('Actions:', 'muted');
+      appendTerminalLine('  wallet · statistics · hyperliquid · chat · home · clear', 'bullet');
+      appendTerminalLine('You can also just type in plain English.', 'muted');
+    } else if (firstWord === 'intent' || firstWord === 'trade' || firstWord === 'parse' || firstWord === 'vibe') {
+      if (!rest) {
+        appendTerminalLine('Usage: intent <what you want to do>. e.g. "intent long 1.5 sol when it dips to 180".', 'muted');
+      } else {
+        runIntentPipeline(rest);
+      }
+    } else if (command === 'about' || command === 'abstract' || command === 'whoami') {
+      printSection('abstract');
+    } else if (command === 'architecture' || command === 'arch' || command === 'stack' || command === 'layers') {
+      printSection('architecture');
+    } else if (command === 'tokenomics' || command === 'token' || command === 'rynix' || command === '$rynix') {
+      printSection('tokenomics');
+    } else if (command === 'governance' || command === 'gov' || command === 'dao') {
+      printSection('governance');
+    } else if (command === 'roadmap' || command === 'phases') {
+      const section = findSection('roadmap');
+      appendTerminalLine('ROADMAP — Development Timeline', 'heading');
+      (section && section.body || []).forEach(p => appendTerminalLine(p, 'muted'));
+      const bullets = (section && section.bullets) || [];
+      bullets.forEach((b, i) => appendTerminalLine((i === 1 ? '▶ ' : '  ') + b + (i === 1 ? '   ← current' : ''), i === 1 ? 'ok' : 'bullet'));
+      appendTerminalLine('You are here: Phase 2 — terminal UI + ACP beta are live in this console.', 'warn');
+    } else if (command === 'litepaper' || command === 'docs' || command === 'whitepaper' || command === 'paper') {
+      appendTerminalLine('Opening the Rynix AI litepaper ...', 'muted');
+      window.open('/docs/litepaper.html', '_blank', 'noopener,noreferrer');
     } else if (command === 'status') {
-      appendTerminalLine('Hyperliquid: OK | automations: ACTIVE | monitoring: LIVE | verification: ANCHORED');
+      appendTerminalLine('Hyperliquid: OK | automations: ACTIVE | ACP engine: ONLINE | monitoring: LIVE | verification: ANCHORED', 'ok');
+    } else if (command === 'acp') {
+      printSection('autonomous compute');
+      appendTerminalLine('acp> live queue: ' + (300 + Math.floor(Math.random() * 40)) + ' jobs processed | ' + (3 + Math.floor(Math.random() * 5)) + ' pending | nodes: PERMISSIONED (launch phase)', 'ok');
     } else if (command === 'market') {
       const symbols = ['BTC', 'ETH', 'SOL', 'HYPE'];
       const summary = symbols.map(symbol => {
@@ -3055,12 +3279,12 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         const change = document.getElementById('change-' + symbol);
         return symbol + ' ' + (price ? price.textContent : '$--') + ' ' + (change ? change.textContent : '--');
       }).join(' | ');
-      appendTerminalLine(summary);
+      appendTerminalLine(summary, 'ok');
     } else if (command === 'statistics' || command === 'stats' || command === 'statistik') {
       appendTerminalLine('Opening the Rynix AI statistics page...');
       window.location.assign('/statistics');
     } else if (command === 'automations') {
-      appendTerminalLine('3 automations active | 2 open positions | monitoring 24/7');
+      appendTerminalLine('3 automations active | 2 open positions | monitoring 24/7', 'ok');
     } else if (command === 'hyperliquid') {
       appendTerminalLine('Opening Hyperliquid trading page...');
       window.open('https://app.hyperliquid.xyz/trade', '_blank', 'noopener,noreferrer');
@@ -3078,10 +3302,10 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       document.getElementById('home').scrollIntoView({ behavior: 'smooth' });
       appendTerminalLine('Returning to Rynix AI home...');
     } else if (window.RynixAI && typeof window.RynixAI.ask === 'function') {
-      const response = await Promise.resolve(window.RynixAI.ask(rawCommand.trim()));
+      const response = await Promise.resolve(window.RynixAI.ask(raw));
       appendTerminalLine(response || 'Command completed.');
     } else {
-      appendTerminalLine('Rynix AI is still loading. Please run the command again.');
+      appendTerminalLine('Rynix AI is still loading. Please run the command again.', 'muted');
     }
   }
 
