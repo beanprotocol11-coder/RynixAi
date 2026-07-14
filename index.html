@@ -3127,7 +3127,13 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     btc: 'BTC', bitcoin: 'BTC', xbt: 'BTC',
     eth: 'ETH', ethereum: 'ETH', ether: 'ETH',
     sol: 'SOL', solana: 'SOL',
-    hype: 'HYPE', hyperliquid: 'HYPE'
+    hype: 'HYPE', hyperliquid: 'HYPE',
+    doge: 'DOGE', dogecoin: 'DOGE',
+    avax: 'AVAX', avalanche: 'AVAX',
+    link: 'LINK', chainlink: 'LINK',
+    arb: 'ARB', arbitrum: 'ARB',
+    xrp: 'XRP', ripple: 'XRP',
+    bnb: 'BNB', sui: 'SUI'
   };
 
   function terminalPrice(symbol) {
@@ -3161,24 +3167,39 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       if (new RegExp('\\b' + key + '\\b').test(raw)) { symbol = SYMBOL_ALIASES[key]; break; }
     }
 
-    // conditions / triggers — detect first so quantity is only read from the
-    // part before the condition (so "when it breaks 4000" isn't a quantity).
-    const condRe = /\b(when|if|below|above|under|over|drop|dip|breaks?|hits?)\b[^.]*/;
-    const condMatch = raw.match(condRe);
-    const condition = condMatch ? condMatch[0].trim() : 'market order';
-    const beforeCond = condMatch ? raw.slice(0, condMatch.index) : raw;
+    // Pull out modifiers first so their numbers aren't mistaken for quantity.
+    let work = raw;
+    let leverage = null, takeProfit = null, stopLoss = null;
+    const levM = work.match(/\b(\d+(?:\.\d+)?)\s*x\b/);
+    if (levM) { leverage = parseFloat(levM[1]); work = work.replace(levM[0], ' '); }
+    const tpM = work.match(/\b(?:tp|take[- ]?profit|target)\s*(?:@|at|=|:)?\s*\$?\s*(\d+(?:\.\d+)?)(k)?/);
+    if (tpM) { takeProfit = parseFloat(tpM[1]) * (tpM[2] ? 1000 : 1); work = work.replace(tpM[0], ' '); }
+    const slM = work.match(/\b(?:sl|stop[- ]?loss|stoploss|stop)\s*(?:@|at|=|:)?\s*\$?\s*(\d+(?:\.\d+)?)(k)?/);
+    if (slM) { stopLoss = parseFloat(slM[1]) * (slM[2] ? 1000 : 1); work = work.replace(slM[0], ' '); }
 
-    // quantity in USD ("$500", "500 usd", "500 dollars") vs token units.
-    let usdAmount = null;
-    let tokenQty = null;
+    // conditions / triggers — detect after modifiers so quantity is only read
+    // from the part before the condition (so "when it breaks 4000" isn't a qty).
+    const condRe = /\b(when|if|below|above|under|over|drop|dip|breaks?|hits?)\b.*/;
+    const condMatch = work.match(condRe);
+    const condition = condMatch ? condMatch[0].trim() : 'market order';
+    const beforeCond = condMatch ? work.slice(0, condMatch.index) : work;
+
+    // sizing: percent of portfolio, USD amount, or token units.
+    let usdAmount = null, tokenQty = null, percent = null;
+    const pctM = beforeCond.match(/(\d+(?:\.\d+)?)\s*(?:%|(?:percent|pct)\b)/);
+    if (pctM) percent = parseFloat(pctM[1]);
     const usdPrefix = beforeCond.match(/\$\s*(\d+(?:\.\d+)?)(k)?/);
     const usdSuffix = beforeCond.match(/(\d+(?:\.\d+)?)(k)?\s*(usd|usdc|dollars|dollar|bucks)\b/);
     const usdMatch = usdPrefix || usdSuffix;
     if (usdMatch) usdAmount = parseFloat(usdMatch[1]) * (usdMatch[2] ? 1000 : 1);
-    const anyNum = beforeCond.match(/(\d+(?:\.\d+)?)(k)?/);
-    if (!usdAmount && anyNum) tokenQty = parseFloat(anyNum[1]) * (anyNum[2] ? 1000 : 1);
+    if (!usdAmount && percent == null) {
+      const anyNum = beforeCond.match(/(\d+(?:\.\d+)?)(k)?/);
+      if (anyNum) tokenQty = parseFloat(anyNum[1]) * (anyNum[2] ? 1000 : 1);
+    }
 
-    return { side: side, symbol: symbol, usdAmount: usdAmount, tokenQty: tokenQty, condition: condition };
+    return { side: side, symbol: symbol, usdAmount: usdAmount, tokenQty: tokenQty,
+      percent: percent, leverage: leverage, takeProfit: takeProfit, stopLoss: stopLoss,
+      condition: condition };
   }
 
   // Full Intent -> Agent -> Execution (ACP) pipeline, driven by live prices.
@@ -3188,18 +3209,21 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     appendTerminalLine('[intent-layer] parsing natural language ...', 'muted');
     if (!plan.side || !plan.symbol) {
       appendTerminalLine('Could not resolve a complete intent.', 'err');
-      appendTerminalLine('  need a side (buy/sell/long/short) and an asset (BTC, ETH, SOL, HYPE).', 'muted');
-      appendTerminalLine('  example: intent buy 2 eth   ·   intent short $500 sol when it breaks 180', 'muted');
+      appendTerminalLine('  need a side (buy/sell/long/short) and an asset (BTC, ETH, SOL, HYPE, DOGE, AVAX, LINK, ARB, XRP, BNB, SUI).', 'muted');
+      appendTerminalLine('  example: intent buy 2 eth   ·   intent short $500 sol when it breaks 180   ·   intent long 10x eth tp 2500 sl 1700', 'muted');
       return;
     }
     appendTerminalLine('  ├─ asset ......... ' + plan.symbol, 'ok');
     appendTerminalLine('  ├─ side .......... ' + plan.side, 'ok');
+    if (plan.leverage != null) appendTerminalLine('  ├─ leverage ...... ' + plan.leverage + 'x', 'ok');
     const price = terminalPrice(plan.symbol);
     let qtyLabel;
     let notional = null;
     if (plan.usdAmount != null) {
       qtyLabel = formatUsd(plan.usdAmount) + (price ? ' (~' + (plan.usdAmount / price).toFixed(4) + ' ' + plan.symbol + ')' : '');
       notional = plan.usdAmount;
+    } else if (plan.percent != null) {
+      qtyLabel = plan.percent + '% of portfolio';
     } else if (plan.tokenQty != null) {
       qtyLabel = plan.tokenQty + ' ' + plan.symbol;
       if (price) notional = plan.tokenQty * price;
@@ -3211,7 +3235,12 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
     appendTerminalLine('[agent-layer] validating vs live market + risk params ...', 'muted');
     appendTerminalLine('  ├─ price feed .... ' + (price ? formatUsd(price) + ' (CoinGecko / HyperLiquid)' : 'unavailable — using cached feed'), 'ok');
-    if (notional != null) appendTerminalLine('  ├─ notional ...... ' + formatUsd(notional), 'ok');
+    if (notional != null) {
+      const lev = plan.leverage != null ? plan.leverage : 1;
+      appendTerminalLine('  ├─ notional ...... ' + formatUsd(notional) + (lev > 1 ? '  (margin ' + formatUsd(notional / lev) + ' @ ' + lev + 'x)' : ''), 'ok');
+    }
+    if (plan.takeProfit != null) appendTerminalLine('  ├─ take-profit ... ' + formatUsd(plan.takeProfit), 'ok');
+    if (plan.stopLoss != null) appendTerminalLine('  ├─ stop-loss ..... ' + formatUsd(plan.stopLoss), 'ok');
     appendTerminalLine('  ├─ portfolio ..... within risk limits', 'ok');
     appendTerminalLine('  └─ plan .......... APPROVED', 'ok');
 
@@ -3239,7 +3268,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     } else if (command === 'help') {
       appendTerminalLine('RYNIX TERMINAL — commands', 'heading');
       appendTerminalLine('Live tech:', 'muted');
-      appendTerminalLine('  intent <text>  run the Intent → Agent → Execution (ACP) pipeline. e.g. "intent buy 2 eth"', 'bullet');
+      appendTerminalLine('  intent <text>  run the Intent → Agent → Execution (ACP) pipeline. e.g. "intent long 10x eth tp 2500 sl 1700"', 'bullet');
       appendTerminalLine('  market         live BTC / ETH / SOL / HYPE prices', 'bullet');
       appendTerminalLine('  status         Hyperliquid / automation / ACP engine status', 'bullet');
       appendTerminalLine('  acp            Autonomous Compute Protocol job-queue snapshot', 'bullet');
