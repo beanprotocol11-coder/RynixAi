@@ -1221,11 +1221,50 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   flex-wrap: wrap;
 }
 
-.footer-partners span {
+.footer-partners span,
+.footer-explorers > span {
   font-size: 0.75rem;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.footer-explorers {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.explorer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  background: var(--accent-dim);
+  border: 1px solid rgba(204,255,0,0.35);
+  border-radius: 999px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.explorer-link:hover {
+  background: rgba(204,255,0,0.14);
+  border-color: var(--accent);
+}
+
+.explorer-link:active {
+  transform: scale(0.96);
+}
+
+.explorer-link svg {
+  width: 13px;
+  height: 13px;
 }
 
 .partner-link {
@@ -2659,6 +2698,17 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </div>
     <div class="footer-bottom">
       <div class="footer-copyright">&copy; 2026 Rynix AI. All rights reserved.</div>
+      <div class="footer-explorers">
+        <span>Explorers</span>
+        <a class="explorer-link" href="https://app.hyperliquid.xyz/explorer" target="_blank" rel="noopener" aria-label="HyperLiquid Explorer">
+          HyperLiquid Explorer
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+        <a class="explorer-link" href="https://robinhood.com/us/en/about/crypto/" target="_blank" rel="noopener" aria-label="Robinhood Chain Explorer">
+          Robinhood Chain Explorer
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      </div>
       <div class="footer-partners">
         <span>Data partners</span>
         <a class="partner-link" href="https://coingecko.com" target="_blank" rel="noopener" aria-label="CoinGecko">
