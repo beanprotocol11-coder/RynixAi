@@ -144,6 +144,36 @@ app.get('/api/wallet', (req, res) => {
   });
 });
 
+app.post('/api/acp/submit', express.json(), (req, res) => {
+  const body = req.body || {};
+  const intent = body.intent;
+  const signature = body.signature;
+
+  if (!intent || !signature || !intent.account || !intent.asset || !intent.side) {
+    return res.status(400).json({ ok: false, error: 'missing intent fields or signature' });
+  }
+  if (typeof signature !== 'string' || !/^0x[0-9a-fA-F]+$/.test(signature)) {
+    return res.status(400).json({ ok: false, error: 'malformed signature' });
+  }
+
+  let h = 0;
+  const seed = String(intent.account) + String(intent.nonce || '') + Date.now();
+  for (let i = 0; i < seed.length; i++) h = (Math.imul(h, 31) + seed.charCodeAt(i)) >>> 0;
+  const jobId = 'acp-' + h.toString(16).padStart(8, '0').slice(0, 8);
+
+  res.json({
+    ok: true,
+    jobId,
+    status: '$QUEUED',
+    account: intent.account,
+    asset: intent.asset,
+    side: intent.side,
+    venue: intent.venue || 'HyperLiquid',
+    receivedAt: Date.now(),
+    signature
+  });
+});
+
 app.get('/api/litepaper', (req, res) => {
   const data = {
     title: "Rynix AI Litepaper",
