@@ -2914,8 +2914,24 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     if (heroText) heroText.textContent = truncateAddress(address);
     if (navText) {
       navText.textContent = truncateAddress(address);
-      navText.title = (name || 'Wallet') + ' connected';
+      navText.title = (name || 'Wallet') + ' connected — click to disconnect';
     }
+  }
+
+  function resetWalletUI() {
+    const heroText = document.getElementById('connectWalletHeroText');
+    const navText = document.getElementById('connectWalletNav');
+    if (heroText) heroText.textContent = 'Connect Wallet';
+    if (navText) {
+      navText.textContent = 'CONNECT WALLET';
+      navText.title = '';
+    }
+  }
+
+  function disconnectWallet() {
+    connectedWallet = null;
+    try { sessionStorage.removeItem('rynixWallet'); } catch (e) {}
+    resetWalletUI();
   }
 
   function persistWallet(type, address, name) {
@@ -3040,7 +3056,15 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
   connectButtons.forEach(btn => {
     if (btn) {
-      btn.addEventListener('click', openModal);
+      btn.addEventListener('click', () => {
+        if (connectedWallet) {
+          if (window.confirm('Disconnect wallet ' + truncateAddress(connectedWallet.address) + ' from Rynix?')) {
+            disconnectWallet();
+          }
+        } else {
+          openModal();
+        }
+      });
     }
   });
 
@@ -3392,7 +3416,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       appendTerminalLine('Litepaper tech:', 'muted');
       appendTerminalLine('  about · architecture · tokenomics · governance · roadmap · litepaper', 'bullet');
       appendTerminalLine('Actions:', 'muted');
-      appendTerminalLine('  wallet · network [testnet|mainnet] · statistics · hyperliquid · chat · home · clear', 'bullet');
+      appendTerminalLine('  wallet · disconnect · network [testnet|mainnet] · statistics · hyperliquid · chat · home · clear', 'bullet');
       appendTerminalLine('Connect a wallet, then "intent ..." executes real orders on HyperLiquid (testnet by default).', 'muted');
       appendTerminalLine('You can also just type in plain English.', 'muted');
     } else if (firstWord === 'intent' || firstWord === 'trade' || firstWord === 'parse' || firstWord === 'vibe') {
@@ -3461,8 +3485,21 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         appendTerminalLine('Network set to testnet (safe, test funds).', 'ok');
       }
     } else if (command === 'wallet' || command === 'connect' || command === 'connect wallet') {
-      appendTerminalLine('Choose a wallet to connect securely.');
-      openModal();
+      if (connectedWallet) {
+        appendTerminalLine('Wallet connected: ' + connectedWallet.address, 'ok');
+        appendTerminalLine('Type "disconnect" to disconnect, or click the address in the top bar.', 'muted');
+      } else {
+        appendTerminalLine('Choose a wallet to connect securely.');
+        openModal();
+      }
+    } else if (command === 'disconnect' || command === 'disconnect wallet' || command === 'logout') {
+      if (connectedWallet) {
+        const addr = connectedWallet.address;
+        disconnectWallet();
+        appendTerminalLine('Wallet ' + truncateAddress(addr) + ' disconnected. Intents run in dry-run until you reconnect.', 'ok');
+      } else {
+        appendTerminalLine('No wallet is connected.', 'muted');
+      }
     } else if (command === 'home') {
       document.getElementById('home').scrollIntoView({ behavior: 'smooth' });
       appendTerminalLine('Returning to Rynix AI home...');
