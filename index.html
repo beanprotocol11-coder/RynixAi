@@ -1563,12 +1563,18 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.7rem;
-  color: var(--accent);
   border: 1px solid var(--accent);
   border-radius: 50%;
   background: var(--accent-dim);
   box-shadow: 0 0 22px var(--accent-glow);
+  overflow: hidden;
+}
+
+.confirm-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .confirm-addr {
@@ -2820,7 +2826,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     <div class="modal-backdrop" data-disconnect-cancel></div>
     <div class="modal-content confirm-content">
       <button class="modal-close" aria-label="Close" data-disconnect-cancel>&times;</button>
-      <div class="confirm-icon">&#9211;</div>
+      <div class="confirm-icon"><img src="logo.png" alt="Rynix" width="30" height="30"></div>
       <h3 id="disconnectTitle">Disconnect wallet?</h3>
       <p>Rynix will end the session for <span id="disconnectAddr" class="confirm-addr"></span>. Your funds stay in your wallet &mdash; this only disconnects it here.</p>
       <div class="confirm-actions">
