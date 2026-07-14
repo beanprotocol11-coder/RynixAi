@@ -1339,13 +1339,49 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   width: 70%;
   height: auto;
   filter: drop-shadow(0 0 28px rgba(204, 255, 0, 0.55));
-  animation: logoFloat3D 8s ease-in-out infinite;
+  animation: logoFlip3D 8s linear infinite;
   transform-style: preserve-3d;
+  backface-visibility: visible;
+  will-change: transform;
 }
 
-@keyframes logoFloat3D {
-  0%, 100% { transform: translateY(0) rotateY(-15deg) rotateX(5deg); }
-  50% { transform: translateY(-18px) rotateY(15deg) rotateX(-5deg); }
+@keyframes logoFlip3D {
+  0%   { transform: perspective(900px) translateY(0)     rotateY(0deg)   scale(1); }
+  25%  { transform: perspective(900px) translateY(-14px) rotateY(90deg)  scale(1.03); }
+  50%  { transform: perspective(900px) translateY(0)     rotateY(180deg) scale(1); }
+  75%  { transform: perspective(900px) translateY(-14px) rotateY(270deg) scale(1.03); }
+  100% { transform: perspective(900px) translateY(0)     rotateY(360deg) scale(1); }
+}
+
+.footer-3d-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  width: 100%;
+}
+
+.ascii-rynix {
+  margin: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(5px, 2.4vw, 15px);
+  line-height: 1.05;
+  font-weight: 400;
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-glow), 0 0 28px rgba(204, 255, 0, 0.35);
+  white-space: pre;
+  letter-spacing: 0;
+  user-select: none;
+  overflow: hidden;
+  max-width: 100%;
+  animation: asciiPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes asciiPulse {
+  0%, 100% { opacity: 0.82; filter: brightness(1); }
+  50%      { opacity: 1;    filter: brightness(1.3); }
 }
 
 .orbit-ring {
@@ -2670,11 +2706,19 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   <!-- 3D logo at end -->
   <section class="footer-3d" aria-label="Rynix AI 3D logo">
     <div class="footer-3d-glow" aria-hidden="true"></div>
-    <div class="logo-3d-stage">
-      <div class="orbit-ring r1" aria-hidden="true"></div>
-      <div class="orbit-ring r2" aria-hidden="true"></div>
-      <div class="orbit-ring r3" aria-hidden="true"></div>
-      <img class="logo-3d-img" src="assets/logo-3d.png" alt="Rynix AI 3D logo">
+    <div class="footer-3d-inner">
+      <div class="logo-3d-stage">
+        <div class="orbit-ring r1" aria-hidden="true"></div>
+        <div class="orbit-ring r2" aria-hidden="true"></div>
+        <div class="orbit-ring r3" aria-hidden="true"></div>
+        <img class="logo-3d-img" src="assets/logo-3d.png" alt="Rynix AI 3D logo">
+      </div>
+      <pre class="ascii-rynix" aria-label="RYNIX">██████╗ ██╗   ██╗███╗   ██╗██╗██╗  ██╗
+██╔══██╗╚██╗ ██╔╝████╗  ██║██║╚██╗██╔╝
+██████╔╝ ╚████╔╝ ██╔██╗ ██║██║ ╚███╔╝ 
+██╔══██╗  ╚██╔╝  ██║╚██╗██║██║ ██╔██╗ 
+██║  ██║   ██║   ██║ ╚████║██║██╔╝ ██╗
+╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝</pre>
     </div>
   </section>
 
