@@ -3288,7 +3288,44 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       return;
     }
 
-    // Wallet connected: authorize the intent with a real wallet signature.
+    appendTerminalLine('  ├─ wallet ........ ' + truncateAddress(connectedWallet.address), 'ok');
+
+    // Real, non-custodial execution on HyperLiquid (wallet signs each order).
+    if (window.RynixHL) {
+      const net = window.RynixHL.isTestnet ? 'HyperLiquid TESTNET' : 'HyperLiquid MAINNET';
+      appendTerminalLine('  ├─ venue ......... ' + net, 'ok');
+      appendTerminalLine('  ├─ order ......... requesting wallet signature ...', 'muted');
+      try {
+        const r = await window.RynixHL.placeOrder({
+          provider: signer, address: connectedWallet.address, symbol: plan.symbol,
+          isBuy: plan.side === 'BUY / LONG',
+          usdAmount: plan.usdAmount, tokenQty: plan.tokenQty, percent: plan.percent,
+          leverage: plan.leverage, takeProfit: plan.takeProfit, stopLoss: plan.stopLoss
+        });
+        const statuses = r.entry && r.entry.response && r.entry.response.data && r.entry.response.data.statuses;
+        let oid = null, fillMsg = 'submitted';
+        if (Array.isArray(statuses) && statuses.length) {
+          const s0 = statuses[0];
+          if (s0.filled) { oid = s0.filled.oid; fillMsg = 'FILLED ' + s0.filled.totalSz + ' @ ' + s0.filled.avgPx; }
+          else if (s0.resting) { oid = s0.resting.oid; fillMsg = 'RESTING'; }
+          else if (s0.error) { fillMsg = 'rejected: ' + s0.error; }
+        }
+        appendTerminalLine('  ├─ size .......... ' + r.size + ' ' + plan.symbol + ' @ ~' + formatUsd(r.mid), 'ok');
+        appendTerminalLine('  ├─ order id ...... ' + (oid != null ? oid : 'n/a'), 'ok');
+        appendTerminalLine('  └─ status ........ ' + (oid != null ? '$OPEN' : '$REJECTED') + '  ' + fillMsg, oid != null ? 'ok' : 'err');
+        if (r.tpsl) appendTerminalLine('  · TP/SL reduce-only orders placed.', 'ok');
+        else if (r.tpslError) appendTerminalLine('  · TP/SL not placed: ' + r.tpslError, 'warn');
+        appendTerminalLine(window.RynixHL.isTestnet
+          ? 'Executed on HyperLiquid testnet (test funds). Use "network mainnet" for real trading.'
+          : 'Executed on HyperLiquid MAINNET with real funds.', window.RynixHL.isTestnet ? 'muted' : 'warn');
+      } catch (err) {
+        const rejected = err && (err.code === 4001 || /reject|denied|cancel/i.test(err.message || ''));
+        appendTerminalLine('  └─ order ......... ' + (rejected ? 'signature rejected — order not sent.' : 'HyperLiquid: ' + ((err && err.message) || 'error')), 'err');
+      }
+      return;
+    }
+
+    // Fallback (HyperLiquid module not loaded): sign the intent and record it.
     const intentPayload = {
       protocol: 'RynixAI-ACP', version: 1,
       account: connectedWallet.address,
@@ -3300,7 +3337,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     };
     const message = 'Rynix AI - authorize ACP intent\n' + JSON.stringify(intentPayload, null, 2);
 
-    appendTerminalLine('  ├─ wallet ........ ' + truncateAddress(connectedWallet.address), 'ok');
     appendTerminalLine('  ├─ auth .......... awaiting signature in wallet ...', 'muted');
 
     let signature;
@@ -3356,7 +3392,8 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       appendTerminalLine('Litepaper tech:', 'muted');
       appendTerminalLine('  about · architecture · tokenomics · governance · roadmap · litepaper', 'bullet');
       appendTerminalLine('Actions:', 'muted');
-      appendTerminalLine('  wallet · statistics · hyperliquid · chat · home · clear', 'bullet');
+      appendTerminalLine('  wallet · network [testnet|mainnet] · statistics · hyperliquid · chat · home · clear', 'bullet');
+      appendTerminalLine('Connect a wallet, then "intent ..." executes real orders on HyperLiquid (testnet by default).', 'muted');
       appendTerminalLine('You can also just type in plain English.', 'muted');
     } else if (firstWord === 'intent' || firstWord === 'trade' || firstWord === 'parse' || firstWord === 'vibe') {
       if (!rest) {
@@ -3409,6 +3446,19 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       else {
         const launcher = document.getElementById('chatLauncher');
         if (launcher) launcher.click();
+      }
+    } else if (firstWord === 'network' || firstWord === 'net') {
+      if (!window.RynixHL) {
+        appendTerminalLine('HyperLiquid module not loaded yet — try again in a moment.', 'warn');
+      } else if (!rest) {
+        appendTerminalLine('Network: ' + (window.RynixHL.isTestnet ? 'testnet' : 'MAINNET'), 'ok');
+        appendTerminalLine('Switch with: network testnet · network mainnet', 'muted');
+      } else if (rest === 'mainnet') {
+        window.RynixHL.setNetwork('mainnet');
+        appendTerminalLine('Network set to MAINNET — intents now trade with REAL funds on HyperLiquid.', 'warn');
+      } else {
+        window.RynixHL.setNetwork('testnet');
+        appendTerminalLine('Network set to testnet (safe, test funds).', 'ok');
       }
     } else if (command === 'wallet' || command === 'connect' || command === 'connect wallet') {
       appendTerminalLine('Choose a wallet to connect securely.');
@@ -4126,6 +4176,8 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
 })();
 </script>
+
+<script type="module" src="hyperliquid.js"></script>
 
 </body>
 </html>
