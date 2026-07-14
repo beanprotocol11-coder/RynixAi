@@ -1476,6 +1476,44 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   margin: 0 0 24px;
 }
 
+.confirm-content {
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-icon {
+  width: 58px;
+  height: 58px;
+  margin: 4px auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  background: var(--accent-dim);
+  box-shadow: 0 0 22px var(--accent-glow);
+}
+
+.confirm-addr {
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.confirm-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
 .wallet-options {
   display: flex;
   flex-direction: column;
@@ -2685,6 +2723,21 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </div>
   </div>
 
+  <!-- disconnect confirm modal (Rynix themed) -->
+  <div class="modal" id="disconnectModal" aria-hidden="true" role="dialog" aria-labelledby="disconnectTitle">
+    <div class="modal-backdrop" data-disconnect-cancel></div>
+    <div class="modal-content confirm-content">
+      <button class="modal-close" aria-label="Close" data-disconnect-cancel>&times;</button>
+      <div class="confirm-icon">&#9211;</div>
+      <h3 id="disconnectTitle">Disconnect wallet?</h3>
+      <p>Rynix will end the session for <span id="disconnectAddr" class="confirm-addr"></span>. Your funds stay in your wallet &mdash; this only disconnects it here.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" data-disconnect-cancel>Cancel</button>
+        <button class="btn btn-primary" id="disconnectConfirm">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
   <script>
 (function () {
   'use strict';
@@ -2934,6 +2987,41 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     resetWalletUI();
   }
 
+  const disconnectModal = document.getElementById('disconnectModal');
+
+  function openDisconnectModal() {
+    if (!disconnectModal || !connectedWallet) return;
+    const addrEl = document.getElementById('disconnectAddr');
+    if (addrEl) addrEl.textContent = truncateAddress(connectedWallet.address);
+    disconnectModal.classList.add('open');
+    disconnectModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDisconnectModal() {
+    if (!disconnectModal) return;
+    disconnectModal.classList.remove('open');
+    disconnectModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  if (disconnectModal) {
+    disconnectModal.querySelectorAll('[data-disconnect-cancel]').forEach(el =>
+      el.addEventListener('click', closeDisconnectModal));
+    const confirmBtn = document.getElementById('disconnectConfirm');
+    if (confirmBtn) confirmBtn.addEventListener('click', () => {
+      const addr = connectedWallet ? connectedWallet.address : null;
+      disconnectWallet();
+      closeDisconnectModal();
+      if (addr && typeof appendTerminalLine === 'function') {
+        appendTerminalLine('Wallet ' + truncateAddress(addr) + ' disconnected. Intents run in dry-run until you reconnect.', 'ok');
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && disconnectModal.classList.contains('open')) closeDisconnectModal();
+    });
+  }
+
   function persistWallet(type, address, name) {
     try {
       sessionStorage.setItem('rynixWallet', JSON.stringify({ type: type, address: address, name: name, ts: Date.now() }));
@@ -3058,9 +3146,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     if (btn) {
       btn.addEventListener('click', () => {
         if (connectedWallet) {
-          if (window.confirm('Disconnect wallet ' + truncateAddress(connectedWallet.address) + ' from Rynix?')) {
-            disconnectWallet();
-          }
+          openDisconnectModal();
         } else {
           openModal();
         }
@@ -3259,6 +3345,8 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   }
 
   // Full Intent -> Agent -> Execution (ACP) pipeline, driven by live prices.
+  const MIN_NOTIONAL_USD = 10;
+
   async function runIntentPipeline(raw) {
     const plan = parseIntent(raw);
 
@@ -3297,6 +3385,11 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     }
     if (plan.takeProfit != null) appendTerminalLine('  ├─ take-profit ... ' + formatUsd(plan.takeProfit), 'ok');
     if (plan.stopLoss != null) appendTerminalLine('  ├─ stop-loss ..... ' + formatUsd(plan.stopLoss), 'ok');
+    if (notional != null && notional < MIN_NOTIONAL_USD) {
+      appendTerminalLine('  └─ plan .......... REJECTED (below minimum)', 'err');
+      appendTerminalLine('Minimum order is ' + formatUsd(MIN_NOTIONAL_USD) + ' notional on HyperLiquid. Try e.g. "intent ' + (plan.side === 'BUY / LONG' ? 'buy' : 'sell') + ' $10 ' + plan.symbol.toLowerCase() + '".', 'warn');
+      return;
+    }
     appendTerminalLine('  ├─ portfolio ..... within risk limits', 'ok');
     appendTerminalLine('  └─ plan .......... APPROVED', 'ok');
 
@@ -3418,10 +3511,12 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       appendTerminalLine('Actions:', 'muted');
       appendTerminalLine('  wallet · disconnect · network [testnet|mainnet] · statistics · hyperliquid · chat · home · clear', 'bullet');
       appendTerminalLine('Connect a wallet, then "intent ..." executes real orders on HyperLiquid (testnet by default).', 'muted');
+      appendTerminalLine('Minimum order size: $10 notional (HyperLiquid).', 'muted');
       appendTerminalLine('You can also just type in plain English.', 'muted');
     } else if (firstWord === 'intent' || firstWord === 'trade' || firstWord === 'parse' || firstWord === 'vibe') {
       if (!rest) {
         appendTerminalLine('Usage: intent <what you want to do>. e.g. "intent long 1.5 sol when it dips to 180".', 'muted');
+        appendTerminalLine('Minimum order size: $10 notional (HyperLiquid). e.g. "intent buy $10 eth".', 'muted');
       } else {
         await runIntentPipeline(rest);
       }

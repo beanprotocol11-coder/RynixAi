@@ -4,6 +4,7 @@
 // testnet — switch with the terminal `network mainnet` command.
 import { ExchangeClient, InfoClient, HttpTransport } from 'https://esm.sh/@nktkas/hyperliquid@0.33.1?bundle';
 
+const MIN_NOTIONAL_USD = 10;
 let isTestnet = true;
 let transport = new HttpTransport({ isTestnet: isTestnet });
 let info = new InfoClient({ transport: transport });
@@ -92,6 +93,9 @@ window.RynixHL = {
     }
     size = roundSize(size, ai.szDecimals);
     if (!(size > 0)) throw new Error('Size rounds to 0 — increase the amount.');
+    if (size * mid < MIN_NOTIONAL_USD) {
+      throw new Error('Order notional ~$' + (size * mid).toFixed(2) + ' is below the $' + MIN_NOTIONAL_USD + ' HyperLiquid minimum.');
+    }
 
     const wallet = makeWallet(provider, address);
     const exch = new ExchangeClient({ transport: transport, wallet: wallet });
