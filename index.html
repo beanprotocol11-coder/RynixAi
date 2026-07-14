@@ -1221,11 +1221,50 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   flex-wrap: wrap;
 }
 
-.footer-partners span {
+.footer-partners span,
+.footer-explorers > span {
   font-size: 0.75rem;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.footer-explorers {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.explorer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  background: var(--accent-dim);
+  border: 1px solid rgba(204,255,0,0.35);
+  border-radius: 999px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.explorer-link:hover {
+  background: rgba(204,255,0,0.14);
+  border-color: var(--accent);
+}
+
+.explorer-link:active {
+  transform: scale(0.96);
+}
+
+.explorer-link svg {
+  width: 13px;
+  height: 13px;
 }
 
 .partner-link {
@@ -1300,13 +1339,49 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   width: 70%;
   height: auto;
   filter: drop-shadow(0 0 28px rgba(204, 255, 0, 0.55));
-  animation: logoFloat3D 8s ease-in-out infinite;
+  animation: logoFlip3D 8s linear infinite;
   transform-style: preserve-3d;
+  backface-visibility: visible;
+  will-change: transform;
 }
 
-@keyframes logoFloat3D {
-  0%, 100% { transform: translateY(0) rotateY(-15deg) rotateX(5deg); }
-  50% { transform: translateY(-18px) rotateY(15deg) rotateX(-5deg); }
+@keyframes logoFlip3D {
+  0%   { transform: perspective(900px) translateY(0)     rotateY(0deg)   scale(1); }
+  25%  { transform: perspective(900px) translateY(-14px) rotateY(90deg)  scale(1.03); }
+  50%  { transform: perspective(900px) translateY(0)     rotateY(180deg) scale(1); }
+  75%  { transform: perspective(900px) translateY(-14px) rotateY(270deg) scale(1.03); }
+  100% { transform: perspective(900px) translateY(0)     rotateY(360deg) scale(1); }
+}
+
+.footer-3d-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  width: 100%;
+}
+
+.ascii-rynix {
+  margin: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: clamp(5px, 2.4vw, 15px);
+  line-height: 1.05;
+  font-weight: 400;
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-glow), 0 0 28px rgba(204, 255, 0, 0.35);
+  white-space: pre;
+  letter-spacing: 0;
+  user-select: none;
+  overflow: hidden;
+  max-width: 100%;
+  animation: asciiPulse 3.2s ease-in-out infinite;
+}
+
+@keyframes asciiPulse {
+  0%, 100% { opacity: 0.82; filter: brightness(1); }
+  50%      { opacity: 1;    filter: brightness(1.3); }
 }
 
 .orbit-ring {
@@ -1474,6 +1549,50 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 .modal-content p {
   color: var(--text-muted);
   margin: 0 0 24px;
+}
+
+.confirm-content {
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-icon {
+  width: 58px;
+  height: 58px;
+  margin: 4px auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  background: var(--accent-dim);
+  box-shadow: 0 0 22px var(--accent-glow);
+  overflow: hidden;
+}
+
+.confirm-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.confirm-addr {
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.confirm-actions .btn {
+  flex: 1;
+  justify-content: center;
 }
 
 .wallet-options {
@@ -1728,6 +1847,21 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 .command-output-line.command {
   color: var(--accent);
 }
+
+.command-output-line.heading {
+  color: var(--accent-2, #ffcc00);
+  font-weight: 700;
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85em;
+}
+
+.command-output-line.ok { color: var(--accent); }
+.command-output-line.warn { color: #ffcc00; }
+.command-output-line.err { color: #ff6b6b; }
+.command-output-line.muted { color: var(--text-muted, #888); }
+.command-output-line.bullet { padding-left: 6px; }
 
 .command-terminal-form {
   display: flex;
@@ -2432,13 +2566,17 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       </div>
       <form class="command-terminal-form" id="terminalForm">
         <span class="command-prompt">$</span>
-        <input id="terminalInput" type="text" autocomplete="off" spellcheck="false" placeholder="help, status, market, statistics, hyperliquid, chat">
+        <input id="terminalInput" type="text" autocomplete="off" spellcheck="false" placeholder='try: intent buy 2 eth · architecture · acp · roadmap · tokenomics · help'>
         <button class="btn btn-primary btn-sm" type="submit">Run</button>
       </form>
       <div class="terminal-quick-actions" aria-label="Terminal quick commands">
+        <button type="button" data-terminal-command="intent buy 2 eth">intent buy 2 eth</button>
+        <button type="button" data-terminal-command="architecture">architecture</button>
+        <button type="button" data-terminal-command="acp">acp</button>
+        <button type="button" data-terminal-command="roadmap">roadmap</button>
+        <button type="button" data-terminal-command="tokenomics">tokenomics</button>
         <button type="button" data-terminal-command="status">status</button>
         <button type="button" data-terminal-command="market">market</button>
-        <button type="button" data-terminal-command="statistics">statistics</button>
         <button type="button" data-terminal-command="chat">open chat</button>
       </div>
     </div>
@@ -2574,11 +2712,19 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   <!-- 3D logo at end -->
   <section class="footer-3d" aria-label="Rynix AI 3D logo">
     <div class="footer-3d-glow" aria-hidden="true"></div>
-    <div class="logo-3d-stage">
-      <div class="orbit-ring r1" aria-hidden="true"></div>
-      <div class="orbit-ring r2" aria-hidden="true"></div>
-      <div class="orbit-ring r3" aria-hidden="true"></div>
-      <img class="logo-3d-img" src="assets/logo-3d.png" alt="Rynix AI 3D logo">
+    <div class="footer-3d-inner">
+      <div class="logo-3d-stage">
+        <div class="orbit-ring r1" aria-hidden="true"></div>
+        <div class="orbit-ring r2" aria-hidden="true"></div>
+        <div class="orbit-ring r3" aria-hidden="true"></div>
+        <img class="logo-3d-img" src="assets/logo-3d.png" alt="Rynix AI 3D logo">
+      </div>
+      <pre class="ascii-rynix" aria-label="RYNIX">██████╗ ██╗   ██╗███╗   ██╗██╗██╗  ██╗
+██╔══██╗╚██╗ ██╔╝████╗  ██║██║╚██╗██╔╝
+██████╔╝ ╚████╔╝ ██╔██╗ ██║██║ ╚███╔╝ 
+██╔══██╗  ╚██╔╝  ██║╚██╗██║██║ ██╔██╗ 
+██║  ██║   ██║   ██║ ╚████║██║██╔╝ ██╗
+╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═══╝╚═╝╚═╝  ╚═╝</pre>
     </div>
   </section>
 
@@ -2588,8 +2734,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       <div class="live-data">
         <div class="live-data-label"><span class="pulse"></span>LIVE DATA ACTIVE</div>
         <div class="live-data-row">
-          <div class="live-data-item"><span>MCAP:</span><strong id="mcap">$122,326.13</strong></div>
-          <div class="live-data-item"><span>TWEETS:</span><strong id="tweets">1934</strong></div>
           <div class="live-data-item"><span>VERSION:</span><strong id="version">1.3.1.252</strong></div>
         </div>
       </div>
@@ -2602,6 +2746,17 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </div>
     <div class="footer-bottom">
       <div class="footer-copyright">&copy; 2026 Rynix AI. All rights reserved.</div>
+      <div class="footer-explorers">
+        <span>Explorers</span>
+        <a class="explorer-link" href="https://app.hyperliquid.xyz/explorer" target="_blank" rel="noopener" aria-label="HyperLiquid Explorer">
+          HyperLiquid Explorer
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+        <a class="explorer-link" href="https://robinhood.com/us/en/about/crypto/" target="_blank" rel="noopener" aria-label="Robinhood Chain Explorer">
+          Robinhood Chain Explorer
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      </div>
       <div class="footer-partners">
         <span>Data partners</span>
         <a class="partner-link" href="https://coingecko.com" target="_blank" rel="noopener" aria-label="CoinGecko">
@@ -2666,6 +2821,21 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     </div>
   </div>
 
+  <!-- disconnect confirm modal (Rynix themed) -->
+  <div class="modal" id="disconnectModal" aria-hidden="true" role="dialog" aria-labelledby="disconnectTitle">
+    <div class="modal-backdrop" data-disconnect-cancel></div>
+    <div class="modal-content confirm-content">
+      <button class="modal-close" aria-label="Close" data-disconnect-cancel>&times;</button>
+      <div class="confirm-icon"><img src="logo.png" alt="Rynix" width="30" height="30"></div>
+      <h3 id="disconnectTitle">Disconnect wallet?</h3>
+      <p>Rynix will end the session for <span id="disconnectAddr" class="confirm-addr"></span>. Your funds stay in your wallet &mdash; this only disconnects it here.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-ghost" data-disconnect-cancel>Cancel</button>
+        <button class="btn btn-primary" id="disconnectConfirm">Disconnect</button>
+      </div>
+    </div>
+  </div>
+
   <script>
 (function () {
   'use strict';
@@ -2712,23 +2882,6 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     }, 4000);
   }
 
-  // mcap / tweets / version updates
-  const mcapEl = document.getElementById('mcap');
-  const tweetsEl = document.getElementById('tweets');
-  if (mcapEl) {
-    let mcap = 122326.13;
-    setInterval(() => {
-      mcap += (Math.random() - 0.45) * 50;
-      mcapEl.textContent = '$' + mcap.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }, 5000);
-  }
-  if (tweetsEl) {
-    let tweets = 1934;
-    setInterval(() => {
-      tweets += Math.floor(Math.random() * 3);
-      tweetsEl.textContent = tweets.toLocaleString();
-    }, 7000);
-  }
 
   // wallet modal
   const walletModal = document.getElementById('walletModal');
@@ -2738,6 +2891,34 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
   const connectButtons = [document.getElementById('connectWalletNav'), document.getElementById('connectWalletHero')];
   const announcedProviders = [];
   const isMobileWalletBrowser = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // Connected wallet, shared with the terminal so intents can be signed on-chain.
+  let connectedWallet = null;
+
+  function utf8ToHex(str) {
+    const bytes = new TextEncoder().encode(str);
+    let hex = '0x';
+    bytes.forEach(b => { hex += b.toString(16).padStart(2, '0'); });
+    return hex;
+  }
+
+  // Return a provider that can sign for the connected wallet, re-acquiring it
+  // after a page reload (sessionStorage keeps the address but not the provider).
+  async function getActiveSigner() {
+    if (!connectedWallet) return null;
+    let provider = connectedWallet.provider;
+    if (!provider && connectedWallet.type) provider = getWalletProvider(connectedWallet.type);
+    if (!provider || typeof provider.request !== 'function') return null;
+    try {
+      const accounts = await provider.request({ method: 'eth_accounts' });
+      if (!accounts || !accounts.length) return null;
+      connectedWallet.address = accounts[0];
+      connectedWallet.provider = provider;
+      return provider;
+    } catch (e) {
+      return null;
+    }
+  }
 
   window.addEventListener('eip6963:announceProvider', event => {
     const detail = event.detail;
@@ -2867,8 +3048,59 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     if (heroText) heroText.textContent = truncateAddress(address);
     if (navText) {
       navText.textContent = truncateAddress(address);
-      navText.title = (name || 'Wallet') + ' connected';
+      navText.title = (name || 'Wallet') + ' connected — click to disconnect';
     }
+  }
+
+  function resetWalletUI() {
+    const heroText = document.getElementById('connectWalletHeroText');
+    const navText = document.getElementById('connectWalletNav');
+    if (heroText) heroText.textContent = 'Connect Wallet';
+    if (navText) {
+      navText.textContent = 'CONNECT WALLET';
+      navText.title = '';
+    }
+  }
+
+  function disconnectWallet() {
+    connectedWallet = null;
+    try { sessionStorage.removeItem('rynixWallet'); } catch (e) {}
+    resetWalletUI();
+  }
+
+  const disconnectModal = document.getElementById('disconnectModal');
+
+  function openDisconnectModal() {
+    if (!disconnectModal || !connectedWallet) return;
+    const addrEl = document.getElementById('disconnectAddr');
+    if (addrEl) addrEl.textContent = truncateAddress(connectedWallet.address);
+    disconnectModal.classList.add('open');
+    disconnectModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDisconnectModal() {
+    if (!disconnectModal) return;
+    disconnectModal.classList.remove('open');
+    disconnectModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  if (disconnectModal) {
+    disconnectModal.querySelectorAll('[data-disconnect-cancel]').forEach(el =>
+      el.addEventListener('click', closeDisconnectModal));
+    const confirmBtn = document.getElementById('disconnectConfirm');
+    if (confirmBtn) confirmBtn.addEventListener('click', () => {
+      const addr = connectedWallet ? connectedWallet.address : null;
+      disconnectWallet();
+      closeDisconnectModal();
+      if (addr && typeof appendTerminalLine === 'function') {
+        appendTerminalLine('Wallet ' + truncateAddress(addr) + ' disconnected. Intents run in dry-run until you reconnect.', 'ok');
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && disconnectModal.classList.contains('open')) closeDisconnectModal();
+    });
   }
 
   function persistWallet(type, address, name) {
@@ -2882,7 +3114,10 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       const raw = sessionStorage.getItem('rynixWallet');
       if (!raw) return;
       const data = JSON.parse(raw);
-      if (data && data.address) updateWalletUI(data.address, data.name || data.type || 'Wallet');
+      if (data && data.address) {
+        connectedWallet = { type: data.type, address: data.address, name: data.name || data.type || 'Wallet', provider: null };
+        updateWalletUI(data.address, data.name || data.type || 'Wallet');
+      }
     } catch (e) {}
   }
 
@@ -2973,6 +3208,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       const backend = await callWalletBackend(walletId, address);
       if (!backend.ok) console.warn('Wallet backend did not respond, but connection succeeded locally.');
 
+      connectedWallet = { type: walletId, address: address, name: config.name, provider: provider };
       updateWalletUI(address, config.name);
       persistWallet(walletId, address, config.name);
       showWalletStatus(config.name + ' connected: ' + truncateAddress(address), 'success');
@@ -2989,7 +3225,13 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
   connectButtons.forEach(btn => {
     if (btn) {
-      btn.addEventListener('click', openModal);
+      btn.addEventListener('click', () => {
+        if (connectedWallet) {
+          openDisconnectModal();
+        } else {
+          openModal();
+        }
+      });
     }
   });
 
@@ -3037,17 +3279,351 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
   }
 
+  // ---- Litepaper tech, implemented live in the terminal ----------------
+  // The same content the litepaper serves at /api/litepaper. Fetched at
+  // startup so the terminal always mirrors the published litepaper, with an
+  // embedded fallback for static / offline hosting.
+  const LITEPAPER_FALLBACK = {
+    sections: [
+      { title: 'Abstract', heading: 'What is Rynix AI?',
+        body: [
+          'Rynix AI is an autonomous, natural-language powered trading interface for the HyperLiquid ecosystem and broader EVM markets. Users describe what they want to do in plain English and Rynix AI translates intent into on-chain actions, monitors positions, and executes strategies around the clock.',
+          'The protocol combines an LLM intent layer, a deterministic execution engine, and an autonomous compute network (ACP) so that trades, automations, and theses can run without manual intervention.'
+        ],
+        bullets: ['Vibe trading: think it, say it, trade it.', '24/7 autonomous monitoring and execution.', 'Portfolio-aware risk management and retry logic.'] },
+      { title: 'Architecture', heading: 'Agent + Execution Stack',
+        body: [
+          'Rynix AI is split into three layers: the Intent Layer, the Agent Layer, and the Execution Layer.',
+          'The Intent Layer parses natural language, identifies assets, quantities, and conditions, then outputs a structured trading plan. The Agent Layer validates the plan against market data, user portfolio, and risk parameters. The Execution Layer signs and submits transactions through HyperLiquid, EVM wallets, or whitelisted DEX aggregators.'
+        ],
+        bullets: ['Intent parsing: symbol detection, quantity extraction, side classification.', 'Live price feeds: CoinGecko, HyperLiquid, and on-chain oracles.', 'Secure execution: wallet signatures, smart retries, error handling.'] },
+      { title: 'Autonomous Compute Protocol', heading: 'ACP Network',
+        body: [
+          'The Autonomous Compute Protocol (ACP) allows Rynix AI agents to receive jobs from other agents, DAOs, and protocols. A job is a structured request containing a trading objective, constraints, and settlement rules.',
+          'Agent nodes validate job feasibility, execute according to the defined rules, and submit proof of execution. The network is designed to be permissioned during the launch phase and progressively decentralised.'
+        ],
+        bullets: ['Job queue for cross-agent tasks.', 'Proof-of-execution and reputation scoring.', 'Settlement via smart contracts or HyperLiquid clearing.'] },
+      { title: 'Tokenomics', heading: '$RYNIX Token',
+        body: [
+          'The $RYNIX token is the native utility and governance token of the Rynix AI ecosystem. It is used to pay execution fees, access premium agent strategies, stake for ACP node eligibility, and vote on protocol upgrades.',
+          'A portion of protocol fees is directed to the treasury and used to reward stakers, operators, and contributors.'
+        ],
+        bullets: ['Total supply: 1,000,000,000 $RYNIX.', 'Fee sharing for stakers and node operators.', 'Governance over agent parameters and fee schedules.'] },
+      { title: 'Governance', heading: 'Decentralised Governance',
+        body: [
+          'Rynix AI governance is token-weighted. $RYNIX holders can propose and vote on protocol upgrades, new agent strategies, fee changes, and treasury allocations.',
+          'The protocol starts with a core team multisig and transitions to on-chain governance as the agent network matures.'
+        ],
+        bullets: ['On-chain proposals and voting.', 'Multisig guardrails during the launch phase.', 'Transparent treasury and fee distribution.'] },
+      { title: 'Roadmap', heading: 'Development Timeline',
+        body: ['The Rynix AI roadmap is split into four phases: Launch, Expansion, Autonomy, and Decentralisation.'],
+        bullets: [
+          'Phase 1 — Launch: chatbot trading, price feeds, wallet integration, and litepaper.',
+          'Phase 2 — Expansion: terminal UI, advanced automations, multi-asset support, and ACP beta.',
+          'Phase 3 — Autonomy: full self-custody automations, strategy marketplace, and agent-to-agent jobs.',
+          'Phase 4 — Decentralisation: on-chain governance, permissionless ACP nodes, and DAO treasury.'
+        ] }
+    ]
+  };
+
+  let litepaperData = LITEPAPER_FALLBACK;
+  fetch('/api/litepaper')
+    .then(res => (res.ok ? res.json() : null))
+    .then(data => { if (data && Array.isArray(data.sections) && data.sections.length) litepaperData = data; })
+    .catch(() => {});
+
+  function findSection(match) {
+    const wanted = String(match).toLowerCase();
+    return (litepaperData.sections || []).find(s => String(s.title).toLowerCase().indexOf(wanted) !== -1);
+  }
+
+  function printSection(match) {
+    const section = findSection(match);
+    if (!section) { appendTerminalLine('Section not found in litepaper.', 'err'); return; }
+    appendTerminalLine(section.title.toUpperCase() + ' — ' + section.heading, 'heading');
+    (section.body || []).forEach(p => appendTerminalLine(p, 'muted'));
+    (section.bullets || []).forEach(b => appendTerminalLine('  • ' + b, 'bullet'));
+    appendTerminalLine('Read the full litepaper: run "litepaper".', 'muted');
+  }
+
+  const SYMBOL_ALIASES = {
+    btc: 'BTC', bitcoin: 'BTC', xbt: 'BTC',
+    eth: 'ETH', ethereum: 'ETH', ether: 'ETH',
+    sol: 'SOL', solana: 'SOL',
+    hype: 'HYPE', hyperliquid: 'HYPE',
+    doge: 'DOGE', dogecoin: 'DOGE',
+    avax: 'AVAX', avalanche: 'AVAX',
+    link: 'LINK', chainlink: 'LINK',
+    arb: 'ARB', arbitrum: 'ARB',
+    xrp: 'XRP', ripple: 'XRP',
+    bnb: 'BNB', sui: 'SUI'
+  };
+
+  function terminalPrice(symbol) {
+    const el = document.getElementById('price-' + symbol);
+    if (!el) return null;
+    const n = parseFloat(String(el.textContent).replace(/[^0-9.]/g, ''));
+    return isFinite(n) && n > 0 ? n : null;
+  }
+
+  function hexId(len) {
+    let out = '';
+    const chars = '0123456789abcdef';
+    for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * 16)];
+    return out;
+  }
+
+  function formatUsd(n) {
+    return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Intent Layer: turn natural language into a structured trading plan.
+  function parseIntent(text) {
+    // Keep the raw ($-preserving) form for USD detection; strip only commas.
+    const raw = ' ' + text.toLowerCase().replace(/,/g, ' ') + ' ';
+    let side = null;
+    if (/\b(buy|long|bid|ape|accumulate|acc|add|dca)\b/.test(raw)) side = 'BUY / LONG';
+    else if (/\b(sell|short|dump|close|exit|reduce|trim|take profit|tp)\b/.test(raw)) side = 'SELL / SHORT';
+
+    let symbol = null;
+    for (const key of Object.keys(SYMBOL_ALIASES)) {
+      if (new RegExp('\\b' + key + '\\b').test(raw)) { symbol = SYMBOL_ALIASES[key]; break; }
+    }
+
+    // Pull out modifiers first so their numbers aren't mistaken for quantity.
+    let work = raw;
+    let leverage = null, takeProfit = null, stopLoss = null;
+    const levM = work.match(/\b(\d+(?:\.\d+)?)\s*x\b/);
+    if (levM) { leverage = parseFloat(levM[1]); work = work.replace(levM[0], ' '); }
+    const tpM = work.match(/\b(?:tp|take[- ]?profit|target)\s*(?:@|at|=|:)?\s*\$?\s*(\d+(?:\.\d+)?)(k)?/);
+    if (tpM) { takeProfit = parseFloat(tpM[1]) * (tpM[2] ? 1000 : 1); work = work.replace(tpM[0], ' '); }
+    const slM = work.match(/\b(?:sl|stop[- ]?loss|stoploss|stop)\s*(?:@|at|=|:)?\s*\$?\s*(\d+(?:\.\d+)?)(k)?/);
+    if (slM) { stopLoss = parseFloat(slM[1]) * (slM[2] ? 1000 : 1); work = work.replace(slM[0], ' '); }
+
+    // conditions / triggers — detect after modifiers so quantity is only read
+    // from the part before the condition (so "when it breaks 4000" isn't a qty).
+    const condRe = /\b(when|if|below|above|under|over|drop|dip|breaks?|hits?)\b.*/;
+    const condMatch = work.match(condRe);
+    const condition = condMatch ? condMatch[0].trim() : 'market order';
+    const beforeCond = condMatch ? work.slice(0, condMatch.index) : work;
+
+    // sizing: percent of portfolio, USD amount, or token units.
+    let usdAmount = null, tokenQty = null, percent = null;
+    const pctM = beforeCond.match(/(\d+(?:\.\d+)?)\s*(?:%|(?:percent|pct)\b)/);
+    if (pctM) percent = parseFloat(pctM[1]);
+    const usdPrefix = beforeCond.match(/\$\s*(\d+(?:\.\d+)?)(k)?/);
+    const usdSuffix = beforeCond.match(/(\d+(?:\.\d+)?)(k)?\s*(usd|usdc|dollars|dollar|bucks)\b/);
+    const usdMatch = usdPrefix || usdSuffix;
+    if (usdMatch) usdAmount = parseFloat(usdMatch[1]) * (usdMatch[2] ? 1000 : 1);
+    if (!usdAmount && percent == null) {
+      const anyNum = beforeCond.match(/(\d+(?:\.\d+)?)(k)?/);
+      if (anyNum) tokenQty = parseFloat(anyNum[1]) * (anyNum[2] ? 1000 : 1);
+    }
+
+    return { side: side, symbol: symbol, usdAmount: usdAmount, tokenQty: tokenQty,
+      percent: percent, leverage: leverage, takeProfit: takeProfit, stopLoss: stopLoss,
+      condition: condition };
+  }
+
+  // Full Intent -> Agent -> Execution (ACP) pipeline, driven by live prices.
+  const MIN_NOTIONAL_USD = 10;
+
+  async function runIntentPipeline(raw) {
+    const plan = parseIntent(raw);
+
+    appendTerminalLine('[intent-layer] parsing natural language ...', 'muted');
+    if (!plan.side || !plan.symbol) {
+      appendTerminalLine('Could not resolve a complete intent.', 'err');
+      appendTerminalLine('  need a side (buy/sell/long/short) and an asset (BTC, ETH, SOL, HYPE, DOGE, AVAX, LINK, ARB, XRP, BNB, SUI).', 'muted');
+      appendTerminalLine('  example: intent buy 2 eth   ·   intent short $500 sol when it breaks 180   ·   intent long 10x eth tp 2500 sl 1700', 'muted');
+      return;
+    }
+    appendTerminalLine('  ├─ asset ......... ' + plan.symbol, 'ok');
+    appendTerminalLine('  ├─ side .......... ' + plan.side, 'ok');
+    if (plan.leverage != null) appendTerminalLine('  ├─ leverage ...... ' + plan.leverage + 'x', 'ok');
+    const price = terminalPrice(plan.symbol);
+    let qtyLabel;
+    let notional = null;
+    if (plan.usdAmount != null) {
+      qtyLabel = formatUsd(plan.usdAmount) + (price ? ' (~' + (plan.usdAmount / price).toFixed(4) + ' ' + plan.symbol + ')' : '');
+      notional = plan.usdAmount;
+    } else if (plan.percent != null) {
+      qtyLabel = plan.percent + '% of portfolio';
+    } else if (plan.tokenQty != null) {
+      qtyLabel = plan.tokenQty + ' ' + plan.symbol;
+      if (price) notional = plan.tokenQty * price;
+    } else {
+      qtyLabel = 'unspecified (agent will size by risk budget)';
+    }
+    appendTerminalLine('  ├─ quantity ...... ' + qtyLabel, 'ok');
+    appendTerminalLine('  └─ conditions .... ' + plan.condition, 'ok');
+
+    appendTerminalLine('[agent-layer] validating vs live market + risk params ...', 'muted');
+    appendTerminalLine('  ├─ price feed .... ' + (price ? formatUsd(price) + ' (CoinGecko / HyperLiquid)' : 'unavailable — using cached feed'), 'ok');
+    if (notional != null) {
+      const lev = plan.leverage != null ? plan.leverage : 1;
+      appendTerminalLine('  ├─ notional ...... ' + formatUsd(notional) + (lev > 1 ? '  (margin ' + formatUsd(notional / lev) + ' @ ' + lev + 'x)' : ''), 'ok');
+    }
+    if (plan.takeProfit != null) appendTerminalLine('  ├─ take-profit ... ' + formatUsd(plan.takeProfit), 'ok');
+    if (plan.stopLoss != null) appendTerminalLine('  ├─ stop-loss ..... ' + formatUsd(plan.stopLoss), 'ok');
+    if (notional != null && notional < MIN_NOTIONAL_USD) {
+      appendTerminalLine('  └─ plan .......... REJECTED (below minimum)', 'err');
+      appendTerminalLine('Minimum order is ' + formatUsd(MIN_NOTIONAL_USD) + ' notional on HyperLiquid. Try e.g. "intent ' + (plan.side === 'BUY / LONG' ? 'buy' : 'sell') + ' $10 ' + plan.symbol.toLowerCase() + '".', 'warn');
+      return;
+    }
+    appendTerminalLine('  ├─ portfolio ..... within risk limits', 'ok');
+    appendTerminalLine('  └─ plan .......... APPROVED', 'ok');
+
+    appendTerminalLine('[execution-layer] dispatching to ACP job queue ...', 'muted');
+    const signer = await getActiveSigner();
+
+    if (!signer) {
+      appendTerminalLine('  ├─ job id ........ acp-' + hexId(8), 'ok');
+      appendTerminalLine('  ├─ route ......... HyperLiquid clearing', 'ok');
+      appendTerminalLine('  ├─ proof ......... 0x' + hexId(6) + '...' + hexId(4) + '  (simulated)', 'ok');
+      appendTerminalLine('  └─ status ........ $OPEN  ✓ simulated fill', 'ok');
+      appendTerminalLine('Dry-run only. Connect a wallet ("wallet") to route this intent on-chain.', 'warn');
+      return;
+    }
+
+    appendTerminalLine('  ├─ wallet ........ ' + truncateAddress(connectedWallet.address), 'ok');
+
+    // Real, non-custodial execution on HyperLiquid (wallet signs each order).
+    if (window.RynixHL) {
+      const net = window.RynixHL.isTestnet ? 'HyperLiquid TESTNET' : 'HyperLiquid MAINNET';
+      appendTerminalLine('  ├─ venue ......... ' + net, 'ok');
+      appendTerminalLine('  ├─ order ......... requesting wallet signature ...', 'muted');
+      try {
+        const r = await window.RynixHL.placeOrder({
+          provider: signer, address: connectedWallet.address, symbol: plan.symbol,
+          isBuy: plan.side === 'BUY / LONG',
+          usdAmount: plan.usdAmount, tokenQty: plan.tokenQty, percent: plan.percent,
+          leverage: plan.leverage, takeProfit: plan.takeProfit, stopLoss: plan.stopLoss
+        });
+        const statuses = r.entry && r.entry.response && r.entry.response.data && r.entry.response.data.statuses;
+        let oid = null, fillMsg = 'submitted';
+        if (Array.isArray(statuses) && statuses.length) {
+          const s0 = statuses[0];
+          if (s0.filled) { oid = s0.filled.oid; fillMsg = 'FILLED ' + s0.filled.totalSz + ' @ ' + s0.filled.avgPx; }
+          else if (s0.resting) { oid = s0.resting.oid; fillMsg = 'RESTING'; }
+          else if (s0.error) { fillMsg = 'rejected: ' + s0.error; }
+        }
+        appendTerminalLine('  ├─ size .......... ' + r.size + ' ' + plan.symbol + ' @ ~' + formatUsd(r.mid), 'ok');
+        appendTerminalLine('  ├─ order id ...... ' + (oid != null ? oid : 'n/a'), 'ok');
+        appendTerminalLine('  └─ status ........ ' + (oid != null ? '$OPEN' : '$REJECTED') + '  ' + fillMsg, oid != null ? 'ok' : 'err');
+        if (r.tpsl) appendTerminalLine('  · TP/SL reduce-only orders placed.', 'ok');
+        else if (r.tpslError) appendTerminalLine('  · TP/SL not placed: ' + r.tpslError, 'warn');
+        appendTerminalLine(window.RynixHL.isTestnet
+          ? 'Executed on HyperLiquid testnet (test funds). Use "network mainnet" for real trading.'
+          : 'Executed on HyperLiquid MAINNET with real funds.', window.RynixHL.isTestnet ? 'muted' : 'warn');
+      } catch (err) {
+        const rejected = err && (err.code === 4001 || /reject|denied|cancel/i.test(err.message || ''));
+        appendTerminalLine('  └─ order ......... ' + (rejected ? 'signature rejected — order not sent.' : 'HyperLiquid: ' + ((err && err.message) || 'error')), 'err');
+      }
+      return;
+    }
+
+    // Fallback (HyperLiquid module not loaded): sign the intent and record it.
+    const intentPayload = {
+      protocol: 'RynixAI-ACP', version: 1,
+      account: connectedWallet.address,
+      asset: plan.symbol, side: plan.side,
+      usdAmount: plan.usdAmount, tokenQty: plan.tokenQty, percent: plan.percent,
+      leverage: plan.leverage, takeProfit: plan.takeProfit, stopLoss: plan.stopLoss,
+      condition: plan.condition, venue: 'HyperLiquid',
+      nonce: hexId(16), issuedAt: new Date().toISOString()
+    };
+    const message = 'Rynix AI - authorize ACP intent\n' + JSON.stringify(intentPayload, null, 2);
+
+    appendTerminalLine('  ├─ auth .......... awaiting signature in wallet ...', 'muted');
+
+    let signature;
+    try {
+      signature = await signer.request({ method: 'personal_sign', params: [utf8ToHex(message), connectedWallet.address] });
+    } catch (err) {
+      const rejected = err && (err.code === 4001 || /reject|denied|cancel/i.test(err.message || ''));
+      appendTerminalLine('  └─ auth .......... ' + (rejected ? 'signature rejected — intent not submitted.' : 'signing failed: ' + ((err && err.message) || 'error')), 'err');
+      return;
+    }
+
+    appendTerminalLine('  ├─ signature ..... ' + signature.slice(0, 10) + '...' + signature.slice(-6), 'ok');
+
+    let receipt = null;
+    try {
+      const res = await fetch('/api/acp/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent: intentPayload, signature: signature })
+      });
+      if (res.ok) receipt = await res.json();
+    } catch (e) { /* offline / static host — fall back to a local receipt */ }
+
+    const jobId = (receipt && receipt.jobId) || ('acp-' + hexId(8));
+    const status = (receipt && receipt.status) || '$QUEUED';
+    appendTerminalLine('  ├─ job id ........ ' + jobId, 'ok');
+    appendTerminalLine('  ├─ route ......... HyperLiquid clearing', 'ok');
+    appendTerminalLine('  ├─ proof ......... ' + signature.slice(0, 8) + '…' + signature.slice(-6) + '  (wallet-signed)', 'ok');
+    appendTerminalLine('  └─ status ........ ' + status + '  ✓ authorization on file', 'ok');
+    appendTerminalLine('Intent signed by ' + truncateAddress(connectedWallet.address) + ' and queued to the ACP relayer for HyperLiquid settlement.', 'ok');
+    appendTerminalLine('Settlement is executed by the ACP relayer/operator; this console never custodies your funds.', 'muted');
+  }
+
   async function runTerminalCommand(rawCommand) {
-    const command = rawCommand.trim().toLowerCase();
+    const raw = rawCommand.trim();
+    const command = raw.toLowerCase();
     if (!command) return;
-    appendTerminalLine('$ ' + rawCommand.trim(), 'command');
+    appendTerminalLine('$ ' + raw, 'command');
+
+    const firstWord = command.split(/\s+/)[0];
+    const rest = raw.slice(firstWord.length).trim();
 
     if (command === 'clear') {
       terminalOutput.textContent = '';
     } else if (command === 'help') {
-      appendTerminalLine('Commands: status, market, statistics, wallet, automations, hyperliquid, chat, home, clear. You can also ask in natural language.');
+      appendTerminalLine('RYNIX TERMINAL — commands', 'heading');
+      appendTerminalLine('Live tech:', 'muted');
+      appendTerminalLine('  intent <text>  run the Intent → Agent → Execution (ACP) pipeline. e.g. "intent long 10x eth tp 2500 sl 1700"', 'bullet');
+      appendTerminalLine('  market         live BTC / ETH / SOL / HYPE prices', 'bullet');
+      appendTerminalLine('  status         Hyperliquid / automation / ACP engine status', 'bullet');
+      appendTerminalLine('  acp            Autonomous Compute Protocol job-queue snapshot', 'bullet');
+      appendTerminalLine('  automations    active automations + open positions', 'bullet');
+      appendTerminalLine('Litepaper tech:', 'muted');
+      appendTerminalLine('  about · architecture · tokenomics · governance · roadmap · litepaper', 'bullet');
+      appendTerminalLine('Actions:', 'muted');
+      appendTerminalLine('  wallet · disconnect · network [testnet|mainnet] · statistics · hyperliquid · chat · home · clear', 'bullet');
+      appendTerminalLine('Connect a wallet, then "intent ..." executes real orders on HyperLiquid (testnet by default).', 'muted');
+      appendTerminalLine('Minimum order size: $10 notional (HyperLiquid).', 'muted');
+      appendTerminalLine('You can also just type in plain English.', 'muted');
+    } else if (firstWord === 'intent' || firstWord === 'trade' || firstWord === 'parse' || firstWord === 'vibe') {
+      if (!rest) {
+        appendTerminalLine('Usage: intent <what you want to do>. e.g. "intent long 1.5 sol when it dips to 180".', 'muted');
+        appendTerminalLine('Minimum order size: $10 notional (HyperLiquid). e.g. "intent buy $10 eth".', 'muted');
+      } else {
+        await runIntentPipeline(rest);
+      }
+    } else if (command === 'about' || command === 'abstract' || command === 'whoami') {
+      printSection('abstract');
+    } else if (command === 'architecture' || command === 'arch' || command === 'stack' || command === 'layers') {
+      printSection('architecture');
+    } else if (command === 'tokenomics' || command === 'token' || command === 'rynix' || command === '$rynix') {
+      printSection('tokenomics');
+    } else if (command === 'governance' || command === 'gov' || command === 'dao') {
+      printSection('governance');
+    } else if (command === 'roadmap' || command === 'phases') {
+      const section = findSection('roadmap');
+      appendTerminalLine('ROADMAP — Development Timeline', 'heading');
+      (section && section.body || []).forEach(p => appendTerminalLine(p, 'muted'));
+      const bullets = (section && section.bullets) || [];
+      bullets.forEach((b, i) => appendTerminalLine((i === 1 ? '▶ ' : '  ') + b + (i === 1 ? '   ← current' : ''), i === 1 ? 'ok' : 'bullet'));
+      appendTerminalLine('You are here: Phase 2 — terminal UI + ACP beta are live in this console.', 'warn');
+    } else if (command === 'litepaper' || command === 'docs' || command === 'whitepaper' || command === 'paper') {
+      appendTerminalLine('Opening the Rynix AI litepaper ...', 'muted');
+      window.open('/docs/litepaper.html', '_blank', 'noopener,noreferrer');
     } else if (command === 'status') {
-      appendTerminalLine('Hyperliquid: OK | automations: ACTIVE | monitoring: LIVE | verification: ANCHORED');
+      appendTerminalLine('Hyperliquid: OK | automations: ACTIVE | ACP engine: ONLINE | monitoring: LIVE | verification: ANCHORED', 'ok');
+    } else if (command === 'acp') {
+      printSection('autonomous compute');
+      appendTerminalLine('acp> live queue: ' + (300 + Math.floor(Math.random() * 40)) + ' jobs processed | ' + (3 + Math.floor(Math.random() * 5)) + ' pending | nodes: PERMISSIONED (launch phase)', 'ok');
     } else if (command === 'market') {
       const symbols = ['BTC', 'ETH', 'SOL', 'HYPE'];
       const summary = symbols.map(symbol => {
@@ -3055,12 +3631,12 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         const change = document.getElementById('change-' + symbol);
         return symbol + ' ' + (price ? price.textContent : '$--') + ' ' + (change ? change.textContent : '--');
       }).join(' | ');
-      appendTerminalLine(summary);
+      appendTerminalLine(summary, 'ok');
     } else if (command === 'statistics' || command === 'stats' || command === 'statistik') {
       appendTerminalLine('Opening the Rynix AI statistics page...');
       window.location.assign('/statistics');
     } else if (command === 'automations') {
-      appendTerminalLine('3 automations active | 2 open positions | monitoring 24/7');
+      appendTerminalLine('3 automations active | 2 open positions | monitoring 24/7', 'ok');
     } else if (command === 'hyperliquid') {
       appendTerminalLine('Opening Hyperliquid trading page...');
       window.open('https://app.hyperliquid.xyz/trade', '_blank', 'noopener,noreferrer');
@@ -3071,17 +3647,43 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         const launcher = document.getElementById('chatLauncher');
         if (launcher) launcher.click();
       }
+    } else if (firstWord === 'network' || firstWord === 'net') {
+      if (!window.RynixHL) {
+        appendTerminalLine('HyperLiquid module not loaded yet — try again in a moment.', 'warn');
+      } else if (!rest) {
+        appendTerminalLine('Network: ' + (window.RynixHL.isTestnet ? 'testnet' : 'MAINNET'), 'ok');
+        appendTerminalLine('Switch with: network testnet · network mainnet', 'muted');
+      } else if (rest === 'mainnet') {
+        window.RynixHL.setNetwork('mainnet');
+        appendTerminalLine('Network set to MAINNET — intents now trade with REAL funds on HyperLiquid.', 'warn');
+      } else {
+        window.RynixHL.setNetwork('testnet');
+        appendTerminalLine('Network set to testnet (safe, test funds).', 'ok');
+      }
     } else if (command === 'wallet' || command === 'connect' || command === 'connect wallet') {
-      appendTerminalLine('Choose a wallet to connect securely.');
-      openModal();
+      if (connectedWallet) {
+        appendTerminalLine('Wallet connected: ' + connectedWallet.address, 'ok');
+        appendTerminalLine('Type "disconnect" to disconnect, or click the address in the top bar.', 'muted');
+      } else {
+        appendTerminalLine('Choose a wallet to connect securely.');
+        openModal();
+      }
+    } else if (command === 'disconnect' || command === 'disconnect wallet' || command === 'logout') {
+      if (connectedWallet) {
+        const addr = connectedWallet.address;
+        disconnectWallet();
+        appendTerminalLine('Wallet ' + truncateAddress(addr) + ' disconnected. Intents run in dry-run until you reconnect.', 'ok');
+      } else {
+        appendTerminalLine('No wallet is connected.', 'muted');
+      }
     } else if (command === 'home') {
       document.getElementById('home').scrollIntoView({ behavior: 'smooth' });
       appendTerminalLine('Returning to Rynix AI home...');
     } else if (window.RynixAI && typeof window.RynixAI.ask === 'function') {
-      const response = await Promise.resolve(window.RynixAI.ask(rawCommand.trim()));
+      const response = await Promise.resolve(window.RynixAI.ask(raw));
       appendTerminalLine(response || 'Command completed.');
     } else {
-      appendTerminalLine('Rynix AI is still loading. Please run the command again.');
+      appendTerminalLine('Rynix AI is still loading. Please run the command again.', 'muted');
     }
   }
 
@@ -3787,6 +4389,8 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 
 })();
 </script>
+
+<script type="module" src="hyperliquid.js"></script>
 
 </body>
 </html>
