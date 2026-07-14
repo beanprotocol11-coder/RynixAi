@@ -631,6 +631,183 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 }
 
 /* --------------------------------------------------------------------------
+   Integrations live terminal (left-to-right running feed)
+   -------------------------------------------------------------------------- */
+
+.integrations-terminal-section {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 96px) clamp(20px, 5vw, 64px);
+}
+
+.integrations-terminal-card {
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+.integrations-terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
+
+.integrations-terminal-header .terminal-title {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.integrations-live-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  padding: 5px 12px;
+  border: 1px solid var(--accent-dim);
+  border-radius: 999px;
+  background: rgba(204, 255, 0, 0.06);
+}
+
+.int-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+  animation: pulseText 1.4s ease-in-out infinite;
+}
+
+/* horizontal marquee that runs left -> right */
+.integrations-marquee {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.integrations-track {
+  display: flex;
+  width: max-content;
+  animation: intMarchRight 26s linear infinite;
+}
+
+.integrations-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes intMarchRight {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.integrations-group {
+  display: flex;
+  gap: 18px;
+  padding: 0 9px;
+}
+
+.integration-chip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px 14px 14px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  min-width: 240px;
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.integration-chip:hover {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 34px rgba(204, 255, 0, 0.12);
+}
+
+.integration-chip img {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  animation: logo3d 6s ease-in-out infinite;
+}
+
+.int-chip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.int-chip-name {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.int-chip-status {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.int-chip-status b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* live "working" console line */
+.integrations-console {
+  border-top: 1px solid var(--border-2);
+  background: var(--bg-2);
+  padding: 18px 22px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text);
+  min-height: 88px;
+}
+
+.int-console-line { white-space: pre-wrap; word-break: break-word; }
+.int-console-line + .int-console-line { margin-top: 2px; }
+
+.int-prompt { color: var(--accent); font-weight: 700; }
+.int-path { color: #4fa3ff; }
+.int-ok { color: var(--accent); font-weight: 700; }
+.int-live { color: var(--danger); font-weight: 700; }
+.int-dim { color: var(--text-muted); }
+
+.int-cursor {
+  color: var(--accent);
+  animation: blink 1s step-end infinite;
+}
+
+@media (max-width: 640px) {
+  .integration-chip { min-width: 210px; }
+  .integrations-console { font-size: 0.8rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .integrations-track { animation-duration: 90s; }
+}
+
+/* --------------------------------------------------------------------------
    Market ticker
    -------------------------------------------------------------------------- */
 
@@ -2215,6 +2392,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     <nav class="nav-links">
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
+      <a href="#integrations" class="nav-link"><span>~/</span>Integrations</a>
       <a href="/statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
       <a href="#hacked-by-robinhood-foundation" class="nav-link"><span>~/</span>Robinhood Chain</a>
@@ -2441,6 +2619,88 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         <button type="button" data-terminal-command="statistics">statistics</button>
         <button type="button" data-terminal-command="chat">open chat</button>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="integrations-terminal-section" id="integrations">
+  <div class="features-header" style="padding-bottom: 24px; text-align: left; align-items: flex-start;">
+    <div class="section-label">Integrations</div>
+    <h2 class="section-title">Live integration feed</h2>
+    <p class="section-subtitle">Rynix AI runs across its partner network in real time — the pipeline executes frame by frame, left to right, all on its own.</p>
+  </div>
+  <div class="integrations-terminal-card">
+    <div class="integrations-terminal-header">
+      <div class="terminal-dots"><span></span><span></span><span></span></div>
+      <div class="terminal-title">C:\RynixAI\integrations --live</div>
+      <span class="integrations-live-badge"><span class="int-live-dot"></span>WORKING</span>
+    </div>
+    <div class="integrations-marquee">
+      <div class="integrations-track">
+        <div class="integrations-group">
+          <a class="integration-chip" href="https://www.virtuals.io" target="_blank" rel="noopener">
+            <img src="assets/virtual-protocol-logo.png" alt="Virtual Protocol" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Virtual Protocol</span>
+              <span class="int-chip-status">agent layer <b>SYNCED</b></span>
+            </span>
+          </a>
+          <a class="integration-chip" href="https://robinhood.com" target="_blank" rel="noopener">
+            <img src="assets/robinhood-chain-logo.png" alt="Robinhood" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Robinhood</span>
+              <span class="int-chip-status">order flow <b>LINKED</b></span>
+            </span>
+          </a>
+          <a class="integration-chip" href="https://arbitrum.io" target="_blank" rel="noopener">
+            <img src="assets/arbitrum-logo.jpg" alt="Arbitrum" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Arbitrum</span>
+              <span class="int-chip-status">L2 settlement <b>OK</b></span>
+            </span>
+          </a>
+          <a class="integration-chip" href="https://app.hyperliquid.xyz/trade" target="_blank" rel="noopener">
+            <img src="assets/hyperliquid-logo.jpg" alt="Hyperliquid" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Hyperliquid</span>
+              <span class="int-chip-status">perps engine <b>LIVE</b></span>
+            </span>
+          </a>
+        </div>
+        <div class="integrations-group" aria-hidden="true">
+          <a class="integration-chip" href="https://www.virtuals.io" target="_blank" rel="noopener" tabindex="-1">
+            <img src="assets/virtual-protocol-logo.png" alt="" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Virtual Protocol</span>
+              <span class="int-chip-status">agent layer <b>SYNCED</b></span>
+            </span>
+          </a>
+          <a class="integration-chip" href="https://robinhood.com" target="_blank" rel="noopener" tabindex="-1">
+            <img src="assets/robinhood-chain-logo.png" alt="" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Robinhood</span>
+              <span class="int-chip-status">order flow <b>LINKED</b></span>
+            </span>
+          </a>
+          <a class="integration-chip" href="https://arbitrum.io" target="_blank" rel="noopener" tabindex="-1">
+            <img src="assets/arbitrum-logo.jpg" alt="" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Arbitrum</span>
+              <span class="int-chip-status">L2 settlement <b>OK</b></span>
+            </span>
+          </a>
+          <a class="integration-chip" href="https://app.hyperliquid.xyz/trade" target="_blank" rel="noopener" tabindex="-1">
+            <img src="assets/hyperliquid-logo.jpg" alt="" width="46" height="46">
+            <span class="int-chip-text">
+              <span class="int-chip-name">Hyperliquid</span>
+              <span class="int-chip-status">perps engine <b>LIVE</b></span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="integrations-console" id="integrationsConsole" aria-live="polite">
+      <div class="int-console-line"><span class="int-prompt">rynix@net</span><span class="int-dim">:</span><span class="int-path">~/pipeline</span><span class="int-dim">$</span> <span id="intConsoleText"></span><span class="int-cursor">&#9611;</span></div>
     </div>
   </div>
 </section>
@@ -2700,6 +2960,52 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
       }
       tickIndex++;
     }, 2600);
+  }
+
+  // integrations live console — types running text, frame by frame
+  const intConsoleText = document.getElementById('intConsoleText');
+  if (intConsoleText) {
+    const intSteps = [
+      { p: 'linking Virtual Protocol agent layer', r: 'SYNCED', cls: 'int-ok' },
+      { p: 'routing order flow via Robinhood', r: 'LINKED', cls: 'int-ok' },
+      { p: 'settling trades on Arbitrum L2', r: 'OK', cls: 'int-ok' },
+      { p: 'executing on Hyperliquid perps engine', r: 'LIVE', cls: 'int-live' },
+      { p: 'syncing cross-venue liquidity', r: 'OK', cls: 'int-ok' },
+      { p: 'streaming agent signals across network', r: 'ONLINE', cls: 'int-ok' }
+    ];
+    const spinner = ['|', '/', '-', '\\'];
+    let stepIdx = 0;
+
+    function runStep() {
+      const step = intSteps[stepIdx % intSteps.length];
+      const full = 'rynix run --pipe "' + step.p + '"';
+      let charIdx = 0;
+
+      function type() {
+        if (charIdx <= full.length) {
+          intConsoleText.textContent = full.slice(0, charIdx);
+          charIdx++;
+          setTimeout(type, 26);
+        } else {
+          working(0);
+        }
+      }
+
+      function working(ticks) {
+        if (ticks < 10) {
+          intConsoleText.innerHTML = full + ' <span class="int-dim">' + spinner[ticks % spinner.length] + ' working...</span>';
+          setTimeout(function () { working(ticks + 1); }, 90);
+        } else {
+          intConsoleText.innerHTML = full + ' ... <span class="' + step.cls + '">' + step.r + '</span>';
+          stepIdx++;
+          setTimeout(runStep, 1300);
+        }
+      }
+
+      type();
+    }
+
+    runStep();
   }
 
   // increment analysis runs
