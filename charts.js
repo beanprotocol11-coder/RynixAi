@@ -8,17 +8,20 @@
   if (!mount) return;
 
   var MARKETS = [
-    { sym: 'BTC', label: 'BTC', net: 'eth', pool: '0x56534741cd8b152df6d48adf7ac51f75169a83b2' },
-    { sym: 'ETH', label: 'ETH', net: 'eth', pool: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640' },
-    { sym: 'SOL', label: 'SOL', net: 'solana', pool: 'Czfq3xZZDmsdGdUyrNLtRhGc47cXcZtLG4crryfu44zE' },
-    { sym: 'CASHCAT', label: '$CASHCAT', net: 'robinhood', pool: '0xA70fc67C9F69da90B63a0e4C05D229954574E313' }
+    { sym: 'BTC', label: 'BTC', src: 'hl', coin: 'BTC' },
+    { sym: 'ETH', label: 'ETH', src: 'hl', coin: 'ETH' },
+    { sym: 'SOL', label: 'SOL', src: 'hl', coin: 'SOL' },
+    { sym: 'HYPE', label: 'HYPE', src: 'hl', coin: 'HYPE' },
+    { sym: 'CASHCAT', label: '$CASHCAT', src: 'gt', net: 'robinhood', pool: '0xA70fc67C9F69da90B63a0e4C05D229954574E313' }
   ];
   var TIMEFRAMES = [
-    { label: '15m', tf: 'minute', agg: 15, perDay: 96 },
-    { label: '1H', tf: 'hour', agg: 1, perDay: 24 },
-    { label: '4H', tf: 'hour', agg: 4, perDay: 6 },
-    { label: '1D', tf: 'day', agg: 1, perDay: 1 }
+    { label: '15m', tf: 'minute', agg: 15, perDay: 96, hl: '15m', ms: 15 * 60000 },
+    { label: '1H', tf: 'hour', agg: 1, perDay: 24, hl: '1h', ms: 60 * 60000 },
+    { label: '4H', tf: 'hour', agg: 4, perDay: 6, hl: '4h', ms: 4 * 60 * 60000 },
+    { label: '1D', tf: 'day', agg: 1, perDay: 1, hl: '1d', ms: 24 * 60 * 60000 }
   ];
+  var CANDLES = 300;
+  var SRC_NAME = { hl: 'HyperLiquid', gt: 'GeckoTerminal' };
 
   var ACCENT = '#ccff00', UP = '#ccff00', DOWN = '#ff4444';
   var EMA20C = '#7fd4ff', EMA50C = '#ffb347', VOLC = 'rgba(120,140,120,0.45)';
@@ -108,9 +111,42 @@
   }
 
   // ---- data ----
-  function url(m, tf) {
-    return 'https://api.geckoterminal.com/api/v2/networks/' + m.net + '/pools/' + m.pool +
-      '/ohlcv/' + tf.tf + '?aggregate=' + tf.agg + '&limit=300&currency=usd&token=base';
+  // Returns a Promise resolving to normalized candles: [{time(sec),open,high,low,close,volume}]
+  function fetchCandles(m, tf) {
+    if (m.src === 'hl') return fetchHL(m, tf);
+    return fetchGT(m, tf);
+  }
+  function fetchHL(m, tf) {
+    var end = Date.now();
+    var startT = end - tf.ms * (CANDLES + 5);
+    return fetch('https://api.hyperliquid.xyz/info', {
+      method: 'POST', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'candleSnapshot', req: { coin: m.coin, interval: tf.hl, startTime: startT, endTime: end } })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('feed HTTP ' + r.status);
+      return r.json();
+    }).then(function (arr) {
+      if (!Array.isArray(arr) || !arr.length) throw new Error('no data for this market');
+      return arr.map(function (k) {
+        return { time: Math.floor(k.t / 1000), open: +k.o, high: +k.h, low: +k.l, close: +k.c, volume: +k.v };
+      });
+    });
+  }
+  function fetchGT(m, tf) {
+    var u = 'https://api.geckoterminal.com/api/v2/networks/' + m.net + '/pools/' + m.pool +
+      '/ohlcv/' + tf.tf + '?aggregate=' + tf.agg + '&limit=' + CANDLES + '&currency=usd&token=base';
+    return fetch(u, { cache: 'no-store' }).then(function (r) {
+      if (r.status === 429) throw new Error('rate-limited — retrying shortly');
+      if (!r.ok) throw new Error('feed HTTP ' + r.status);
+      return r.json();
+    }).then(function (d) {
+      var list = d && d.data && d.data.attributes && d.data.attributes.ohlcv_list;
+      if (!list || !list.length) throw new Error('no data for this market');
+      return list.slice().reverse().map(function (row) {
+        return { time: row[0], open: +row[1], high: +row[2], low: +row[3], close: +row[4], volume: +row[5] };
+      });
+    });
   }
   function setStatus(txt, cls) {
     var el = document.getElementById('chartStatusText');
@@ -123,38 +159,36 @@
     if (el) el.hidden = !on;
   }
 
+  var reqId = 0;
   function load(showLoader) {
     var m = state.market, tf = state.tf;
+    var myReq = ++reqId;
     if (showLoader) loading(true);
-    setStatus('fetching ' + m.sym + ' · ' + tf.label + ' from on-chain feed…');
-    fetch(url(m, tf), { cache: 'no-store' })
-      .then(function (r) {
-        if (r.status === 429) throw new Error('rate-limited — retrying shortly');
-        if (!r.ok) throw new Error('feed HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (d) {
-        var list = d && d.data && d.data.attributes && d.data.attributes.ohlcv_list;
-        if (!list || !list.length) throw new Error('no data for this market');
-        list = list.slice().reverse(); // oldest -> newest
-        render(m, tf, list);
+    setStatus('fetching ' + m.sym + ' · ' + tf.label + ' from ' + SRC_NAME[m.src] + ' feed…');
+    fetchCandles(m, tf)
+      .then(function (rows) {
+        if (myReq !== reqId) return; // a newer request superseded this one
+        render(m, tf, rows);
       })
       .catch(function (e) {
+        if (myReq !== reqId) return;
         setStatus(e.message || 'feed error', 'cs-err');
       })
-      .then(function () { loading(false); });
+      .then(function () { if (myReq === reqId) loading(false); });
   }
 
-  function render(m, tf, list) {
-    var candles = [], closes = [], vols = [], t;
-    for (var i = 0; i < list.length; i++) {
-      var row = list[i];
-      t = row[0];
-      var o = +row[1], h = +row[2], l = +row[3], c = +row[4], v = +row[5];
+  function render(m, tf, rows) {
+    var candles = [], closes = [], vols = [], seen = {};
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var t = row.time, o = row.open, h = row.high, l = row.low, c = row.close, v = row.volume;
+      if (!isFinite(o) || !isFinite(h) || !isFinite(l) || !isFinite(c) || seen[t]) continue;
+      seen[t] = 1;
       candles.push({ time: t, open: o, high: h, low: l, close: c });
       closes.push(c);
-      vols.push({ time: t, value: v, color: c >= o ? 'rgba(204,255,0,0.30)' : 'rgba(255,68,68,0.30)' });
+      vols.push({ time: t, value: isFinite(v) ? v : 0, color: c >= o ? 'rgba(204,255,0,0.30)' : 'rgba(255,68,68,0.30)' });
     }
+    if (!candles.length) { setStatus('no data for this market', 'cs-err'); return; }
     var last = closes[closes.length - 1];
     var pr = precisionFor(last);
     candle.applyOptions({ priceFormat: { type: 'price', precision: pr.p, minMove: pr.m } });
@@ -192,9 +226,12 @@
       (rsiNow !== null ? 'RSI ' + rsiNow.toFixed(0) + ' · ' : '') +
       (last > e20[e20.length - 1] ? 'above EMA20' : 'below EMA20');
 
+    priceChart.timeScale().fitContent();
+    rsiChart.timeScale().fitContent();
+
     var now = new Date();
     setStatus('live · ' + m.sym + ' ' + tf.label + ' · ' + candles.length +
-      ' candles · updated ' + now.toLocaleTimeString() + ' · source: GeckoTerminal', 'cs-ok');
+      ' candles · updated ' + now.toLocaleTimeString() + ' · source: ' + SRC_NAME[m.src], 'cs-ok');
   }
 
   // ---- controls ----
