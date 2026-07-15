@@ -836,6 +836,177 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 }
 
 /* --------------------------------------------------------------------------
+   Live charts terminal
+   -------------------------------------------------------------------------- */
+
+.charts-terminal-section {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: clamp(48px, 8vw, 96px) clamp(20px, 5vw, 64px);
+}
+
+.charts-terminal-card {
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+.charts-terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-2);
+  background: var(--surface-2);
+}
+
+.charts-terminal-header .terminal-title {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.charts-live-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  padding: 5px 12px;
+  border: 1px solid var(--border-3);
+  border-radius: 999px;
+}
+
+.charts-live-badge .int-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+  animation: chartPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes chartPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+.charts-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-2);
+  background: var(--bg-2);
+}
+
+.charts-tabs, .charts-tf {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.charts-tabs button, .charts-tf button {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-xs);
+  padding: 7px 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.charts-tabs button:hover, .charts-tf button:hover {
+  color: var(--text);
+  border-color: var(--border-3);
+}
+
+.charts-tabs button.active, .charts-tf button.active {
+  color: #000;
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+
+.charts-quote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 18px;
+  padding: 16px 18px 6px;
+  font-family: var(--font-mono);
+}
+
+.charts-quote .cq-sym { font-size: 1.05rem; color: var(--text); font-weight: 700; }
+.charts-quote .cq-price { font-size: 1.6rem; color: var(--accent); font-weight: 700; letter-spacing: 0.01em; }
+.charts-quote .cq-chg { font-size: 0.95rem; font-weight: 700; }
+.charts-quote .cq-chg.up { color: var(--accent); }
+.charts-quote .cq-chg.down { color: var(--danger); }
+.charts-quote .cq-meta { font-size: 0.78rem; color: var(--text-dim); margin-left: auto; }
+
+.charts-canvas-wrap { position: relative; padding: 8px 10px 4px; }
+#priceChart { width: 100%; height: 380px; }
+#rsiChart { width: 100%; height: 120px; }
+.charts-rsi-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  padding: 2px 18px 0;
+}
+
+.charts-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 4px 18px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+.charts-legend .lg { display: inline-flex; align-items: center; gap: 7px; }
+.charts-legend .lg i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+
+.charts-status {
+  border-top: 1px solid var(--border-2);
+  background: var(--bg-2);
+  padding: 12px 18px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.charts-status .cs-ok { color: var(--accent); }
+.charts-status .cs-err { color: var(--danger); }
+
+.charts-loading {
+  position: absolute;
+  inset: 8px 10px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.55);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--accent);
+  z-index: 5;
+}
+.charts-loading[hidden] { display: none; }
+
+@media (max-width: 640px) {
+  #priceChart { height: 300px; }
+  .charts-quote .cq-price { font-size: 1.3rem; }
+}
+
+/* --------------------------------------------------------------------------
    Market ticker
    -------------------------------------------------------------------------- */
 
@@ -2554,6 +2725,7 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
     <nav class="nav-links">
       <a href="#home" class="nav-link active"><span>~/</span>Home</a>
       <a href="#terminal" class="nav-link"><span>~/</span>Terminal</a>
+      <a href="#charts" class="nav-link"><span>~/</span>Charts</a>
       <a href="#integrations" class="nav-link"><span>~/</span>Integrations</a>
       <a href="/statistics" class="nav-link"><span>~/</span>Statistics</a>
       <a href="docs/litepaper.html" class="nav-link"><span>~/</span>Litepaper</a>
@@ -2785,6 +2957,53 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
         <button type="button" data-terminal-command="market">market</button>
         <button type="button" data-terminal-command="chat">open chat</button>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="charts-terminal-section" id="charts">
+  <div class="features-header" style="padding-bottom: 24px; text-align: left; align-items: flex-start;">
+    <div class="section-label">Live Charts</div>
+    <h2 class="section-title">Rynix trading terminal</h2>
+    <p class="section-subtitle">Rynix builds its own charts — real-time candlesticks with EMA20/50, RSI and volume, streamed live from on-chain data. Pick a market and watch it update.</p>
+  </div>
+  <div class="charts-terminal-card">
+    <div class="charts-terminal-header">
+      <div class="terminal-dots"><span></span><span></span><span></span></div>
+      <div class="terminal-title">terminal.rynix · charts --live</div>
+      <span class="charts-live-badge"><span class="int-live-dot"></span>LIVE</span>
+    </div>
+
+    <div class="charts-toolbar">
+      <div class="charts-tabs" id="chartTabs" role="tablist" aria-label="Select market"></div>
+      <div class="charts-tf" id="chartTf" role="tablist" aria-label="Select timeframe"></div>
+    </div>
+
+    <div class="charts-quote">
+      <span class="cq-sym" id="cqSym">—</span>
+      <span class="cq-price" id="cqPrice">$—</span>
+      <span class="cq-chg" id="cqChg">—</span>
+      <span class="cq-meta" id="cqMeta"></span>
+    </div>
+
+    <div class="charts-legend">
+      <span class="lg"><i style="background:#ccff00"></i>Price</span>
+      <span class="lg"><i style="background:#7fd4ff"></i>EMA 20</span>
+      <span class="lg"><i style="background:#ffb347"></i>EMA 50</span>
+      <span class="lg"><i style="background:#4d5a4d"></i>Volume</span>
+    </div>
+
+    <div class="charts-canvas-wrap">
+      <div class="charts-loading" id="chartLoading">loading market data…</div>
+      <div id="priceChart"></div>
+    </div>
+    <div class="charts-rsi-label">RSI (14)</div>
+    <div class="charts-canvas-wrap">
+      <div id="rsiChart"></div>
+    </div>
+
+    <div class="charts-status" id="chartStatus">
+      <span class="int-prompt">rynix@charts</span>:<span>~</span>$ <span id="chartStatusText">initializing feed…</span>
     </div>
   </div>
 </section>
@@ -4746,6 +4965,9 @@ button:active, .btn:active, .chip:active, .chat-launcher:active, .chatbot-close:
 </script>
 
 <script type="module" src="hyperliquid.js"></script>
+
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="charts.js"></script>
 
 </body>
 </html>
