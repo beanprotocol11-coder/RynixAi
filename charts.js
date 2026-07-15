@@ -8,9 +8,9 @@
   if (!mount) return;
 
   var MARKETS = [
-    { sym: 'BTC', label: 'BTC', src: 'hl', coin: 'BTC' },
-    { sym: 'ETH', label: 'ETH', src: 'hl', coin: 'ETH' },
-    { sym: 'SOL', label: 'SOL', src: 'hl', coin: 'SOL' },
+    { sym: 'BTC', label: 'BTC', src: 'hl', coin: 'BTC', net: 'eth', pool: '0x99ac8ca7087fa4a2a1fb6357269965a2014abc35' },
+    { sym: 'ETH', label: 'ETH', src: 'hl', coin: 'ETH', net: 'eth', pool: '0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640' },
+    { sym: 'SOL', label: 'SOL', src: 'hl', coin: 'SOL', net: 'solana', pool: '58oQChx4yWmvKdwLLZzBi4ChoCc2fqCUWBkwMihLYQo2' },
     { sym: 'HYPE', label: 'HYPE', src: 'hl', coin: 'HYPE' },
     { sym: 'CASHCAT', label: '$CASHCAT', src: 'gt', net: 'robinhood', pool: '0xA70fc67C9F69da90B63a0e4C05D229954574E313' }
   ];
@@ -113,8 +113,20 @@
   // ---- data ----
   // Returns a Promise resolving to normalized candles: [{time(sec),open,high,low,close,volume}]
   function fetchCandles(m, tf) {
-    if (m.src === 'hl') return fetchHL(m, tf);
-    return fetchGT(m, tf);
+    if (m.src === 'hl') {
+      return fetchHL(m, tf).then(function (rows) {
+        return { rows: rows, source: 'HyperLiquid' };
+      }).catch(function (e) {
+        // HyperLiquid unreachable (e.g. region-blocked) — fall back to on-chain feed
+        if (!m.pool) throw e;
+        return fetchGT(m, tf).then(function (rows) {
+          return { rows: rows, source: 'GeckoTerminal' };
+        });
+      });
+    }
+    return fetchGT(m, tf).then(function (rows) {
+      return { rows: rows, source: 'GeckoTerminal' };
+    });
   }
   function fetchHL(m, tf) {
     var end = Date.now();
@@ -166,9 +178,9 @@
     if (showLoader) loading(true);
     setStatus('fetching ' + m.sym + ' · ' + tf.label + ' from ' + SRC_NAME[m.src] + ' feed…');
     fetchCandles(m, tf)
-      .then(function (rows) {
+      .then(function (res) {
         if (myReq !== reqId) return; // a newer request superseded this one
-        render(m, tf, rows);
+        render(m, tf, res.rows, res.source);
       })
       .catch(function (e) {
         if (myReq !== reqId) return;
@@ -177,7 +189,7 @@
       .then(function () { if (myReq === reqId) loading(false); });
   }
 
-  function render(m, tf, rows) {
+  function render(m, tf, rows, source) {
     var candles = [], closes = [], vols = [], seen = {};
     for (var i = 0; i < rows.length; i++) {
       var row = rows[i];
@@ -231,7 +243,7 @@
 
     var now = new Date();
     setStatus('live · ' + m.sym + ' ' + tf.label + ' · ' + candles.length +
-      ' candles · updated ' + now.toLocaleTimeString() + ' · source: ' + SRC_NAME[m.src], 'cs-ok');
+      ' candles · updated ' + now.toLocaleTimeString() + ' · source: ' + (source || SRC_NAME[m.src]), 'cs-ok');
   }
 
   // ---- controls ----
