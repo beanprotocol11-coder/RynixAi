@@ -571,7 +571,7 @@
       }
 
       function onMove(evt) {
-        if (!layout || !state.prices.length) { tooltip.style.display = 'none'; return; }
+        if (!layout || state.prices.length < 2) { tooltip.style.display = 'none'; return; }
         var rect = canvas.getBoundingClientRect();
         var mx = evt.clientX - rect.left;
         var my = evt.clientY - rect.top;
