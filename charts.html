@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050705">
+  <title>Rynix AI — Charts</title>
+  <meta name="description" content="Live Rynix AI price charts for BTC, ETH, SOL and HYPE with 24H, 7D and 30D history.">
+  <link rel="icon" href="/logo.png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050705;
+      --surface: #0a0d0a;
+      --surface-2: #101510;
+      --border: #242b24;
+      --accent: #ccff00;
+      --text: #f4f6f4;
+      --muted: #9da69d;
+      --dim: #697269;
+      --down: #ff7373;
+      --radius: 18px;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      --body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: var(--bg);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(204,255,0,0.07), transparent 30rem),
+        linear-gradient(rgba(204,255,0,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(204,255,0,0.025) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, 48px 48px, 48px 48px, auto;
+      font-family: var(--body);
+    }
+
+    a { color: inherit; }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      min-height: 72px;
+      padding: 12px clamp(20px, 5vw, 64px);
+      background: rgba(5,7,5,0.88);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 1.08rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-decoration: none;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 17px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .button:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .button.primary {
+      color: #050705;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: clamp(56px, 8vw, 104px) 0 80px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      max-width: 780px;
+      margin: 0;
+      font-size: clamp(2.3rem, 7vw, 5.4rem);
+      line-height: 0.98;
+      letter-spacing: -0.06em;
+    }
+
+    .hero p {
+      margin: 22px 0 0;
+      max-width: 680px;
+      color: var(--muted);
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      line-height: 1.7;
+    }
+
+    .network-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-self: end;
+      padding: 16px 18px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+    }
+
+    .pulse {
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 0 6px rgba(204,255,0,0.1), 0 0 20px rgba(204,255,0,0.65);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% { opacity: 0.45; transform: scale(0.8); }
+    }
+
+    .panel {
+      background: linear-gradient(145deg, rgba(16,21,16,0.96), rgba(8,11,8,0.96));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .tab-group {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      min-height: 40px;
+      padding: 0 16px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .tab:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .tab.active {
+      color: #050705;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .range-group .tab {
+      min-height: 36px;
+      padding: 0 14px;
+    }
+
+    .chart-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 6px;
+    }
+
+    .chart-title {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0.01em;
+    }
+
+    .chart-price {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .chart-change {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .chart-change.up { color: var(--accent); }
+    .chart-change.down { color: var(--down); }
+
+    .chart-sub {
+      margin: 0 0 18px;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 380px;
+    }
+
+    #priceChart {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      z-index: 5;
+      display: none;
+      padding: 8px 11px;
+      color: var(--text);
+      background: rgba(8,11,8,0.96);
+      border: 1px solid var(--accent);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      line-height: 1.5;
+      pointer-events: none;
+      transform: translate(-50%, -120%);
+      white-space: nowrap;
+    }
+
+    .chart-tooltip b { color: var(--accent); }
+
+    .chart-empty {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: var(--dim);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .stat-box {
+      padding: 16px;
+      background: rgba(255,255,255,0.018);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .stat-box .label {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .stat-box .value {
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .footer-note {
+      margin: 28px 0 0;
+      color: var(--dim);
+      font-size: 0.75rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .network-status { justify-self: start; }
+      .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 560px) {
+      .brand span { display: none; }
+      .nav-actions .button:not(.primary) { display: none; }
+      main { width: min(100% - 28px, 1180px); }
+      .chart-wrap { height: 300px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a class="brand" href="/#home">
+      <img src="/logo.png" alt="Rynix AI">
+      <span>RYNIX AI</span>
+    </a>
+    <nav class="nav-actions" aria-label="Charts actions">
+      <a class="button" href="/statistics">Statistics</a>
+      <a class="button primary" href="/#home">Back home</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Rynix network / live charts</p>
+        <h1>Live price charts.</h1>
+        <p>Track BTC, ETH, SOL and HYPE with clean, real-time price history across 24H, 7D and 30D windows — powered by the same feeds Rynix agents trade on.</p>
+      </div>
+      <div class="network-status"><span class="pulse"></span><span id="networkStatus">LIVE DATA CONNECTED</span></div>
+    </section>
+
+    <section class="panel">
+      <div class="controls">
+        <div class="tab-group" id="symbolTabs" role="tablist" aria-label="Select asset">
+          <button class="tab active" data-symbol="BTC">BTC</button>
+          <button class="tab" data-symbol="ETH">ETH</button>
+          <button class="tab" data-symbol="SOL">SOL</button>
+          <button class="tab" data-symbol="HYPE">HYPE</button>
+        </div>
+        <div class="tab-group range-group" id="rangeTabs" role="tablist" aria-label="Select timeframe">
+          <button class="tab active" data-range="1">24H</button>
+          <button class="tab" data-range="7">7D</button>
+          <button class="tab" data-range="30">30D</button>
+        </div>
+      </div>
+
+      <div class="chart-head">
+        <h2 class="chart-title" id="chartTitle">Bitcoin</h2>
+        <span class="chart-price" id="chartPrice">$--</span>
+        <span class="chart-change up" id="chartChange">--</span>
+      </div>
+      <p class="chart-sub" id="chartSub">Loading price history…</p>
+
+      <div class="chart-wrap">
+        <canvas id="priceChart"></canvas>
+        <div class="chart-tooltip" id="chartTooltip"></div>
+        <div class="chart-empty" id="chartEmpty">No chart data available.</div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box"><div class="label">Range high</div><div class="value" id="statHigh">$--</div></div>
+        <div class="stat-box"><div class="label">Range low</div><div class="value" id="statLow">$--</div></div>
+        <div class="stat-box"><div class="label">Range change</div><div class="value" id="statChange">--</div></div>
+        <div class="stat-box"><div class="label">Data source</div><div class="value" id="statSource">--</div></div>
+      </div>
+    </section>
+
+    <p class="footer-note">Chart data refreshes automatically. Prices are indicative and sourced from public market feeds — not financial advice.</p>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var SYMBOL_META = {
+        BTC: { name: 'Bitcoin' },
+        ETH: { name: 'Ethereum' },
+        SOL: { name: 'Solana' },
+        HYPE: { name: 'Hyperliquid' }
+      };
+
+      var state = { symbol: 'BTC', range: '1', prices: [], source: '' };
+
+      var canvas = document.getElementById('priceChart');
+      var ctx = canvas.getContext('2d');
+      var tooltip = document.getElementById('chartTooltip');
+      var emptyEl = document.getElementById('chartEmpty');
+      var padding = { top: 20, right: 16, bottom: 28, left: 62 };
+      var layout = null;
+      var refreshTimer = null;
+
+      function formatPrice(value) {
+        var abs = Math.abs(value);
+        var digits = abs >= 1000 ? 0 : abs >= 1 ? 2 : 4;
+        return '$' + Number(value).toLocaleString('en-US', {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
+      }
+
+      function formatTime(ts, range) {
+        var d = new Date(ts);
+        if (range === '1') {
+          return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+
+      function resizeCanvas() {
+        var rect = canvas.getBoundingClientRect();
+        var dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.max(1, Math.round(rect.width * dpr));
+        canvas.height = Math.max(1, Math.round(rect.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return rect;
+      }
+
+      function drawChart() {
+        var rect = resizeCanvas();
+        var w = rect.width;
+        var h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        var prices = state.prices;
+        if (!prices || prices.length < 2) {
+          layout = null;
+          return;
+        }
+
+        var values = prices.map(function (p) { return p[1]; });
+        var min = Math.min.apply(null, values);
+        var max = Math.max.apply(null, values);
+        if (min === max) { min -= 1; max += 1; }
+        var pad = (max - min) * 0.08;
+        min -= pad; max += pad;
+
+        var plotW = w - padding.left - padding.right;
+        var plotH = h - padding.top - padding.bottom;
+        var n = prices.length;
+
+        function xFor(i) { return padding.left + (plotW * i) / (n - 1); }
+        function yFor(v) { return padding.top + plotH * (1 - (v - min) / (max - min)); }
+
+        var accent = '#ccff00';
+        var up = values[n - 1] >= values[0];
+        var lineColor = up ? accent : '#ff7373';
+
+        ctx.strokeStyle = 'rgba(36,43,36,0.9)';
+        ctx.lineWidth = 1;
+        ctx.font = '11px "SFMono-Regular", Consolas, monospace';
+        ctx.fillStyle = '#697269';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        var gridLines = 4;
+        for (var g = 0; g <= gridLines; g++) {
+          var gy = padding.top + (plotH * g) / gridLines;
+          ctx.beginPath();
+          ctx.moveTo(padding.left, gy);
+          ctx.lineTo(w - padding.right, gy);
+          ctx.stroke();
+          var gv = max - ((max - min) * g) / gridLines;
+          ctx.fillText(formatPrice(gv), padding.left - 8, gy);
+        }
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        var xTicks = Math.min(6, n);
+        for (var t = 0; t < xTicks; t++) {
+          var idx = Math.round((n - 1) * (t / (xTicks - 1)));
+          var tx = xFor(idx);
+          ctx.fillStyle = '#697269';
+          ctx.fillText(formatTime(prices[idx][0], state.range), tx, h - padding.bottom + 8);
+        }
+
+        var grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + plotH);
+        grad.addColorStop(0, up ? 'rgba(204,255,0,0.28)' : 'rgba(255,115,115,0.24)');
+        grad.addColorStop(1, 'rgba(204,255,0,0)');
+        ctx.beginPath();
+        ctx.moveTo(xFor(0), yFor(values[0]));
+        for (var i = 1; i < n; i++) { ctx.lineTo(xFor(i), yFor(values[i])); }
+        ctx.lineTo(xFor(n - 1), padding.top + plotH);
+        ctx.lineTo(xFor(0), padding.top + plotH);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(xFor(0), yFor(values[0]));
+        for (var j = 1; j < n; j++) { ctx.lineTo(xFor(j), yFor(values[j])); }
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.shadowColor = up ? 'rgba(204,255,0,0.5)' : 'rgba(255,115,115,0.45)';
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        layout = { xFor: xFor, yFor: yFor, plotW: plotW, plotH: plotH, n: n, min: min, max: max };
+      }
+
+      function nearestIndex(mouseX) {
+        if (!layout) return -1;
+        var rel = (mouseX - padding.left) / layout.plotW;
+        rel = Math.max(0, Math.min(1, rel));
+        return Math.round(rel * (layout.n - 1));
+      }
+
+      function onMove(evt) {
+        if (!layout || state.prices.length < 2) { tooltip.style.display = 'none'; return; }
+        var rect = canvas.getBoundingClientRect();
+        var mx = evt.clientX - rect.left;
+        var my = evt.clientY - rect.top;
+        if (mx < padding.left || mx > rect.width - padding.right) { tooltip.style.display = 'none'; return; }
+        var idx = nearestIndex(mx);
+        var point = state.prices[idx];
+        if (!point) { tooltip.style.display = 'none'; return; }
+
+        drawChart();
+        var px = layout.xFor(idx);
+        var py = layout.yFor(point[1]);
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(px, padding.top);
+        ctx.lineTo(px, padding.top + layout.plotH);
+        ctx.strokeStyle = 'rgba(204,255,0,0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(px, py, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ccff00';
+        ctx.fill();
+
+        tooltip.innerHTML = '<b>' + formatPrice(point[1]) + '</b><br>' + formatTime(point[0], state.range);
+        tooltip.style.left = px + 'px';
+        tooltip.style.top = py + 'px';
+        tooltip.style.display = 'block';
+
+        if (my < 0) { tooltip.style.display = 'none'; }
+      }
+
+      function onLeave() {
+        tooltip.style.display = 'none';
+        drawChart();
+      }
+
+      function updateHeader() {
+        var prices = state.prices;
+        var meta = SYMBOL_META[state.symbol] || { name: state.symbol };
+        document.getElementById('chartTitle').textContent = meta.name;
+
+        if (!prices || prices.length < 2) {
+          document.getElementById('chartPrice').textContent = '$--';
+          document.getElementById('chartChange').textContent = '--';
+          document.getElementById('statHigh').textContent = '$--';
+          document.getElementById('statLow').textContent = '$--';
+          document.getElementById('statChange').textContent = '--';
+          return;
+        }
+
+        var values = prices.map(function (p) { return p[1]; });
+        var first = values[0];
+        var last = values[values.length - 1];
+        var high = Math.max.apply(null, values);
+        var low = Math.min.apply(null, values);
+        var changePct = first !== 0 ? ((last - first) / first) * 100 : 0;
+        var up = changePct >= 0;
+        var rangeLabel = { '1': '24H', '7': '7D', '30': '30D' }[state.range];
+
+        document.getElementById('chartPrice').textContent = formatPrice(last);
+        var changeEl = document.getElementById('chartChange');
+        changeEl.textContent = (up ? '+' : '') + changePct.toFixed(2) + '% (' + rangeLabel + ')';
+        changeEl.className = 'chart-change ' + (up ? 'up' : 'down');
+
+        document.getElementById('statHigh').textContent = formatPrice(high);
+        document.getElementById('statLow').textContent = formatPrice(low);
+        var statChange = document.getElementById('statChange');
+        statChange.textContent = (up ? '+' : '') + changePct.toFixed(2) + '%';
+        statChange.style.color = up ? 'var(--accent)' : 'var(--down)';
+        document.getElementById('statSource').textContent = state.source === 'coingecko' ? 'CoinGecko' : (state.source === 'fallback' ? 'Simulated' : '--');
+
+        document.getElementById('chartSub').textContent =
+          meta.name + ' / USD · ' + rangeLabel + ' · ' + prices.length + ' points · updated ' + new Date().toLocaleTimeString();
+      }
+
+      async function loadChart() {
+        try {
+          var res = await fetch('/api/history?symbol=' + state.symbol + '&range=' + state.range);
+          if (!res.ok) throw new Error('History API unavailable');
+          var data = await res.json();
+          state.prices = Array.isArray(data.prices) ? data.prices : [];
+          state.source = data.source || '';
+          emptyEl.style.display = state.prices.length >= 2 ? 'none' : 'flex';
+          document.getElementById('networkStatus').textContent =
+            state.source === 'fallback' ? 'LIVE DATA FALLBACK' : 'LIVE DATA CONNECTED';
+        } catch (err) {
+          state.prices = [];
+          state.source = '';
+          emptyEl.style.display = 'flex';
+          document.getElementById('networkStatus').textContent = 'LIVE DATA FALLBACK';
+        }
+        updateHeader();
+        drawChart();
+      }
+
+      function bindTabs(containerId, key, cb) {
+        var container = document.getElementById(containerId);
+        container.addEventListener('click', function (evt) {
+          var btn = evt.target.closest('.tab');
+          if (!btn) return;
+          var value = btn.getAttribute('data-' + key);
+          if (!value || state[key] === value) return;
+          state[key] = value;
+          Array.prototype.forEach.call(container.querySelectorAll('.tab'), function (t) {
+            t.classList.toggle('active', t === btn);
+          });
+          cb();
+        });
+      }
+
+      bindTabs('symbolTabs', 'symbol', loadChart);
+      bindTabs('rangeTabs', 'range', loadChart);
+
+      canvas.addEventListener('mousemove', onMove);
+      canvas.addEventListener('mouseleave', onLeave);
+      window.addEventListener('resize', function () { drawChart(); });
+
+      loadChart();
+      refreshTimer = setInterval(loadChart, 60000);
+    })();
+  </script>
+</body>
+</html>

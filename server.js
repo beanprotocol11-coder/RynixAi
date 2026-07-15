@@ -32,6 +32,10 @@ app.get('/statistics', (req, res) => {
   res.sendFile(path.join(__dirname, 'statistics.html'));
 });
 
+app.get('/charts', (req, res) => {
+  res.sendFile(path.join(__dirname, 'charts.html'));
+});
+
 function getKrakenResult(data) {
   const result = {};
   for (const [symbol, config] of Object.entries(priceSources)) {
@@ -118,6 +122,83 @@ app.get('/api/prices', async (req, res) => {
   }
 
   res.json(FALLBACK_PRICES);
+});
+
+const HISTORY_RANGES = {
+  '1': { days: '1', ttl: 5 * 60 * 1000 },
+  '7': { days: '7', ttl: 30 * 60 * 1000 },
+  '30': { days: '30', ttl: 60 * 60 * 1000 }
+};
+
+const historyCoins = {
+  BTC: { cg: 'bitcoin', name: 'Bitcoin' },
+  ETH: { cg: 'ethereum', name: 'Ethereum' },
+  SOL: { cg: 'solana', name: 'Solana' },
+  HYPE: { cg: 'hyperliquid', name: 'Hyperliquid' }
+};
+
+const historyCache = {};
+
+function buildHistoryFallback(symbol, days) {
+  const base = (FALLBACK_PRICES[symbol] && FALLBACK_PRICES[symbol].price) || 100;
+  const points = days === '1' ? 48 : days === '7' ? 56 : 60;
+  const now = Date.now();
+  const span = Number(days) * 24 * 60 * 60 * 1000;
+  const prices = [];
+  let value = base * 0.96;
+  for (let i = 0; i < points; i++) {
+    const t = now - span + (span / (points - 1)) * i;
+    value = value * (1 + (Math.sin(i / 4) * 0.012) + (i / points) * 0.001);
+    prices.push([Math.round(t), Number(value.toFixed(2))]);
+  }
+  return prices;
+}
+
+app.get('/api/history', async (req, res) => {
+  const symbol = String(req.query.symbol || 'BTC').toUpperCase();
+  const rangeKey = String(req.query.range || '1');
+  const coin = historyCoins[symbol];
+  const range = HISTORY_RANGES[rangeKey];
+
+  if (!coin || !range) {
+    return res.status(400).json({ ok: false, error: 'Invalid symbol or range' });
+  }
+
+  const cacheKey = symbol + ':' + rangeKey;
+  const now = Date.now();
+  const cached = historyCache[cacheKey];
+  if (cached && now - cached.updatedAt < range.ttl) {
+    return res.json(cached.payload);
+  }
+
+  try {
+    const url = 'https://api.coingecko.com/api/v3/coins/' + coin.cg +
+      '/market_chart?vs_currency=usd&days=' + range.days;
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; RynixAI/1.0)' },
+      timeout: 10000
+    });
+    if (!response.ok) throw new Error('CoinGecko history error: ' + response.status);
+    const data = await response.json();
+    if (!Array.isArray(data.prices) || !data.prices.length) {
+      throw new Error('CoinGecko history empty');
+    }
+    const payload = {
+      ok: true, symbol, name: coin.name, range: rangeKey,
+      prices: data.prices.map(p => [p[0], p[1]]), source: 'coingecko'
+    };
+    historyCache[cacheKey] = { payload, updatedAt: now };
+    return res.json(payload);
+  } catch (error) {
+    console.error('History fetch error:', error.message);
+    if (cached) {
+      return res.json(cached.payload);
+    }
+    return res.json({
+      ok: true, symbol, name: coin.name, range: rangeKey,
+      prices: buildHistoryFallback(symbol, range.days), source: 'fallback'
+    });
+  }
 });
 
 app.get('/api/wallet', (req, res) => {
