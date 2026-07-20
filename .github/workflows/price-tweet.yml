@@ -1,0 +1,40 @@
+name: Auto-post price update to X
+
+on:
+  schedule:
+    # Every 4 hours (UTC). Adjust cadence as needed.
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Print the tweet instead of posting'
+        type: boolean
+        default: false
+
+concurrency:
+  group: x-price-autopost
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    name: Post terminal price update
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Post price update tweet
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          PRICES_URL: https://rynixai.pages.dev/api/prices
+          SITE_URL: https://rynixai.pages.dev
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+        run: node scripts/post-price-tweet.js
