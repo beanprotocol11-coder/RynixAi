@@ -27,6 +27,24 @@ const DRY_RUN = String(process.env.DRY_RUN || '').toLowerCase() === 'true';
 // Order the pairs the same way they appear on the website terminal.
 const PAIR_ORDER = ['BTC', 'ETH', 'SOL', 'HYPE'];
 
+// Static fallback the API serves when both Kraken and CoinGecko fail.
+// Must stay in sync with FALLBACK_PRICES in server.js / functions/api/prices.js.
+// We refuse to tweet these so we never label stale placeholders as "live".
+const FALLBACK_PRICES = {
+  BTC: { price: 62750, change24h: -1.5 },
+  ETH: { price: 1776, change24h: -1.0 },
+  SOL: { price: 76.4, change24h: 0.3 },
+  HYPE: { price: 65.1, change24h: -2.6 }
+};
+
+function looksLikeFallback(prices) {
+  return PAIR_ORDER.every((s) => {
+    const p = prices[s];
+    const f = FALLBACK_PRICES[s];
+    return p && p.price === f.price && p.change24h === f.change24h;
+  });
+}
+
 function formatPrice(value) {
   if (!isFinite(value)) return '—';
   const decimals = value >= 100 ? 2 : value >= 1 ? 2 : 4;
@@ -147,11 +165,14 @@ function loadCreds() {
     .filter(([, v]) => !v)
     .map(([k]) => k);
   if (missing.length) {
+    const envNames = {
+      apiKey: 'X_API_KEY',
+      apiSecret: 'X_API_SECRET',
+      accessToken: 'X_ACCESS_TOKEN',
+      accessTokenSecret: 'X_ACCESS_TOKEN_SECRET'
+    };
     throw new Error(
-      'Missing X API credentials: ' +
-        missing
-          .map((k) => k.replace('api', 'X_API_').replace('access', 'X_ACCESS_'))
-          .join(', ')
+      'Missing X API credentials: ' + missing.map((k) => envNames[k]).join(', ')
     );
   }
   return creds;
@@ -159,6 +180,12 @@ function loadCreds() {
 
 async function main() {
   const prices = await fetchPrices();
+
+  if (looksLikeFallback(prices)) {
+    console.warn('Prices match the static fallback (feeds likely down); skipping post.');
+    return;
+  }
+
   const tweet = buildTweet(prices);
 
   if (tweet.length > 280) {
