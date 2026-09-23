@@ -1,15 +1,29 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cx } from '../lib/format'
+import type { Channel } from '../lib/social'
 import { CloseIcon } from './Icons'
 import { useNotify } from '../store/notify'
 
-export function Logo({ size = 32, className }: { size?: number; className?: string }) {
-  return <img src="/logo.svg" alt="Perpcast" width={size} height={size} className={cx('rounded-[28%] shrink-0', className)} draggable={false} />
+/** Transparent brand mark — no box, no background; sized generously so it reads at a glance. */
+export function Logo({ size = 44, className }: { size?: number; className?: string }) {
+  return <img src="/logo.svg" alt="Perpcast" width={size} height={size} className={cx('shrink-0 select-none', className)} draggable={false} />
+}
+
+export function ChannelIcon({ channel, size = 32, className }: { channel: Channel; size?: number; className?: string }) {
+  const radius = size >= 56 ? 'rounded-2xl' : size >= 36 ? 'rounded-xl' : 'rounded-lg'
+  return (
+    <span
+      className={cx('flex shrink-0 items-center justify-center overflow-hidden', radius, className)}
+      style={{ width: size, height: size, fontSize: size * 0.5, background: `${channel.accent}22`, border: `1px solid ${channel.accent}44` }}
+    >
+      {channel.icon ? <img src={channel.icon} alt={channel.name} className="h-full w-full object-cover" draggable={false} /> : channel.emoji}
+    </span>
+  )
 }
 
 export function Wordmark({ className, size = 'md' }: { className?: string; size?: 'sm' | 'md' | 'lg' }) {
-  const s = size === 'lg' ? 'text-2xl' : size === 'sm' ? 'text-base' : 'text-lg'
+  const s = size === 'lg' ? 'text-3xl' : size === 'sm' ? 'text-lg' : 'text-[22px]'
   return (
     <span className={cx('font-display font-extrabold tracking-tight', s, className)}>
       Perp<span className="text-gradient">cast</span>
@@ -17,15 +31,21 @@ export function Wordmark({ className, size = 'md' }: { className?: string; size?
   )
 }
 
-export function Avatar({ src, name, size = 40, className, fid }: { src?: string; name?: string; size?: number; className?: string; fid?: number }) {
+function hashHue(seed: string): number {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0
+  return h % 360
+}
+
+export function Avatar({ src, name, size = 40, className, seed }: { src?: string; name?: string; size?: number; className?: string; seed?: string }) {
   const [err, setErr] = useState(false)
-  const letter = (name ?? '?').replace(/^@/, '').slice(0, 1).toUpperCase()
-  const hue = fid !== undefined ? Math.abs(fid * 47) % 360 : (letter.charCodeAt(0) * 37) % 360
+  const letter = (name ?? '?').replace(/^@/, '').slice(0, 1).toUpperCase() || '?'
+  const hue = hashHue(seed ?? name ?? '?')
   const show = src && !err
   return (
     <div
       className={cx('relative shrink-0 overflow-hidden rounded-full bg-surface-2 flex items-center justify-center font-bold select-none', className)}
-      style={{ width: size, height: size, fontSize: size * 0.4, background: show ? undefined : `linear-gradient(135deg, hsl(${hue} 60% 55%), hsl(${(hue + 40) % 360} 70% 45%))`, color: '#fff' }}
+      style={{ width: size, height: size, fontSize: size * 0.4, background: show ? undefined : `linear-gradient(135deg, hsl(${hue} 45% 48%), hsl(${(hue + 40) % 360} 50% 38%))`, color: '#fff7ea' }}
     >
       {show ? <img src={src} alt={name ?? ''} className="h-full w-full object-cover" loading="lazy" onError={() => setErr(true)} draggable={false} /> : letter}
     </div>

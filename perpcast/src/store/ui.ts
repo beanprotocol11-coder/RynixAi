@@ -1,10 +1,10 @@
 import { create } from 'zustand'
-import type { Cast, PositionEmbed } from '../lib/farcaster'
+import type { Cast, PositionEmbed } from '../lib/social'
 
 export type Theme = 'dark' | 'light'
 
 export interface ComposerOptions {
-  channelUrl?: string | null
+  channel?: string | null
   parent?: Cast | null
   quote?: Cast | null
   position?: PositionEmbed
@@ -29,7 +29,7 @@ function readTheme(): Theme {
   } catch {
     /* ignore */
   }
-  return 'dark'
+  return 'light'
 }
 
 function applyTheme(t: Theme) {
@@ -40,7 +40,7 @@ function applyTheme(t: Theme) {
     /* ignore */
   }
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute('content', t === 'dark' ? '#0b0c10' : '#f6f6f8')
+  if (meta) meta.setAttribute('content', t === 'dark' ? '#1d140e' : '#f3e9d8')
 }
 
 export const useUI = create<UIState>()((set, get) => ({

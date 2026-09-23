@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { fetchBook, subscribeBook, subscribeTrades, type L2Book, type Market, type Trade } from '../lib/hyperliquid'
+import { CoinLogo } from './CoinLogo'
+import { CATEGORIES, coinName, displaySymbol, fetchBook, subscribeBook, subscribeTrades, type L2Book, type Market, type MarketCategory, type Trade } from '../lib/hyperliquid'
 import { useMarket } from '../store/market'
 import { useTrading, liqPrice, unrealized, roe, TAKER_FEE, MAKER_FEE, type Position, type Order, type Fill, type Side } from '../store/trading'
 import { useAuth } from '../store/auth'
@@ -239,7 +240,7 @@ export function OrderBook({ coin, szDecimals, mark, rows = 12, className, onPick
     <div className={cx('flex flex-col text-[11px] mono', className)}>
       <div className="grid grid-cols-3 px-3 py-1.5 text-[10px] font-sans font-semibold uppercase tracking-wider text-ink-3">
         <span>Price</span>
-        <span className="text-right">Size ({coin})</span>
+        <span className="text-right">Size ({displaySymbol(coin)})</span>
         <span className="text-right">Total</span>
       </div>
       <div className="flex-1">
@@ -399,7 +400,7 @@ export function PositionsTable({ positions, compact }: { positions: Position[]; 
             return (
               <tr key={p.id} className="border-t border-line [&>td]:px-3 [&>td]:py-2">
                 <td>
-                  <Link to={`/trade/${p.coin}`} className="flex items-center gap-2 font-sans font-bold hover:underline">
+                  <Link to={`/trade/${encodeURIComponent(p.coin)}`} className="flex items-center gap-2 font-sans font-bold hover:underline">
                     <span className={cx('badge', p.side === 'long' ? 'badge-long' : 'badge-short')}>{p.side === 'long' ? 'Long' : 'Short'}</span>
                     {p.coin}
                     <span className="text-ink-3">{p.leverage.toFixed(0)}x</span>
@@ -455,7 +456,7 @@ function SharePositionBtn({ p, mark }: { p: Position; mark: number }) {
       className="btn btn-ghost !px-2 !py-1 text-xs gap-1"
       title="Share to feed"
       onClick={() => {
-        openComposer({ position: { coin: p.coin, side: p.side, leverage: p.leverage, entry: p.entry, size: p.size, pnl: u, pnlPct: roe(p, mark) }, text: `${p.side === 'long' ? 'Long' : 'Short'} $${p.coin} ${p.leverage.toFixed(0)}x from ${px(p.entry)} ` })
+        openComposer({ position: { coin: p.coin, side: p.side, leverage: p.leverage, entry: p.entry, size: p.size, pnl: u, pnlPct: roe(p, mark) }, text: `${p.side === 'long' ? 'Long' : 'Short'} $${displaySymbol(p.coin)} ${p.leverage.toFixed(0)}x from ${px(p.entry)} ` })
         if (window.innerWidth < 768) nav('/')
       }}
     >
@@ -473,13 +474,13 @@ function CloseModal({ p, onClose }: { p: Position; onClose: () => void }) {
   const est = unrealized({ ...p, size }, mark) - size * mark * TAKER_FEE
   return (
     <Modal open onClose={onClose} size="sm" label="Close position">
-      <ModalHeader title={`Close ${p.side} ${p.coin}`} sub={`Mark ${px(mark, sd)} · Entry ${px(p.entry, sd)}`} onClose={onClose} />
+      <ModalHeader title={`Close ${p.side} ${displaySymbol(p.coin)}`} sub={`Mark ${px(mark, sd)} · Entry ${px(p.entry, sd)}`} onClose={onClose} />
       <div className="flex flex-col gap-4 px-5 pb-5">
         <div>
           <div className="mb-1 flex justify-between text-xs text-ink-3">
             <span>Amount to close</span>
             <span className="mono text-ink">
-              {num(size, sd)} {p.coin} ({frac}%)
+              {num(size, sd)} {displaySymbol(p.coin)} ({frac}%)
             </span>
           </div>
           <input type="range" min={1} max={100} value={frac} onChange={(e) => setFrac(Number(e.target.value))} className="w-full accent-[var(--accent)]" />
@@ -524,7 +525,7 @@ function TpSlModal({ p, onClose }: { p: Position; onClose: () => void }) {
   const gain = (target: number) => unrealized(p, target)
   return (
     <Modal open onClose={onClose} size="sm" label="Take profit / stop loss">
-      <ModalHeader title="Take profit / Stop loss" sub={`${p.side} ${p.coin} ${p.leverage.toFixed(0)}x · Mark ${px(mark, sd)}`} onClose={onClose} />
+      <ModalHeader title="Take profit / Stop loss" sub={`${p.side} ${displaySymbol(p.coin)} ${p.leverage.toFixed(0)}x · Mark ${px(mark, sd)}`} onClose={onClose} />
       <div className="flex flex-col gap-3 px-5 pb-5">
         <label className="block">
           <span className="mb-1 block text-xs text-ink-3">Take profit price</span>
@@ -655,10 +656,13 @@ export function FillsTable({ fills, limit = 100 }: { fills: Fill[]; limit?: numb
 
 // ---------------------------------------------------------------- Market selector
 
-export function MarketSelector({ current, onPick, open, onClose }: { current: string; onPick: (coin: string) => void; open: boolean; onClose: () => void }) {
+export type SelectorCat = MarketCategory | 'all' | 'favs'
+
+export function MarketSelector({ current, onPick, open, onClose, initialCat = 'all' }: { current: string; onPick: (coin: string) => void; open: boolean; onClose: () => void; initialCat?: SelectorCat }) {
   const markets = useMarket((s) => s.markets)
   const mids = useMarket((s) => s.mids)
   const [q, setQ] = useState('')
+  const [cat, setCat] = useState<SelectorCat>(initialCat)
   const [favs, setFavs] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('perpcast:favs') ?? '[]') as string[]
@@ -668,25 +672,43 @@ export function MarketSelector({ current, onPick, open, onClose }: { current: st
   })
   const inputRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    if (open) setTimeout(() => inputRef.current?.focus(), 30)
-    else setQ('')
-  }, [open])
+    if (open) {
+      setCat(initialCat)
+      setTimeout(() => inputRef.current?.focus(), 30)
+    } else setQ('')
+  }, [open, initialCat])
   const toggleFav = (c: string) => {
     const next = favs.includes(c) ? favs.filter((x) => x !== c) : [...favs, c]
     setFavs(next)
     localStorage.setItem('perpcast:favs', JSON.stringify(next))
   }
+  const counts = useMemo(() => {
+    const n: Record<string, number> = { all: markets.length, favs: favs.filter((f) => markets.some((m) => m.coin === f)).length }
+    for (const m of markets) n[m.category] = (n[m.category] ?? 0) + 1
+    return n
+  }, [markets, favs])
   const list = useMemo(() => {
     const ql = q.trim().toLowerCase()
-    const xs = ql ? markets.filter((m) => m.coin.toLowerCase().includes(ql)) : markets
+    let xs = markets
+    if (cat === 'favs') xs = xs.filter((m) => favs.includes(m.coin))
+    else if (cat !== 'all') xs = xs.filter((m) => m.category === cat)
+    if (ql) xs = xs.filter((m) => m.symbol.toLowerCase().includes(ql) || coinName(m.coin).toLowerCase().includes(ql))
     return [...xs].sort((a, b) => Number(favs.includes(b.coin)) - Number(favs.includes(a.coin)) || b.dayNtlVlm - a.dayNtlVlm)
-  }, [markets, q, favs])
+  }, [markets, q, favs, cat])
 
   return (
     <Modal open={open} onClose={onClose} size="md" label="Select market" className="!p-0">
-      <ModalHeader title="Markets" sub={`${markets.length} perpetuals · live from Hyperliquid`} onClose={onClose} />
-      <div className="px-4 pb-3">
+      <ModalHeader title="Markets" sub={`${markets.length} perpetuals · crypto, memes, stocks & RWAs · live from Hyperliquid`} onClose={onClose} />
+      <div className="px-4 pb-2">
         <input ref={inputRef} className="input" placeholder="Search markets…" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && list[0]) { onPick(list[0].coin); onClose() } }} />
+      </div>
+      <div className="scrollbar-none flex gap-1.5 overflow-x-auto px-4 pb-3">
+        {CATEGORIES.map((c) => (
+          <button key={c.id} className={cx('chip shrink-0 !py-1 text-xs', cat === c.id && 'chip-active')} title={c.hint} onClick={() => setCat(c.id)}>
+            {c.label}
+            <span className="ml-1 text-ink-3">{counts[c.id] ?? 0}</span>
+          </button>
+        ))}
       </div>
       <div className="grid grid-cols-[auto_1fr_auto_auto] gap-x-3 px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-ink-3">
         <span className="w-4" />
@@ -704,8 +726,11 @@ export function MarketSelector({ current, onPick, open, onClose }: { current: st
                 ★
               </button>
               <button className="flex min-w-0 items-center gap-2 text-left" onClick={() => { onPick(m.coin); onClose() }}>
-                <CoinDot coin={m.coin} />
-                <span className="truncate font-bold">{m.coin}-USD</span>
+                <CoinLogo coin={m.coin} size={30} />
+                <span className="min-w-0 leading-tight">
+                  <span className="block truncate font-bold">{m.symbol}-USD</span>
+                  <span className="block truncate text-[10px] text-ink-3">{coinName(m.coin)}</span>
+                </span>
                 <span className="hidden text-[10px] text-ink-3 sm:inline">{m.maxLeverage}x</span>
               </button>
               <button className="mono text-right text-sm" onClick={() => { onPick(m.coin); onClose() }}>
@@ -717,18 +742,9 @@ export function MarketSelector({ current, onPick, open, onClose }: { current: st
             </div>
           )
         })}
-        {list.length === 0 && <div className="px-4 py-8 text-center text-sm text-ink-3">No markets match “{q}”.</div>}
+        {list.length === 0 && <div className="px-4 py-8 text-center text-sm text-ink-3">{cat === 'favs' && !q ? 'Star a market to keep it here.' : `No markets match “${q}”.`}</div>}
       </div>
     </Modal>
-  )
-}
-
-export function CoinDot({ coin, size = 22 }: { coin: string; size?: number }) {
-  const hue = [...coin].reduce((a, c) => a + c.charCodeAt(0), 0) % 360
-  return (
-    <span className="grid shrink-0 place-items-center rounded-full font-display text-[10px] font-extrabold text-white" style={{ width: size, height: size, background: `linear-gradient(135deg, hsl(${hue} 80% 55%), hsl(${(hue + 40) % 360} 80% 45%))` }}>
-      {coin.slice(0, 1)}
-    </span>
   )
 }
 

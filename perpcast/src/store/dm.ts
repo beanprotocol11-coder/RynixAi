@@ -1,61 +1,87 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { uid } from '../lib/format'
-import { primeUser, type FcUser } from '../lib/farcaster'
-
-export interface DMMessage {
-  id: string
-  from: number
-  text: string
-  time: number
-}
-
-export interface DMThread {
-  id: string
-  peer: FcUser
-  messages: DMMessage[]
-  lastRead: number
-  createdAt: number
-}
+import { api } from '../lib/api'
+import type { DMMessage, DMThread, User } from '../lib/social'
+import { useAuth } from './auth'
+import { toast } from './notify'
 
 interface DMState {
   threads: DMThread[]
-  open: (peer: FcUser) => DMThread
-  send: (threadId: string, from: number, text: string) => void
-  markRead: (threadId: string) => void
-  remove: (threadId: string) => void
+  messages: Record<string, DMMessage[]> // peerId -> ascending
+  loading: boolean
+  loaded: boolean
+  refreshThreads: () => Promise<void>
+  open: (peer: User) => void
+  loadMessages: (peerId: string) => Promise<void>
+  send: (peer: User, text: string) => Promise<void>
+  markRead: (peerId: string) => Promise<void>
   unreadCount: () => number
+  reset: () => void
 }
 
-export const useDMs = create<DMState>()(
-  persist(
-    (set, get) => ({
-      threads: [],
-      open: (peer) => {
-        primeUser(peer)
-        const existing = get().threads.find((t) => t.peer.fid === peer.fid)
-        if (existing) return existing
-        const t: DMThread = { id: `dm:${uid()}`, peer, messages: [], lastRead: Date.now(), createdAt: Date.now() }
-        set((s) => ({ threads: [t, ...s.threads] }))
-        return t
-      },
-      send: (threadId, from, text) =>
-        set((s) => ({
-          threads: s.threads
-            .map((t) => (t.id === threadId ? { ...t, messages: [...t.messages, { id: uid(), from, text, time: Date.now() }], lastRead: Date.now() } : t))
-            .sort((a, b) => lastTime(b) - lastTime(a)),
-        })),
-      markRead: (threadId) => set((s) => ({ threads: s.threads.map((t) => (t.id === threadId ? { ...t, lastRead: Date.now() } : t)) })),
-      remove: (threadId) => set((s) => ({ threads: s.threads.filter((t) => t.id !== threadId) })),
-      unreadCount: () => get().threads.reduce((n, t) => n + t.messages.filter((m) => m.time > t.lastRead && m.from === t.peer.fid).length, 0),
-    }),
-    {
-      name: 'perpcast:dm',
-      onRehydrateStorage: () => (state) => state?.threads.forEach((t) => primeUser(t.peer)),
-    },
-  ),
-)
+export const useDMs = create<DMState>()((set, get) => ({
+  threads: [],
+  messages: {},
+  loading: false,
+  loaded: false,
+
+  refreshThreads: async () => {
+    if (!useAuth.getState().user) return
+    set({ loading: true })
+    try {
+      const threads = await api().dmThreads()
+      set((s) => {
+        // keep locally-opened empty threads that the server does not know about yet
+        const known = new Set(threads.map((t) => t.peer.id))
+        const extra = s.threads.filter((t) => !t.last && !known.has(t.peer.id))
+        return { threads: [...threads, ...extra], loaded: true }
+      })
+    } catch (e) {
+      if (!get().loaded) toast({ kind: 'error', title: (e as Error).message })
+    } finally {
+      set({ loading: false })
+    }
+  },
+
+  open: (peer) => {
+    if (get().threads.some((t) => t.peer.id === peer.id)) return
+    set((s) => ({ threads: [{ peer, last: null, unread: 0 }, ...s.threads] }))
+  },
+
+  loadMessages: async (peerId) => {
+    const have = get().messages[peerId]
+    const since = have?.length ? have[have.length - 1].time : undefined
+    try {
+      const list = await api().dmMessages(peerId, since)
+      if (!list.length && have) return
+      set((s) => {
+        const prev = s.messages[peerId] ?? []
+        const ids = new Set(prev.map((m) => m.id))
+        const merged = [...prev, ...list.filter((m) => !ids.has(m.id))].sort((a, b) => a.time - b.time)
+        return { messages: { ...s.messages, [peerId]: merged } }
+      })
+    } catch {
+      /* transient */
+    }
+  },
+
+  send: async (peer, text) => {
+    const msg = await api().dmSend(peer.id, text)
+    set((s) => {
+      const prev = s.messages[peer.id] ?? []
+      const threads = s.threads.filter((t) => t.peer.id !== peer.id)
+      return { messages: { ...s.messages, [peer.id]: [...prev, msg] }, threads: [{ peer, last: msg, unread: 0 }, ...threads] }
+    })
+  },
+
+  markRead: async (peerId) => {
+    set((s) => ({ threads: s.threads.map((t) => (t.peer.id === peerId ? { ...t, unread: 0 } : t)) }))
+    await api().dmRead(peerId).catch(() => undefined)
+  },
+
+  unreadCount: () => get().threads.reduce((n, t) => n + t.unread, 0),
+  reset: () => set({ threads: [], messages: {}, loaded: false }),
+}))
 
 export function lastTime(t: DMThread): number {
-  return t.messages.length ? t.messages[t.messages.length - 1].time : t.createdAt
+  return t.last?.time ?? 0
 }

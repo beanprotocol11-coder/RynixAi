@@ -68,6 +68,15 @@ export function stopMarket() {
   started = false
 }
 
+/** Resolve a route/param coin (`BTC`, `xyz:TSLA`, or bare `TSLA`) to a listed market. */
+export function resolveMarket(key: string | undefined, s: Pick<MarketState, 'byCoin' | 'markets'> = useMarket.getState()): Market | undefined {
+  if (!key) return undefined
+  const direct = s.byCoin[key] ?? s.byCoin[decodeURIComponent(key)]
+  if (direct) return direct
+  const up = key.toUpperCase()
+  return s.markets.find((m) => m.coin.toUpperCase() === up || m.symbol.toUpperCase() === up)
+}
+
 export function change24h(m: Market, mid?: number): number {
   const p = mid ?? m.midPx
   if (!m.prevDayPx) return 0

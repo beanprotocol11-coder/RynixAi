@@ -1,123 +1,126 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { uid } from '../lib/format'
-import type { Cast, FcUser, PositionEmbed } from '../lib/farcaster'
-import { primeUser } from '../lib/farcaster'
-import { notify } from './notify'
-
-export interface LocalCast extends Cast {
-  local: true
-  author: FcUser
-  parentId?: string | null // id of parent cast (hub `${fid}:${hash}` or local id)
-  parentAuthor?: FcUser | null
-  quoteId?: string | null
-  images?: string[]
-}
+import { api } from '../lib/api'
+import type { Cast, PublishInput, User } from '../lib/social'
+import { useAuth } from './auth'
+import { notify, toast } from './notify'
 
 interface SocialState {
-  casts: LocalCast[]
-  likes: Record<string, number> // castId -> liked at
-  recasts: Record<string, number>
-  bookmarks: Record<string, number>
-  follows: Record<number, number> // fid -> followed at
-  mutedFids: Record<number, number>
-  hiddenCasts: Record<string, number>
-  replyCounts: Record<string, number>
-  likeCounts: Record<string, number> // local like deltas per cast
+  /** Latest known version of every cast the UI has seen — keeps likes/replies consistent across feeds. */
+  casts: Record<string, Cast>
+  /** Casts published in this session, newest first, so they appear instantly in feeds. */
+  fresh: Cast[]
+  deleted: Record<string, true>
+  follows: Record<string, true>
+  bookmarks: Record<string, number> // castId -> saved at (device local)
+  muted: Record<string, number>
+  hidden: Record<string, number>
+  tick: number
 
-  publish: (input: {
-    author: FcUser
-    text: string
-    channelUrl?: string | null
-    parent?: Cast | null
-    quote?: Cast | null
-    position?: PositionEmbed
-    images?: string[]
-  }) => LocalCast
-  remove: (id: string) => void
-  toggleLike: (id: string) => boolean
-  toggleRecast: (id: string) => boolean
+  absorb: (casts: Cast[]) => void
+  hydrateMine: () => Promise<void>
+  publish: (input: PublishInput) => Promise<Cast>
+  remove: (id: string) => Promise<void>
+  toggleLike: (cast: Cast) => Promise<boolean>
+  toggleRecast: (cast: Cast) => Promise<boolean>
   toggleBookmark: (id: string) => boolean
-  toggleFollow: (fid: number, user?: FcUser) => boolean
-  toggleMute: (fid: number) => boolean
+  toggleFollow: (user: User) => Promise<boolean>
+  toggleMute: (userId: string) => boolean
   hide: (id: string) => void
-  isLiked: (id: string) => boolean
-  isRecast: (id: string) => boolean
-  isBookmarked: (id: string) => boolean
-  isFollowing: (fid: number) => boolean
+  isFollowing: (userId: string) => boolean
+  bump: () => void
 }
 
 export const useSocial = create<SocialState>()(
   persist(
     (set, get) => ({
-      casts: [],
-      likes: {},
-      recasts: {},
-      bookmarks: {},
+      casts: {},
+      fresh: [],
+      deleted: {},
       follows: {},
-      mutedFids: {},
-      hiddenCasts: {},
-      replyCounts: {},
-      likeCounts: {},
+      bookmarks: {},
+      muted: {},
+      hidden: {},
+      tick: 0,
 
-      publish: ({ author, text, channelUrl, parent, quote, position, images }) => {
-        const id = `local:${uid()}`
-        const parentAuthor = parent ? (parent as LocalCast).author ?? null : null
-        const cast: LocalCast = {
-          id,
-          local: true,
-          fid: author.fid,
-          hash: id,
-          author,
-          text,
-          timestamp: Date.now(),
-          parentUrl: parent ? null : channelUrl ?? null,
-          parent: parent ? { fid: parent.fid, hash: parent.hash } : null,
-          parentId: parent?.id ?? null,
-          parentAuthor,
-          quoteId: quote?.id ?? null,
-          embeds: quote ? [{ castId: { fid: quote.fid, hash: quote.hash } }] : [],
-          mentions: [],
-          mentionsPositions: [],
-          position,
-          images,
-          channel: channelUrl ?? null,
+      absorb: (list) => {
+        if (!list.length) return
+        set((s) => {
+          const casts = { ...s.casts }
+          for (const c of list) {
+            casts[c.id] = c
+            if (c.quote) casts[c.quote.id] = { ...casts[c.quote.id], ...c.quote }
+          }
+          return { casts }
+        })
+      },
+
+      hydrateMine: async () => {
+        if (!useAuth.getState().user) {
+          set({ follows: {}, fresh: [] })
+          return
         }
-        set((s) => ({
-          casts: [cast, ...s.casts],
-          replyCounts: parent ? { ...s.replyCounts, [parent.id]: (s.replyCounts[parent.id] ?? 0) + 1 } : s.replyCounts,
-        }))
+        try {
+          const ids = await api().myFollowing()
+          const follows: Record<string, true> = {}
+          ids.forEach((id) => (follows[id] = true))
+          set({ follows })
+        } catch {
+          /* offline */
+        }
+      },
+
+      publish: async (input) => {
+        const cast = await api().publish(input)
+        set((s) => {
+          const casts = { ...s.casts, [cast.id]: cast }
+          if (cast.parentId && casts[cast.parentId]) casts[cast.parentId] = { ...casts[cast.parentId], replies: casts[cast.parentId].replies + 1 }
+          return { casts, fresh: [cast, ...s.fresh].slice(0, 100) }
+        })
         return cast
       },
 
-      remove: (id) =>
+      remove: async (id) => {
+        await api().remove(id)
         set((s) => {
-          const target = s.casts.find((c) => c.id === id)
-          const replyCounts = { ...s.replyCounts }
-          if (target?.parentId && replyCounts[target.parentId]) replyCounts[target.parentId] = Math.max(0, replyCounts[target.parentId] - 1)
-          return { casts: s.casts.filter((c) => c.id !== id && c.parentId !== id), replyCounts }
-        }),
+          const target = s.casts[id]
+          const casts = { ...s.casts }
+          delete casts[id]
+          if (target?.parentId && casts[target.parentId]) casts[target.parentId] = { ...casts[target.parentId], replies: Math.max(0, casts[target.parentId].replies - 1) }
+          return { casts, fresh: s.fresh.filter((c) => c.id !== id), deleted: { ...s.deleted, [id]: true } }
+        })
+      },
 
-      toggleLike: (id) => {
-        const on = !get().likes[id]
-        set((s) => {
-          const likes = { ...s.likes }
-          if (on) likes[id] = Date.now()
-          else delete likes[id]
-          return { likes, likeCounts: { ...s.likeCounts, [id]: (s.likeCounts[id] ?? 0) + (on ? 1 : -1) } }
-        })
+      toggleLike: async (cast) => {
+        const cur = get().casts[cast.id] ?? cast
+        const on = !cur.liked
+        set((s) => ({ casts: { ...s.casts, [cast.id]: { ...cur, liked: on, likes: Math.max(0, cur.likes + (on ? 1 : -1)) } } }))
+        try {
+          const fresh = await api().react(cast.id, 'like', on)
+          set((s) => ({ casts: { ...s.casts, [cast.id]: fresh } }))
+        } catch (e) {
+          set((s) => ({ casts: { ...s.casts, [cast.id]: cur } }))
+          toast({ kind: 'error', title: (e as Error).message })
+          return !on
+        }
         return on
       },
-      toggleRecast: (id) => {
-        const on = !get().recasts[id]
-        set((s) => {
-          const recasts = { ...s.recasts }
-          if (on) recasts[id] = Date.now()
-          else delete recasts[id]
-          return { recasts }
-        })
+
+      toggleRecast: async (cast) => {
+        const cur = get().casts[cast.id] ?? cast
+        const on = !cur.recasted
+        set((s) => ({ casts: { ...s.casts, [cast.id]: { ...cur, recasted: on, recasts: Math.max(0, cur.recasts + (on ? 1 : -1)) } } }))
+        try {
+          const fresh = await api().react(cast.id, 'recast', on)
+          set((s) => ({ casts: { ...s.casts, [cast.id]: fresh } }))
+        } catch (e) {
+          set((s) => ({ casts: { ...s.casts, [cast.id]: cur } }))
+          toast({ kind: 'error', title: (e as Error).message })
+          return !on
+        }
         return on
       },
+
       toggleBookmark: (id) => {
         const on = !get().bookmarks[id]
         set((s) => {
@@ -128,43 +131,56 @@ export const useSocial = create<SocialState>()(
         })
         return on
       },
-      toggleFollow: (fid, user) => {
-        const on = !get().follows[fid]
-        if (user) primeUser(user)
+
+      toggleFollow: async (user) => {
+        const on = !get().follows[user.id]
         set((s) => {
           const follows = { ...s.follows }
-          if (on) follows[fid] = Date.now()
-          else delete follows[fid]
+          if (on) follows[user.id] = true
+          else delete follows[user.id]
           return { follows }
         })
-        if (on && user) notify({ kind: 'follow', title: `You followed @${user.username}`, href: `/u/${user.username}` })
+        try {
+          await api().follow(user.id, on)
+        } catch (e) {
+          set((s) => {
+            const follows = { ...s.follows }
+            if (on) delete follows[user.id]
+            else follows[user.id] = true
+            return { follows }
+          })
+          toast({ kind: 'error', title: (e as Error).message })
+          return !on
+        }
+        if (on) notify({ kind: 'follow', title: `You followed @${user.username}`, href: `/u/${user.username}` })
+        get().bump()
         return on
       },
-      toggleMute: (fid) => {
-        const on = !get().mutedFids[fid]
+
+      toggleMute: (userId) => {
+        const on = !get().muted[userId]
         set((s) => {
-          const mutedFids = { ...s.mutedFids }
-          if (on) mutedFids[fid] = Date.now()
-          else delete mutedFids[fid]
-          return { mutedFids }
+          const muted = { ...s.muted }
+          if (on) muted[userId] = Date.now()
+          else delete muted[userId]
+          return { muted }
         })
         return on
       },
-      hide: (id) => set((s) => ({ hiddenCasts: { ...s.hiddenCasts, [id]: Date.now() } })),
-      isLiked: (id) => !!get().likes[id],
-      isRecast: (id) => !!get().recasts[id],
-      isBookmarked: (id) => !!get().bookmarks[id],
-      isFollowing: (fid) => !!get().follows[fid],
+      hide: (id) => set((s) => ({ hidden: { ...s.hidden, [id]: Date.now() } })),
+      isFollowing: (userId) => !!get().follows[userId],
+      bump: () => set((s) => ({ tick: s.tick + 1 })),
     }),
     {
       name: 'perpcast:social',
-      onRehydrateStorage: () => (state) => {
-        state?.casts.forEach((c) => primeUser(c.author))
-      },
+      version: 2,
+      partialize: (s) => ({ bookmarks: s.bookmarks, muted: s.muted, hidden: s.hidden }),
+      migrate: () => ({ bookmarks: {}, muted: {}, hidden: {} }),
     },
   ),
 )
 
-export function selectLocalReplies(casts: LocalCast[], parentId: string): LocalCast[] {
-  return casts.filter((c) => c.parentId === parentId).sort((a, b) => a.timestamp - b.timestamp)
+/** Live view of a cast: server copy merged with any optimistic updates. */
+export function useCast(cast: Cast): Cast {
+  return useSocial((s) => s.casts[cast.id]) ?? cast
 }

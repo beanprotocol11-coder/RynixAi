@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Feed, type Loader } from '../components/Feed'
+import { Feed, feedLoader } from '../components/Feed'
 import { ComposerBody } from '../components/Composer'
-import { PageHeader, Empty } from '../components/ui'
-import { ArrowLeftIcon, ExternalIcon, HashIcon, ShareIcon } from '../components/Icons'
-import { channelById, fetchChannelCasts, CHANNELS } from '../lib/farcaster'
+import { PageHeader, Empty, ChannelIcon } from '../components/ui'
+import { ArrowLeftIcon, ArrowRightIcon, HashIcon, ShareIcon } from '../components/Icons'
+import { channelById, CHANNELS } from '../lib/social'
 import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
 import { cx } from '../lib/format'
+
+const MARKET_CHANNELS: Record<string, string> = { crypto: 'crypto', memes: 'memes', stocks: 'stocks', rwa: 'rwa', perpcast: 'all', hyperliquid: 'all' }
 
 function readJoined(id: string): boolean {
   try {
@@ -26,8 +28,8 @@ export default function Channel() {
   const [joinedState, setJoinedState] = useState<{ id: string; joined: boolean } | null>(null)
   const joined = joinedState?.id === id ? joinedState.joined : readJoined(id)
   const setJoined = (v: boolean) => setJoinedState({ id, joined: v })
-  const url = channel?.url
-  const load = useMemo<Loader>(() => (url && !url.startsWith('perpcast://') ? (t?: string) => fetchChannelCasts(url, 25, t) : async () => ({ casts: [] })), [url])
+  const load = useMemo(() => feedLoader({ kind: 'channel', key: id }), [id])
+  const category = MARKET_CHANNELS[id]
 
   if (!channel) {
     return (
@@ -73,9 +75,7 @@ export default function Channel() {
       <div className="relative overflow-hidden border-b border-line px-4 pb-4 pt-5">
         <div className="pointer-events-none absolute inset-0 opacity-30" style={{ background: `radial-gradient(600px 160px at 20% 0%, ${channel.accent}55, transparent 70%)` }} />
         <div className="relative flex items-start gap-4">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-3xl shadow" style={{ background: `${channel.accent}26`, border: `1px solid ${channel.accent}55` }}>
-            {channel.emoji}
-          </span>
+          <ChannelIcon channel={channel} size={64} className="shadow" />
           <div className="min-w-0 flex-1">
             <h2 className="font-display text-xl font-extrabold tracking-tight">{channel.name}</h2>
             <p className="text-sm text-ink-2 mt-0.5">{channel.description}</p>
@@ -83,10 +83,10 @@ export default function Channel() {
               <button className={cx('btn !py-1.5', joined ? 'btn-outline' : 'btn-ink')} onClick={toggleJoin}>
                 {joined ? 'Joined' : 'Join channel'}
               </button>
-              {!channel.url.startsWith('perpcast://') && (
-                <a className="btn btn-ghost !py-1.5 text-sm" href={`https://warpcast.com/~/channel/${channel.id}`} target="_blank" rel="noreferrer noopener">
-                  Warpcast <ExternalIcon size={14} />
-                </a>
+              {category && (
+                <Link className="btn btn-ghost !py-1.5 text-sm" to={`/trade?cat=${category}`}>
+                  Trade {channel.name} <ArrowRightIcon size={14} />
+                </Link>
               )}
             </div>
           </div>
@@ -95,14 +95,14 @@ export default function Channel() {
       <div className="flex gap-2 overflow-x-auto no-scrollbar border-b border-line px-4 py-2.5">
         {CHANNELS.map((c) => (
           <button key={c.id} className={cx('chip shrink-0', c.id === id && 'chip-active')} onClick={() => nav(`/channel/${c.id}`)}>
-            {c.emoji} /{c.id}
+            {c.icon ? <img src={c.icon} alt="" width={14} height={14} className="rounded-sm" /> : c.emoji} /{c.id}
           </button>
         ))}
       </div>
       <div className="border-b border-line px-4 py-3">
-        <ComposerBody opts={{ channelUrl: channel.url }} autoFocus={false} />
+        <ComposerBody opts={{ channel: channel.id }} autoFocus={false} />
       </div>
-      <Feed load={load} localFilter={(c) => !c.parentId && c.channel === channel.url} emptyTitle={`Be the first to cast in /${channel.id}`} emptyBody="Your casts here are visible to everyone browsing this channel on Perpcast." />
+      <Feed load={load} refreshKey={`${id}:${me?.id ?? ''}`} freshFilter={(c) => !c.parentId && c.channel === channel.id} emptyTitle={`Be the first to cast in /${channel.id}`} emptyBody="Your casts here are visible to everyone browsing this channel on Perpcast." />
     </div>
   )
 }

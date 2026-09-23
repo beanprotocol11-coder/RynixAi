@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { Toasts, Spinner, Empty } from './components/ui'
-import { SignInModal } from './components/SignInModal'
+import { SignInModal, WalletSessionWatcher } from './components/SignInModal'
 import { ComposerModal } from './components/Composer'
 import { useUI } from './store/ui'
 import { useAuth } from './store/auth'
@@ -75,8 +75,7 @@ export default function App() {
                   <Route path="explore" element={<Explore />} />
                   <Route path="search" element={<Navigate to="/explore" replace />} />
                   <Route path="channel/:id" element={<Channel />} />
-                  <Route path="cast/local/:localId" element={<CastDetail />} />
-                  <Route path="cast/:fid/:hash" element={<CastDetail />} />
+                  <Route path="cast/:id" element={<CastDetail />} />
                   <Route path="u/:handle" element={<Profile />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="notifications" element={<Notifications />} />
@@ -94,6 +93,7 @@ export default function App() {
       </Routes>
       <Toasts />
       <SignInModal />
+      <WalletSessionWatcher />
       <ComposerModal />
     </BrowserRouter>
   )

@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@farcaster/auth-client": "^0.7.1",
     "lightweight-charts": "^5.2.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.8",

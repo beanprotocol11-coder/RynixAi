@@ -1,25 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <defs>
-    <linearGradient id="pc-bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#16171d"/>
-      <stop offset="1" stop-color="#0b0c10"/>
+    <linearGradient id="pc-hill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3a1c"/>
+      <stop offset="0.55" stop-color="#4a2a17"/>
+      <stop offset="1" stop-color="#2b1a10"/>
     </linearGradient>
-    <linearGradient id="pc-wave" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="#ff4d6d"/>
-      <stop offset="0.55" stop-color="#ff7a45"/>
-      <stop offset="1" stop-color="#ffb347"/>
+    <linearGradient id="pc-rim" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#d19a4f"/>
+      <stop offset="1" stop-color="#a8562b"/>
     </linearGradient>
-    <clipPath id="pc-clip"><rect width="128" height="128" rx="30"/></clipPath>
   </defs>
-  <rect width="128" height="128" rx="30" fill="url(#pc-bg)"/>
-  <g clip-path="url(#pc-clip)">
-    <path d="M-4 92 C 18 46, 52 22, 96 30 C 116 34, 128 44, 134 52 L134 134 L-4 134 Z" fill="url(#pc-wave)"/>
-    <path d="M-4 104 C 26 70, 70 52, 134 66 L134 134 L-4 134 Z" fill="#0b0c10" opacity="0.18"/>
+  <!-- rising hill (price curve) — transparent background, no box -->
+  <path d="M8 118 C 8 64, 44 24, 96 24 C 112 24, 122 30, 122 44 L122 118 Z" fill="url(#pc-hill)"/>
+  <path d="M8 118 C 8 64, 44 24, 96 24 C 112 24, 122 30, 122 44" fill="none" stroke="url(#pc-rim)" stroke-width="4" stroke-linecap="round"/>
+  <!-- twin cast quotes in cream -->
+  <g fill="#f3e9d8">
+    <path d="M52 58 h14 a4 4 0 0 1 4 4 v12 a14 14 0 0 1 -14 14 h-2 v-7 h2 a7 7 0 0 0 7 -7 h-11 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z"/>
+    <path d="M80 58 h14 a4 4 0 0 1 4 4 v12 a14 14 0 0 1 -14 14 h-2 v-7 h2 a7 7 0 0 0 7 -7 h-11 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z"/>
   </g>
-  <!-- cast marks: two speech-style quotes reimagined as candles -->
-  <g fill="#0b0c10">
-    <path d="M46 56 h12 a4 4 0 0 1 4 4 v10 a12 12 0 0 1 -12 12 h-2 v-6 h2 a6 6 0 0 0 6 -6 h-10 a4 4 0 0 1 -4 -4 v-6 a4 4 0 0 1 4 -4 z"/>
-    <path d="M70 56 h12 a4 4 0 0 1 4 4 v10 a12 12 0 0 1 -12 12 h-2 v-6 h2 a6 6 0 0 0 6 -6 h-10 a4 4 0 0 1 -4 -4 v-6 a4 4 0 0 1 4 -4 z"/>
-  </g>
-  <path d="M52 46 v8 M76 44 v10" stroke="#0b0c10" stroke-width="3" stroke-linecap="round"/>
+  <!-- candle wicks -->
+  <path d="M59 47 v8 M87 45 v10" stroke="#d19a4f" stroke-width="3.5" stroke-linecap="round"/>
 </svg>

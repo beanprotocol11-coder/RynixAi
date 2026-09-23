@@ -3,23 +3,51 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Avatar, PageHeader, Empty, Modal, ModalHeader, Spinner, Menu, MenuItem } from '../components/ui'
 import { MobileTopBar } from '../components/Layout'
 import { BackBtn } from './Channel'
-import { MessageIcon, PlusIcon, TrashIcon, MoreIcon, UserIcon, ShieldIcon } from '../components/Icons'
-import { useDMs, lastTime, type DMThread } from '../store/dm'
+import { MessageIcon, PlusIcon, MoreIcon, UserIcon, ShieldIcon } from '../components/Icons'
+import { useDMs, lastTime } from '../store/dm'
 import { useAuth } from '../store/auth'
-import { useSocial } from '../store/social'
-import { fetchUser, fidByUsername, cachedUser, type FcUser } from '../lib/farcaster'
-import { cx, timeAgo, fullDate } from '../lib/format'
+import { api } from '../lib/api'
+import { userPath, type DMThread, type User } from '../lib/social'
+import { useAsync } from '../hooks/useAsync'
+import { cx, timeAgo, fullDate, shortAddr } from '../lib/format'
 import { toast } from '../store/notify'
 
 export default function Messages() {
   const { threadId } = useParams()
   const threads = useDMs((s) => s.threads)
+  const loaded = useDMs((s) => s.loaded)
+  const loading = useDMs((s) => s.loading)
+  const refreshThreads = useDMs((s) => s.refreshThreads)
+  const openThread = useDMs((s) => s.open)
   const me = useAuth((s) => s.user)
   const openSignIn = useAuth((s) => s.openSignIn)
   const [picker, setPicker] = useState(false)
   const nav = useNavigate()
   const sorted = useMemo(() => [...threads].sort((a, b) => lastTime(b) - lastTime(a)), [threads])
-  const active = threadId ? threads.find((t) => t.id === threadId) : undefined
+  const active = threadId ? threads.find((t) => t.peer.id === threadId) : undefined
+
+  useEffect(() => {
+    if (!me) return
+    void refreshThreads()
+    const iv = setInterval(() => void refreshThreads(), 15_000)
+    return () => clearInterval(iv)
+  }, [me, refreshThreads])
+
+  useEffect(() => {
+    if (!me || !threadId || active || !loaded) return
+    let alive = true
+    api()
+      .getUser(threadId)
+      .then((u) => {
+        if (!alive) return
+        if (u) openThread(u)
+        else nav('/messages', { replace: true })
+      })
+      .catch(() => alive && nav('/messages', { replace: true }))
+    return () => {
+      alive = false
+    }
+  }, [me, threadId, active, loaded, openThread, nav])
 
   if (!me) {
     return (
@@ -28,12 +56,24 @@ export default function Messages() {
         <div className="hidden md:block">
           <PageHeader title="Messages" />
         </div>
-        <Empty title="Sign in to message traders" body="Direct messages on Perpcast are private and stored on this device." icon={<MessageIcon />} action={<button className="btn btn-primary" onClick={() => openSignIn('Sign in to send messages.')}>Sign in</button>} />
+        <Empty title="Sign in to message traders" body="Direct messages on Perpcast are private between you and the other wallet." icon={<MessageIcon />} action={<button className="btn btn-primary" onClick={() => openSignIn('Sign in to send messages.')}>Sign in</button>} />
       </div>
     )
   }
 
-  if (active) return <Chat thread={active} meFid={me.fid} />
+  if (active) return <Chat thread={active} me={me} />
+  if (threadId) {
+    return (
+      <div>
+        <PageHeader title="Messages" back={<BackBtn />} />
+        <div className="flex justify-center py-16">
+          <Spinner size={22} />
+        </div>
+      </div>
+    )
+  }
+
+  const local = api().mode === 'local'
 
   return (
     <div>
@@ -50,12 +90,17 @@ export default function Messages() {
         />
       </div>
       <div className="flex items-center gap-2 border-b border-line px-4 py-2 text-xs text-ink-3">
-        <ShieldIcon size={14} /> Messages are stored locally in your browser. Nothing is sent to a server.
+        <ShieldIcon size={14} /> {local ? 'Offline mode: messages are stored in this browser only.' : 'Messages are stored on Perpcast and visible only to the two wallets in the chat.'}
       </div>
-      {sorted.length === 0 && (
+      {sorted.length === 0 && loading && !loaded && (
+        <div className="flex justify-center py-16">
+          <Spinner size={22} />
+        </div>
+      )}
+      {sorted.length === 0 && (loaded || !loading) && (
         <Empty
           title="No conversations yet"
-          body="Start a chat with any Farcaster user by username."
+          body="Start a chat with any Perpcast user by username or wallet address."
           icon={<MessageIcon />}
           action={
             <button className="btn btn-primary" onClick={() => setPicker(true)}>
@@ -65,20 +110,20 @@ export default function Messages() {
         />
       )}
       {sorted.map((t) => {
-        const last = t.messages[t.messages.length - 1]
-        const unread = t.messages.filter((m) => m.time > t.lastRead && m.from === t.peer.fid).length
+        const last = t.last
+        const name = t.peer.displayName || t.peer.username
         return (
-          <button key={t.id} className="flex w-full items-center gap-3 border-b border-line px-4 py-3 text-left transition-colors hover:bg-surface-hover/60" onClick={() => nav(`/messages/${t.id}`)}>
-            <Avatar src={t.peer.pfp} name={t.peer.displayName} fid={t.peer.fid} size={44} />
+          <button key={t.peer.id} className="flex w-full items-center gap-3 border-b border-line px-4 py-3 text-left transition-colors hover:bg-surface-hover/60" onClick={() => nav(`/messages/${t.peer.id}`)}>
+            <Avatar src={t.peer.pfp} name={name} seed={t.peer.id} size={44} />
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2">
-                <span className="truncate font-bold">{t.peer.displayName}</span>
+                <span className="truncate font-bold">{name}</span>
                 <span className="truncate text-xs text-ink-3">@{t.peer.username}</span>
-                <span className="ml-auto shrink-0 text-xs text-ink-3">{timeAgo(lastTime(t))}</span>
+                {last && <span className="ml-auto shrink-0 text-xs text-ink-3">{timeAgo(lastTime(t))}</span>}
               </span>
-              <span className={cx('block truncate text-sm', unread ? 'font-semibold text-ink' : 'text-ink-3')}>{last ? (last.from === me.fid ? `You: ${last.text}` : last.text) : 'Say hi 👋'}</span>
+              <span className={cx('block truncate text-sm', t.unread ? 'font-semibold text-ink' : 'text-ink-3')}>{last ? (last.from === me.id ? `You: ${last.text}` : last.text) : 'Say hi 👋'}</span>
             </span>
-            {unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white">{unread}</span>}
+            {t.unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white">{t.unread}</span>}
           </button>
         )
       })}
@@ -92,69 +137,52 @@ export default function Messages() {
 
 function NewMessageModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [q, setQ] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [hit, setHit] = useState<FcUser | null | undefined>(undefined)
-  const follows = useSocial((s) => s.follows)
+  const [debounced, setDebounced] = useState('')
+  const me = useAuth((s) => s.user)
   const openThread = useDMs((s) => s.open)
   const nav = useNavigate()
-  const suggestions = useMemo(() => Object.keys(follows).map((f) => cachedUser(Number(f))).filter((u): u is FcUser => !!u).slice(0, 8), [follows])
 
   useEffect(() => {
-    const handle = q.trim().replace(/^@/, '').toLowerCase()
-    setHit(undefined)
-    if (!handle) return
-    let alive = true
-    setBusy(true)
-    const t = setTimeout(async () => {
-      const fid = /^\d+$/.test(handle) ? Number(handle) : await fidByUsername(handle)
-      if (!alive) return
-      if (!fid) {
-        setHit(null)
-        setBusy(false)
-        return
-      }
-      const u = await fetchUser(fid)
-      if (!alive) return
-      setHit(u)
-      setBusy(false)
-    }, 350)
-    return () => {
-      alive = false
-      clearTimeout(t)
-    }
+    const t = setTimeout(() => setDebounced(q.trim().replace(/^@/, '').toLowerCase()), 300)
+    return () => clearTimeout(t)
   }, [q])
 
-  const start = (u: FcUser) => {
-    const t = openThread(u)
+  const { data: hits, loading } = useAsync<User[]>(() => (debounced ? api().searchUsers(debounced, 8) : Promise.resolve([])), [debounced])
+  const { data: suggested } = useAsync<User[]>(() => api().suggestedUsers(8), [open, me?.id])
+  const results = (hits ?? []).filter((u) => u.id !== me?.id)
+  const suggestions = (suggested ?? []).filter((u) => u.id !== me?.id)
+
+  const start = (u: User) => {
+    openThread(u)
     onClose()
     setQ('')
-    nav(`/messages/${t.id}`)
+    nav(`/messages/${u.id}`)
   }
 
   return (
     <Modal open={open} onClose={onClose} size="sm" label="New message">
-      <ModalHeader title="New message" sub="Search any Farcaster username" onClose={onClose} />
+      <ModalHeader title="New message" sub="Search by username or wallet address" onClose={onClose} />
       <div className="px-5 pb-5">
-        <input className="input" placeholder="@username or fid" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+        <input className="input" placeholder="@username or 0x…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
         <div className="mt-3 flex flex-col gap-1">
-          {busy && (
+          {debounced && loading && (
             <div className="flex items-center gap-2 px-2 py-2 text-sm text-ink-3">
               <Spinner /> Searching…
             </div>
           )}
-          {hit === null && !busy && <div className="px-2 py-2 text-sm text-ink-3">No user found for “{q}”.</div>}
-          {hit && !busy && <UserPick u={hit} onPick={start} />}
-          {!q && suggestions.length > 0 && (
+          {debounced && !loading && results.length === 0 && <div className="px-2 py-2 text-sm text-ink-3">No user found for “{q}”.</div>}
+          {debounced && results.map((u) => <UserPick key={u.id} u={u} onPick={start} />)}
+          {!debounced && suggestions.length > 0 && (
             <>
-              <div className="px-2 pt-1 text-xs font-semibold uppercase tracking-wider text-ink-3">People you follow</div>
+              <div className="px-2 pt-1 text-xs font-semibold uppercase tracking-wider text-ink-3">Traders on Perpcast</div>
               {suggestions.map((u) => (
-                <UserPick key={u.fid} u={u} onPick={start} />
+                <UserPick key={u.id} u={u} onPick={start} />
               ))}
             </>
           )}
-          {!q && suggestions.length === 0 && (
+          {!debounced && suggestions.length === 0 && (
             <div className="px-2 py-2 text-sm text-ink-3">
-              Tip: follow people from <Link to="/explore" className="text-accent" onClick={onClose}>Explore</Link> to see them here.
+              Tip: find people on <Link to="/explore" className="text-accent" onClick={onClose}>Explore</Link> and message them from their profile.
             </div>
           )}
         </div>
@@ -163,37 +191,57 @@ function NewMessageModal({ open, onClose }: { open: boolean; onClose: () => void
   )
 }
 
-function UserPick({ u, onPick }: { u: FcUser; onPick: (u: FcUser) => void }) {
+function UserPick({ u, onPick }: { u: User; onPick: (u: User) => void }) {
   return (
     <button className="flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-surface-hover" onClick={() => onPick(u)}>
-      <Avatar src={u.pfp} name={u.displayName} fid={u.fid} size={36} />
+      <Avatar src={u.pfp} name={u.displayName || u.username} seed={u.id} size={36} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-bold">{u.displayName}</span>
-        <span className="block truncate text-xs text-ink-3">@{u.username}</span>
+        <span className="block truncate text-sm font-bold">{u.displayName || u.username}</span>
+        <span className="block truncate text-xs text-ink-3">@{u.username} · {shortAddr(u.address)}</span>
       </span>
       <MessageIcon size={16} className="text-ink-3" />
     </button>
   )
 }
 
-function Chat({ thread, meFid }: { thread: DMThread; meFid: number }) {
+function Chat({ thread, me }: { thread: DMThread; me: User }) {
+  const peer = thread.peer
+  const messages = useDMs((s) => s.messages[peer.id]) ?? EMPTY
   const send = useDMs((s) => s.send)
   const markRead = useDMs((s) => s.markRead)
-  const remove = useDMs((s) => s.remove)
+  const loadMessages = useDMs((s) => s.loadMessages)
   const nav = useNavigate()
   const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
   const bottom = useRef<HTMLDivElement>(null)
+  const name = peer.displayName || peer.username
 
   useEffect(() => {
-    markRead(thread.id)
-    bottom.current?.scrollIntoView({ block: 'end' })
-  }, [thread.id, thread.messages.length, markRead])
+    void loadMessages(peer.id)
+    const iv = setInterval(() => void loadMessages(peer.id), 5_000)
+    return () => clearInterval(iv)
+  }, [peer.id, loadMessages])
 
-  const submit = () => {
+  useEffect(() => {
+    if (thread.unread) void markRead(peer.id)
+  }, [peer.id, thread.unread, messages.length, markRead])
+
+  useEffect(() => {
+    bottom.current?.scrollIntoView({ block: 'end' })
+  }, [messages.length])
+
+  const submit = async () => {
     const t = text.trim()
-    if (!t) return
-    send(thread.id, meFid, t)
-    setText('')
+    if (!t || busy) return
+    setBusy(true)
+    try {
+      await send(peer, t)
+      setText('')
+    } catch (e) {
+      toast({ kind: 'error', title: 'Message not sent', body: (e as Error).message })
+    } finally {
+      setBusy(false)
+    }
   }
 
   let lastDay = ''
@@ -201,43 +249,44 @@ function Chat({ thread, meFid }: { thread: DMThread; meFid: number }) {
     <div className="flex h-[calc(100dvh-2rem)] flex-col md:h-[calc(100dvh-2rem)]">
       <PageHeader
         title={
-          <Link to={`/u/${thread.peer.username}`} className="flex items-center gap-2 hover:underline">
-            <Avatar src={thread.peer.pfp} name={thread.peer.displayName} fid={thread.peer.fid} size={28} />
-            {thread.peer.displayName}
+          <Link to={userPath(peer)} className="flex items-center gap-2 hover:underline">
+            <Avatar src={peer.pfp} name={name} seed={peer.id} size={28} />
+            {name}
           </Link>
         }
-        sub={`@${thread.peer.username}`}
+        sub={`@${peer.username} · ${shortAddr(peer.address)}`}
         back={<BackBtn />}
         right={
           <Menu trigger={() => <button className="icon-btn" aria-label="Options"><MoreIcon size={18} /></button>}>
             {(close) => (
-              <>
-                <MenuItem icon={<UserIcon />} onClick={() => { nav(`/u/${thread.peer.username}`); close() }}>
-                  View profile
-                </MenuItem>
-                <MenuItem icon={<TrashIcon />} danger onClick={() => { remove(thread.id); toast({ kind: 'info', title: 'Conversation deleted' }); nav('/messages') }}>
-                  Delete conversation
-                </MenuItem>
-              </>
+              <MenuItem
+                icon={<UserIcon />}
+                onClick={() => {
+                  nav(userPath(peer))
+                  close()
+                }}
+              >
+                View profile
+              </MenuItem>
             )}
           </Menu>
         }
       />
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {thread.messages.length === 0 && (
+        {messages.length === 0 && (
           <div className="mx-auto max-w-xs py-10 text-center">
-            <Avatar src={thread.peer.pfp} name={thread.peer.displayName} fid={thread.peer.fid} size={64} className="mx-auto" />
-            <div className="mt-3 font-display font-extrabold">{thread.peer.displayName}</div>
-            <div className="text-sm text-ink-3">@{thread.peer.username}</div>
-            {thread.peer.bio && <p className="mt-2 text-sm text-ink-2">{thread.peer.bio}</p>}
-            <p className="mt-4 text-xs text-ink-3">This is the beginning of your conversation. Messages live only on this device.</p>
+            <Avatar src={peer.pfp} name={name} seed={peer.id} size={64} className="mx-auto" />
+            <div className="mt-3 font-display font-extrabold">{name}</div>
+            <div className="text-sm text-ink-3">@{peer.username}</div>
+            {peer.bio && <p className="mt-2 text-sm text-ink-2">{peer.bio}</p>}
+            <p className="mt-4 text-xs text-ink-3">This is the beginning of your conversation.</p>
           </div>
         )}
-        {thread.messages.map((m) => {
+        {messages.map((m) => {
           const day = new Date(m.time).toDateString()
           const showDay = day !== lastDay
           lastDay = day
-          const mine = m.from === meFid
+          const mine = m.from === me.id
           return (
             <div key={m.id}>
               {showDay && <div className="my-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-3">{new Date(m.time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>}
@@ -256,26 +305,28 @@ function Chat({ thread, meFid }: { thread: DMThread; meFid: number }) {
         className="flex items-end gap-2 border-t border-line p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] mb-16 md:mb-0"
         onSubmit={(e) => {
           e.preventDefault()
-          submit()
+          void submit()
         }}
       >
         <textarea
           className="input max-h-32 min-h-[42px] flex-1 resize-none !py-2.5"
           rows={1}
-          placeholder={`Message @${thread.peer.username}`}
+          placeholder={`Message @${peer.username}`}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
-              submit()
+              void submit()
             }
           }}
         />
-        <button type="submit" className="btn btn-primary !py-2.5" disabled={!text.trim()}>
-          Send
+        <button type="submit" className="btn btn-primary !py-2.5" disabled={!text.trim() || busy}>
+          {busy ? <Spinner /> : 'Send'}
         </button>
       </form>
     </div>
   )
 }
+
+const EMPTY: never[] = []

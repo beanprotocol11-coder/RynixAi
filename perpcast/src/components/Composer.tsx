@@ -4,7 +4,7 @@ import { Avatar, Modal, Menu, MenuItem } from './ui'
 import { CastText } from './CastText'
 import { QuoteCard, PositionCard, castPath } from './CastCard'
 import { ChartIcon, ChevronDownIcon, CloseIcon, HashIcon, ImageIcon, GlobeIcon } from './Icons'
-import { CHANNELS, channelByUrl, MARKET_CHANNEL_PREFIX, PERPCAST_CHANNEL_URL, type PositionEmbed } from '../lib/farcaster'
+import { CHANNELS, channelById, marketOfChannel, type PositionEmbed } from '../lib/social'
 import { useAuth } from '../store/auth'
 import { useSocial } from '../store/social'
 import { useUI, type ComposerOptions } from '../store/ui'
@@ -12,7 +12,7 @@ import { useTrading, unrealized, roe } from '../store/trading'
 import { useMarket } from '../store/market'
 import { toast, notify } from '../store/notify'
 import { cx, usd, pct } from '../lib/format'
-import { useUser } from '../hooks/useFarcaster'
+import { displaySymbol } from '../lib/hyperliquid'
 
 const MAX = 1024
 
@@ -32,18 +32,19 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
   const publish = useSocial((s) => s.publish)
   const nav = useNavigate()
   const [text, setText] = useState(opts.text ?? '')
-  const [channelUrl, setChannelUrl] = useState<string | null>(opts.channelUrl ?? null)
+  const [channelId, setChannelId] = useState<string | null>(opts.channel ?? null)
   const [position, setPosition] = useState<PositionEmbed | undefined>(opts.position)
   const [images, setImages] = useState<string[]>([])
   const [imgInput, setImgInput] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
   const positions = useTrading((s) => s.positions)
   const mids = useMarket((s) => s.mids)
-  const parentAuthor = useUser(opts.parent?.fid)
+  const parentAuthor = opts.parent?.author
 
   useEffect(() => {
     setText(opts.text ?? '')
-    setChannelUrl(opts.channelUrl ?? null)
+    setChannelId(opts.channel ?? null)
     setPosition(opts.position)
     setImages([])
     if (autoFocus) setTimeout(() => ref.current?.focus(), 30)
@@ -57,31 +58,38 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
   }, [text, modal])
 
   const remaining = MAX - text.length
-  const canPost = text.trim().length > 0 && remaining >= 0 || (!!position && remaining >= 0)
-  const channel = channelByUrl(channelUrl)
-  const marketRoom = channelUrl?.startsWith(MARKET_CHANNEL_PREFIX) ? channelUrl.slice(MARKET_CHANNEL_PREFIX.length) : null
+  const canPost = ((text.trim().length > 0 && remaining >= 0) || (!!position && remaining >= 0)) && !busy
+  const channel = channelById(channelId)
+  const marketRoom = marketOfChannel(channelId)
 
-  const submit = () => {
+  const submit = async () => {
     if (!me) return openSignIn('Sign in to cast.')
     if (!canPost) return
-    const cast = publish({ author: me, text: text.trim(), channelUrl: opts.parent ? null : channelUrl, parent: opts.parent ?? null, quote: opts.quote ?? null, position, images })
-    setText('')
-    setImages([])
-    setPosition(undefined)
-    if (opts.parent) {
-      toast({ kind: 'success', title: 'Reply posted' })
-      notify({ kind: 'reply', title: `You replied to @${parentAuthor?.username ?? opts.parent.fid}`, body: cast.text.slice(0, 80), href: castPath(cast) })
-    } else {
-      toast({ kind: 'success', title: 'Cast published', body: channel ? `Posted in /${channel.id}` : marketRoom ? `Posted in $${marketRoom} room` : 'Posted to your feed', action: { label: 'View', onClick: () => nav(castPath(cast)) } })
-      notify({ kind: 'cast', title: 'Your cast is live', body: cast.text.slice(0, 80), href: castPath(cast) })
+    setBusy(true)
+    try {
+      const cast = await publish({ text: text.trim(), channel: opts.parent ? null : channelId, parentId: opts.parent?.id ?? null, quoteId: opts.quote?.id ?? null, position, images })
+      setText('')
+      setImages([])
+      setPosition(undefined)
+      if (opts.parent) {
+        toast({ kind: 'success', title: 'Reply posted' })
+        notify({ kind: 'reply', title: `You replied to @${parentAuthor?.username ?? 'someone'}`, body: cast.text.slice(0, 80), href: castPath(cast) })
+      } else {
+        toast({ kind: 'success', title: 'Cast published', body: channel ? `Posted in /${channel.id}` : marketRoom ? `Posted in $${displaySymbol(marketRoom)} room` : 'Posted to your feed', action: { label: 'View', onClick: () => nav(castPath(cast)) } })
+        notify({ kind: 'cast', title: 'Your cast is live', body: cast.text.slice(0, 80), href: castPath(cast) })
+      }
+      onDone?.()
+    } catch (e) {
+      toast({ kind: 'error', title: 'Could not publish', body: (e as Error).message })
+    } finally {
+      setBusy(false)
     }
-    onDone?.()
   }
 
   const onKey = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault()
-      submit()
+      void submit()
     }
   }
 
@@ -109,9 +117,9 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
       {opts.parent && (
         <div className="mb-3 rounded-2xl border border-line bg-surface-2/60 p-3">
           <div className="flex items-center gap-2 text-sm">
-            <Avatar src={parentAuthor?.pfp} name={parentAuthor?.displayName} fid={opts.parent.fid} size={22} />
-            <span className="font-bold">{parentAuthor?.displayName ?? '…'}</span>
-            <span className="text-ink-3">@{parentAuthor?.username ?? opts.parent.fid}</span>
+            <Avatar src={parentAuthor?.pfp} name={parentAuthor?.displayName || parentAuthor?.username} seed={parentAuthor?.id} size={22} />
+            <span className="font-bold">{parentAuthor?.displayName || parentAuthor?.username}</span>
+            <span className="text-ink-3">@{parentAuthor?.username}</span>
           </div>
           <div className="mt-1.5 text-sm text-ink-2 line-clamp-4">
             <CastText text={opts.parent.text} className="!text-sm" />
@@ -120,7 +128,7 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
       )}
 
       <div className="flex gap-3">
-        <Avatar src={me?.pfp} name={me?.displayName ?? me?.username} fid={me?.fid} size={40} />
+        <Avatar src={me?.pfp} name={me?.displayName || me?.username} seed={me?.id} size={40} />
         <div className="min-w-0 flex-1">
           <textarea
             ref={ref}
@@ -186,27 +194,24 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
                 trigger={() => (
                   <button className="chip chip-active !py-1.5 gap-1.5 max-w-[190px]" type="button">
                     {channel ? <HashIcon size={14} /> : marketRoom ? <ChartIcon size={14} /> : <GlobeIcon size={14} />}
-                    <span className="truncate">{channel ? `/${channel.id}` : marketRoom ? `$${marketRoom} room` : 'Home'}</span>
+                    <span className="truncate">{channel ? `/${channel.id}` : marketRoom ? `$${displaySymbol(marketRoom)} room` : 'Home'}</span>
                     <ChevronDownIcon size={14} />
                   </button>
                 )}
               >
                 {(close) => (
                   <div className="max-h-72 overflow-auto">
-                    <MenuItem icon={<GlobeIcon />} onClick={() => { setChannelUrl(null); close() }}>
+                    <MenuItem icon={<GlobeIcon />} onClick={() => { setChannelId(null); close() }}>
                       Home feed
                     </MenuItem>
-                    <MenuItem icon={<HashIcon />} onClick={() => { setChannelUrl(PERPCAST_CHANNEL_URL); close() }}>
-                      /perpcast
-                    </MenuItem>
-                    {CHANNELS.filter((c) => c.url !== PERPCAST_CHANNEL_URL).map((c) => (
-                      <MenuItem key={c.id} icon={<HashIcon />} onClick={() => { setChannelUrl(c.url); close() }}>
+                    {CHANNELS.map((c) => (
+                      <MenuItem key={c.id} icon={<HashIcon />} onClick={() => { setChannelId(c.id); close() }}>
                         /{c.id}
                       </MenuItem>
                     ))}
                     {marketRoom && (
                       <MenuItem icon={<ChartIcon />} onClick={close}>
-                        ${marketRoom} room (current)
+                        ${displaySymbol(marketRoom)} room (current)
                       </MenuItem>
                     )}
                   </div>
@@ -243,7 +248,7 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
                       }}
                     >
                       <span className={cx('badge', p.side === 'long' ? 'badge-long' : 'badge-short')}>{p.side}</span>
-                      <span className="font-bold">{p.coin}</span>
+                      <span className="font-bold">{displaySymbol(p.coin)}</span>
                       <span className="mono text-xs text-ink-3">{p.leverage}x</span>
                       <span className={cx('ml-auto mono text-xs', pnl >= 0 ? 'text-long' : 'text-short')}>
                         {usd(pnl, { sign: true })} ({pct(r)})
@@ -256,8 +261,8 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
             </Menu>
             <div className="ml-auto flex items-center gap-3">
               <CharRing used={text.length} max={MAX} />
-              <button className="btn btn-primary !py-2 !px-5" disabled={!canPost} onClick={submit} type="button">
-                {opts.parent ? 'Reply' : 'Cast'}
+              <button className="btn btn-primary !py-2 !px-5" disabled={!canPost} onClick={() => void submit()} type="button">
+                {busy ? 'Posting…' : opts.parent ? 'Reply' : 'Cast'}
               </button>
             </div>
           </div>

@@ -5,17 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <link rel="apple-touch-icon" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b0c10" />
+    <meta name="theme-color" content="#f3e9d8" />
     <title>Perpcast — cast, chat & trade perps</title>
-    <meta name="description" content="Perpcast is a social trading network: cast with the Farcaster community, talk markets in real time, and open perpetual positions without leaving the conversation." />
+    <meta name="description" content="Perpcast is a social trading network: sign in with your wallet, cast with traders, talk crypto, memes, stocks and RWAs in real time, and open perpetual positions without leaving the conversation." />
     <meta property="og:title" content="Perpcast — cast, chat & trade perps" />
-    <meta property="og:description" content="Cast with the Farcaster community and open perpetual positions without leaving the conversation." />
+    <meta property="og:description" content="Cast with traders and open perpetual positions on crypto, memes, stocks & RWAs without leaving the conversation." />
     <meta property="og:image" content="/og.png" />
     <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <script>
@@ -26,7 +26,36 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="splash" style="display:flex;flex-direction:column;gap:18px;height:100dvh;align-items:center;justify-content:center;background:#f3e9d8;color:#2b1a10;font-family:Georgia,serif">
+        <style>
+          @keyframes pc-blink { 0%, 10%, 22%, 100% { transform: scaleY(1) } 14%, 18% { transform: scaleY(0.08) } }
+          @keyframes pc-breathe { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+          @keyframes pc-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: translateY(0) } }
+          #splash .eyes { transform-origin: 73px 74px; animation: pc-blink 2.4s ease-in-out infinite; }
+          #splash .eyes.l { transform-origin: 59px 74px; }
+          #splash .eyes.r { transform-origin: 87px 74px; }
+          #splash svg { animation: pc-breathe 3.2s ease-in-out infinite; }
+          #splash .wm { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; animation: pc-in 0.6s ease-out both; }
+          #splash .wm b { color: #a8562b; font-weight: 800 }
+          #splash.out { transition: opacity .35s ease; opacity: 0; pointer-events: none }
+        </style>
+        <svg viewBox="0 0 128 128" width="116" height="116" aria-hidden="true">
+          <defs>
+            <linearGradient id="s-hill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3a1c"/><stop offset=".55" stop-color="#4a2a17"/><stop offset="1" stop-color="#2b1a10"/></linearGradient>
+            <linearGradient id="s-rim" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d19a4f"/><stop offset="1" stop-color="#a8562b"/></linearGradient>
+          </defs>
+          <path d="M8 118 C 8 64, 44 24, 96 24 C 112 24, 122 30, 122 44 L122 118 Z" fill="url(#s-hill)"/>
+          <path d="M8 118 C 8 64, 44 24, 96 24 C 112 24, 122 30, 122 44" fill="none" stroke="url(#s-rim)" stroke-width="4" stroke-linecap="round"/>
+          <g fill="#f3e9d8">
+            <path class="eyes l" d="M52 58 h14 a4 4 0 0 1 4 4 v12 a14 14 0 0 1 -14 14 h-2 v-7 h2 a7 7 0 0 0 7 -7 h-11 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z"/>
+            <path class="eyes r" d="M80 58 h14 a4 4 0 0 1 4 4 v12 a14 14 0 0 1 -14 14 h-2 v-7 h2 a7 7 0 0 0 7 -7 h-11 a4 4 0 0 1 -4 -4 v-8 a4 4 0 0 1 4 -4 z"/>
+          </g>
+          <path d="M59 47 v8 M87 45 v10" stroke="#d19a4f" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+        <div class="wm">Perp<b>cast</b></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

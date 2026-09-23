@@ -1,15 +1,14 @@
-import { useCallback, useMemo, useState } from 'react'
-import { Feed, mergeLoaders, type Loader } from '../components/Feed'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Feed, feedLoader } from '../components/Feed'
 import { ComposerBody } from '../components/Composer'
 import { MobileTopBar } from '../components/Layout'
 import { Tabs } from '../components/ui'
-import { CHANNELS, fetchChannelCasts, fetchFollowingFeed, fetchUserCasts, PERPCAST_CHANNEL_URL, type CastPage } from '../lib/farcaster'
 import { useAuth } from '../store/auth'
 import { useSocial } from '../store/social'
 import { RefreshIcon } from '../components/Icons'
 
-type Tab = 'foryou' | 'following' | 'perpcast'
-const FOR_YOU = ['farcaster', 'base', 'degen', 'ethereum', 'bitcoin', 'dev', 'founders']
+type Tab = 'foryou' | 'following' | 'traders'
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>(() => (localStorage.getItem('perpcast:homeTab') as Tab) || 'foryou')
@@ -17,22 +16,10 @@ export default function Home() {
   const me = useAuth((s) => s.user)
   const openSignIn = useAuth((s) => s.openSignIn)
   const follows = useSocial((s) => s.follows)
-  const followFids = useMemo(() => Object.keys(follows).map(Number), [follows])
 
-  const forYou = useMemo<Loader>(() => mergeLoaders(CHANNELS.filter((c) => FOR_YOU.includes(c.id)).map((c) => (t?: string) => fetchChannelCasts(c.url, 12, t))), [])
-
-  const following = useCallback<Loader>(async (): Promise<CastPage> => {
-    const [hub, local] = await Promise.all([
-      me && me.method === 'farcaster' ? fetchFollowingFeed(me.fid).catch(() => []) : Promise.resolve([]),
-      Promise.all(followFids.map((f) => fetchUserCasts(f, 8).catch(() => ({ casts: [] })))).then((ps) => ps.flatMap((p) => p.casts).filter((c) => !c.parent)),
-    ])
-    const seen = new Set<string>()
-    const casts = [...hub, ...local].filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)))
-    casts.sort((a, b) => b.timestamp - a.timestamp)
-    return { casts }
-  }, [me, followFids])
-
-  const perpcast = useMemo<Loader>(() => mergeLoaders([(t?: string) => fetchChannelCasts(CHANNELS.find((c) => c.id === 'hyperliquid')!.url, 20, t)]), [])
+  const forYou = useMemo(() => feedLoader({ kind: 'home' }), [])
+  const following = useMemo(() => feedLoader({ kind: 'following' }), [])
+  const traders = useMemo(() => feedLoader({ kind: 'channel', key: 'perpcast' }), [])
 
   const pick = (t: Tab) => {
     setTab(t)
@@ -55,41 +42,63 @@ export default function Home() {
           tabs={[
             { id: 'foryou', label: 'For you' },
             { id: 'following', label: 'Following' },
-            { id: 'perpcast', label: 'Traders' },
+            { id: 'traders', label: 'Traders' },
           ]}
         />
       </div>
 
       <div className="hidden border-b border-line px-4 py-3 md:block">
-        <ComposerBody opts={{ channelUrl: tab === 'perpcast' ? PERPCAST_CHANNEL_URL : null }} autoFocus={false} />
+        <ComposerBody opts={{ channel: tab === 'traders' ? 'perpcast' : null }} autoFocus={false} />
       </div>
 
-      {tab === 'foryou' && <Feed load={forYou} refreshKey={refreshKey} localFilter={(c) => !c.parentId} />}
+      {tab === 'foryou' && (
+        <Feed
+          load={forYou}
+          refreshKey={`${refreshKey}:${me?.id ?? ''}`}
+          emptyTitle="Be the first to cast"
+          emptyBody="Perpcast is brand new. Share a market take, a chart or a position and start the conversation."
+          emptyAction={
+            <Link to="/trade" className="btn btn-primary">
+              Open the terminal
+            </Link>
+          }
+        />
+      )}
       {tab === 'following' &&
-        (me || followFids.length ? (
+        (me ? (
           <Feed
             load={following}
-            refreshKey={refreshKey}
-            localFilter={(c) => !c.parentId && (c.fid === me?.fid || !!follows[c.fid])}
+            refreshKey={`${refreshKey}:${Object.keys(follows).length}`}
+            freshFilter={(c) => !c.parentId && (c.author.id === me.id || !!follows[c.author.id])}
             emptyTitle="Your following feed is quiet"
-            emptyBody="Follow a few people from Explore and their casts will show up here."
+            emptyBody="Follow a few traders from Explore and their casts will show up here."
+            emptyAction={
+              <Link to="/explore" className="btn btn-outline">
+                Find people
+              </Link>
+            }
           />
         ) : (
           <div className="px-6 py-16 text-center">
             <h3 className="font-display text-lg font-extrabold">See casts from people you follow</h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-ink-3">Sign in with Farcaster to pull in your real following graph, or follow people here on Perpcast.</p>
+            <p className="mx-auto mt-1 max-w-xs text-sm text-ink-3">Sign in with your wallet to follow traders and build your own feed.</p>
             <button className="btn btn-primary mt-4" onClick={() => openSignIn()}>
               Sign in
             </button>
           </div>
         ))}
-      {tab === 'perpcast' && (
+      {tab === 'traders' && (
         <Feed
-          load={perpcast}
-          refreshKey={refreshKey}
-          localFilter={(c) => !c.parentId && (c.channel === PERPCAST_CHANNEL_URL || !!c.position)}
+          load={traders}
+          refreshKey={`${refreshKey}:${me?.id ?? ''}`}
+          freshFilter={(c) => !c.parentId && (c.channel === 'perpcast' || !!c.position)}
           emptyTitle="No trader casts yet"
           emptyBody="Open a position on the Trade tab and share it with the community."
+          emptyAction={
+            <Link to="/trade" className="btn btn-primary">
+              Go to Trade
+            </Link>
+          }
         />
       )}
     </div>

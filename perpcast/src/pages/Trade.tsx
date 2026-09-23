@@ -1,45 +1,66 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMarket, change24h } from '../store/market'
 import { useTrading, unrealized } from '../store/trading'
+import { useAuth } from '../store/auth'
 import { TradingChart } from '../components/TradingChart'
-import { OrderForm, OrderBook, RecentTrades, Desk, MarketSelector, CoinDot } from '../components/TradePanels'
-import { Feed, type Loader } from '../components/Feed'
+import { OrderForm, OrderBook, RecentTrades, Desk, MarketSelector, type SelectorCat } from '../components/TradePanels'
+import { CoinLogo } from '../components/CoinLogo'
+import { Feed, feedLoader } from '../components/Feed'
 import { ComposerBody } from '../components/Composer'
 import { LiveNumber, Skeleton, Tabs } from '../components/ui'
 import { MobileTopBar } from '../components/Layout'
 import { ChevronDownIcon, ExternalIcon, MessageIcon } from '../components/Icons'
-import { fetchChannelCasts, CHANNELS, MARKET_CHANNEL_PREFIX } from '../lib/farcaster'
-import { coinName } from '../lib/hyperliquid'
+import { MARKET_CHANNEL_PREFIX } from '../lib/social'
+import { CATEGORIES, coinName, displaySymbol, dexOf } from '../lib/hyperliquid'
 import { cx, usd, px, pct, compact } from '../lib/format'
+
+const CATEGORY_CHANNEL: Record<string, string> = { crypto: 'crypto', memes: 'memes', stocks: 'stocks', rwa: 'rwa' }
+
+function isSelectorCat(v: string | null): v is SelectorCat {
+  return !!v && CATEGORIES.some((c) => c.id === v)
+}
 
 type SidePanel = 'book' | 'trades' | 'chat'
 type MobilePanel = 'chart' | 'trade' | 'book' | 'chat'
 
 export default function Trade() {
-  const { coin: param } = useParams()
+  const { coin: rawParam } = useParams()
+  const [search, setSearch] = useSearchParams()
+  const catParam = search.get('cat')
   const nav = useNavigate()
+  const me = useAuth((s) => s.user)
   const markets = useMarket((s) => s.markets)
   const byCoin = useMarket((s) => s.byCoin)
   const loaded = useMarket((s) => s.loaded)
   const error = useMarket((s) => s.error)
   const wsStatus = useMarket((s) => s.wsStatus)
+  const param = rawParam ? decodeURIComponent(rawParam) : undefined
   const requested = param ?? localStorage.getItem('perpcast:lastCoin') ?? 'BTC'
   const coin = useMemo(() => {
     if (byCoin[requested]) return requested
     const lower = requested.toLowerCase()
-    return markets.find((m) => m.coin.toLowerCase() === lower)?.coin ?? requested.toUpperCase()
+    return markets.find((m) => m.coin.toLowerCase() === lower)?.coin ?? markets.find((m) => m.symbol.toLowerCase() === lower)?.coin ?? requested.toUpperCase()
   }, [requested, byCoin, markets])
   const market = byCoin[coin]
   const mid = useMarket((s) => s.mids[coin])
   const positions = useTrading((s) => s.positions)
-  const [selector, setSelector] = useState(false)
+  const [selector, setSelector] = useState(() => isSelectorCat(catParam))
+  const [selectorCat, setSelectorCat] = useState<SelectorCat>(() => (isSelectorCat(catParam) ? catParam : 'all'))
   const [side, setSide] = useState<SidePanel>('book')
   const [mobile, setMobile] = useState<MobilePanel>('chart')
+  const symbol = displaySymbol(coin)
+  const category = market ? CATEGORIES.find((c) => c.id === market.category) : undefined
 
   useEffect(() => {
-    if (!param || (market && param !== coin)) nav(`/trade/${coin}`, { replace: true })
-  }, [param, coin, market, nav])
+    if (isSelectorCat(catParam)) {
+      setSelectorCat(catParam)
+      setSelector(true)
+    }
+  }, [catParam])
+  useEffect(() => {
+    if (!param || (market && param !== coin)) nav({ pathname: `/trade/${encodeURIComponent(coin)}`, search: search.toString() ? `?${search}` : '' }, { replace: true })
+  }, [param, coin, market, nav, search])
   useEffect(() => {
     if (market) localStorage.setItem('perpcast:lastCoin', coin)
   }, [coin, market])
@@ -48,20 +69,29 @@ export default function Trade() {
   }, [loaded, markets.length, market, nav])
   useEffect(() => {
     if (!mid) return
-    document.title = `${px(mid, market?.szDecimals)} ${coin} · Perpcast`
+    document.title = `${px(mid, market?.szDecimals)} ${symbol} · Perpcast`
     return () => {
       document.title = 'Perpcast'
     }
-  }, [mid, coin, market?.szDecimals])
+  }, [mid, symbol, market?.szDecimals])
 
   const mark = mid ?? market?.markPx ?? 0
   const ch = market ? change24h(market, mid) : 0
   const coinPositions = useMemo(() => positions.filter((p) => p.coin === coin), [positions, coin])
   const coinPnl = coinPositions.reduce((a, p) => a + unrealized(p, mark || p.entry), 0)
-  const channelUrl = `${MARKET_CHANNEL_PREFIX}${coin}`
-  const hubChannel = useMemo(() => CHANNELS.find((c) => c.id === coin.toLowerCase() || c.id === coinName(coin).toLowerCase()) ?? CHANNELS.find((c) => c.id === 'hyperliquid'), [coin])
-  const chatLoader = useMemo<Loader>(() => (t?: string) => (hubChannel ? fetchChannelCasts(hubChannel.url, 10, t) : Promise.resolve({ casts: [] })), [hubChannel])
-  const pick = useCallback((c: string) => nav(`/trade/${c}`), [nav])
+  const channelId = `${MARKET_CHANNEL_PREFIX}${coin}`
+  const categoryChannel = market ? CATEGORY_CHANNEL[market.category] : undefined
+  const chatLoader = useMemo(() => feedLoader({ kind: 'market', key: coin }), [coin])
+  const pick = useCallback((c: string) => nav(`/trade/${encodeURIComponent(c)}`), [nav])
+  const closeSelector = useCallback(() => {
+    setSelector(false)
+    if (search.has('cat')) {
+      const next = new URLSearchParams(search)
+      next.delete('cat')
+      setSearch(next, { replace: true })
+    }
+  }, [search, setSearch])
+  const hlUrl = dexOf(coin) ? `https://app.hyperliquid.xyz/trade/${encodeURIComponent(coin)}` : `https://app.hyperliquid.xyz/trade/${coin}`
 
   if (loaded && error && !market) {
     return (
@@ -79,12 +109,14 @@ export default function Trade() {
   const header = (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-line px-3 py-2">
       <button className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-surface-hover" onClick={() => setSelector(true)}>
-        <CoinDot coin={coin} size={28} />
+        <CoinLogo coin={coin} size={30} />
         <span className="text-left leading-tight">
           <span className="flex items-center gap-1 font-display text-lg font-extrabold">
-            {coin}-USD <ChevronDownIcon size={16} className="text-ink-3" />
+            {symbol}-USD <ChevronDownIcon size={16} className="text-ink-3" />
           </span>
-          <span className="block text-[11px] text-ink-3">{coinName(coin)} · Perp · {market?.maxLeverage ?? '—'}x</span>
+          <span className="block text-[11px] text-ink-3">
+            {coinName(coin)} · {category?.label ?? 'Perp'} · {market?.maxLeverage ?? '—'}x
+          </span>
         </span>
       </button>
       <div className="flex items-baseline gap-2">
@@ -94,13 +126,13 @@ export default function Trade() {
       <Stat label="Mark" value={market ? px(market.markPx, market.szDecimals) : '—'} />
       <Stat label="Oracle" value={market ? px(market.oraclePx, market.szDecimals) : '—'} />
       <Stat label="24h volume" value={market ? usd(market.dayNtlVlm, { compact: true }) : '—'} />
-      <Stat label="Open interest" value={market ? `${compact(market.openInterest)} ${coin}` : '—'} />
+      <Stat label="Open interest" value={market ? `${compact(market.openInterest)} ${symbol}` : '—'} />
       <Stat label="Funding / 1h" value={market ? `${(market.funding * 100).toFixed(4)}%` : '—'} tone={market ? (market.funding >= 0 ? 'long' : 'short') : undefined} />
       {coinPositions.length > 0 && <Stat label={`Your PnL (${coinPositions.length})`} value={usd(coinPnl, { sign: true })} tone={coinPnl >= 0 ? 'long' : 'short'} />}
       <span className="ml-auto flex items-center gap-1.5 text-[11px] text-ink-3">
         <span className={cx('h-1.5 w-1.5 rounded-full', wsStatus === 'open' ? 'bg-long animate-pulse' : wsStatus === 'connecting' ? 'bg-amber-400' : 'bg-short')} />
         {wsStatus === 'open' ? 'Live' : wsStatus === 'connecting' ? 'Connecting' : 'Reconnecting'}
-        <a href={`https://app.hyperliquid.xyz/trade/${coin}`} target="_blank" rel="noreferrer" className="ml-2 hidden items-center gap-1 hover:text-ink lg:flex">
+        <a href={hlUrl} target="_blank" rel="noreferrer" className="ml-2 hidden items-center gap-1 hover:text-ink lg:flex">
           Hyperliquid <ExternalIcon size={11} />
         </a>
       </span>
@@ -110,9 +142,9 @@ export default function Trade() {
   const chat = (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="border-b border-line px-3 py-2">
-        <ComposerBody opts={{ channelUrl }} autoFocus={false} />
+        <ComposerBody opts={{ channel: channelId }} autoFocus={false} />
       </div>
-      <Feed load={chatLoader} localFilter={(c) => !c.parentId && (c.channel === channelUrl || c.position?.coin === coin)} emptyTitle={`No ${coin} chatter yet`} emptyBody="Be the first to post in this market room." showParentContext={false} />
+      <Feed load={chatLoader} refreshKey={`${coin}:${me?.id ?? ''}`} freshFilter={(c) => !c.parentId && (c.channel === channelId || c.position?.coin === coin)} emptyTitle={`No ${symbol} chatter yet`} emptyBody="Be the first to post in this market room." showParentContext={false} />
     </div>
   )
 
@@ -143,10 +175,10 @@ export default function Trade() {
             {side === 'chat' && <div className="xl:hidden">{chat}</div>}
             {side === 'chat' && (
               <div className="hidden p-4 text-sm text-ink-3 xl:block">
-                The {coin} room is open on the right.{' '}
-                {hubChannel && (
-                  <Link to={`/channel/${hubChannel.id}`} className="text-accent">
-                    Open /{hubChannel.id} →
+                The {symbol} room is open on the right.{' '}
+                {categoryChannel && (
+                  <Link to={`/channel/${categoryChannel}`} className="text-accent">
+                    Open /{categoryChannel} →
                   </Link>
                 )}
               </div>
@@ -156,7 +188,7 @@ export default function Trade() {
         <div className="hidden min-h-0 flex-col xl:flex">
           {market ? <OrderForm market={market} mark={mark} className="border-b border-line" /> : <Skeleton className="m-3 h-96" />}
           <div className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-ink-3">
-            <MessageIcon size={13} /> {coin} room
+            <MessageIcon size={13} /> {symbol} room
           </div>
           {chat}
         </div>
@@ -196,7 +228,7 @@ export default function Trade() {
         {mobile === 'chat' && chat}
       </div>
 
-      <MarketSelector current={coin} open={selector} onClose={() => setSelector(false)} onPick={pick} />
+      <MarketSelector current={coin} open={selector} onClose={closeSelector} onPick={pick} initialCat={selectorCat} />
     </div>
   )
 }

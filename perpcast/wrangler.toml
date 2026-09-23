@@ -1,0 +1,13 @@
+name = "perpcast"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 database that backs casts, profiles, follows, reactions, activity and DMs.
+# Create it once with `npx wrangler d1 create perpcast` and paste the id below, then
+# `npx wrangler d1 migrations apply perpcast --remote`.
+[[d1_databases]]
+binding = "DB"
+database_name = "perpcast"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

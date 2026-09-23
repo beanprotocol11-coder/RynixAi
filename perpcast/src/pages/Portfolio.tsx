@@ -5,7 +5,8 @@ import { useTrading, unrealized, START_BALANCE } from '../store/trading'
 import { useMarket } from '../store/market'
 import { useAuth } from '../store/auth'
 import { useUI } from '../store/ui'
-import { Desk, CoinDot } from '../components/TradePanels'
+import { Desk } from '../components/TradePanels'
+import { CoinLogo } from '../components/CoinLogo'
 import { PageHeader, Modal, ModalHeader, Empty } from '../components/ui'
 import { MobileTopBar } from '../components/Layout'
 import { WalletIcon, RefreshIcon, PlusIcon, ChartIcon } from '../components/Icons'
@@ -118,7 +119,7 @@ export default function Portfolio() {
                 <Link key={coin} to={`/trade/${coin}`} className="group">
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2 font-semibold">
-                      <CoinDot coin={coin} size={18} /> {coin}
+                      <CoinLogo coin={coin} size={18} /> {coin}
                     </span>
                     <span className="mono text-ink-2">
                       {usd(v, { compact: true })} <span className="text-ink-3">({((v / totalExposure) * 100).toFixed(0)}%)</span>

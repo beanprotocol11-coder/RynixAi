@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Avatar, Logo, Menu, MenuItem, Wordmark, LiveNumber } from './ui'
+import { Avatar, ChannelIcon, Logo, Menu, MenuItem, Wordmark, LiveNumber } from './ui'
 import { BellIcon, BookmarkIcon, ChartIcon, CompassIcon, HomeIcon, LogoutIcon, MessageIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, WalletIcon, MoreIcon, ExternalIcon, HashIcon, TrendUpIcon, TrendDownIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { useUI } from '../store/ui'
@@ -8,10 +8,14 @@ import { useNotify } from '../store/notify'
 import { useMarket, change24h } from '../store/market'
 import { useTrading, unrealized } from '../store/trading'
 import { useSocial } from '../store/social'
-import { CHANNELS, fetchUser, type FcUser } from '../lib/farcaster'
-import { coinColor, coinName } from '../lib/hyperliquid'
-import { cx, px, pct, usd, compact } from '../lib/format'
+import { CHANNELS, userPath, type User } from '../lib/social'
+import { api } from '../lib/api'
+import { coinName, displaySymbol } from '../lib/hyperliquid'
+import { CoinLogo } from './CoinLogo'
+import { cx, px, pct, usd, compact, shortAddr } from '../lib/format'
+import { ROBINHOOD_CHAIN, ROBINHOOD_TESTNET } from '../lib/wallet'
 import { useDMs } from '../store/dm'
+import { useAsync } from '../hooks/useAsync'
 
 const NAV = [
   { to: '/', label: 'Home', icon: HomeIcon, end: true },
@@ -49,6 +53,7 @@ export function Layout() {
 
 function Sidebar() {
   const me = useAuth((s) => s.user)
+  const session = useAuth((s) => s.session)
   const openSignIn = useAuth((s) => s.openSignIn)
   const signOut = useAuth((s) => s.signOut)
   const openComposer = useUI((s) => s.openComposer)
@@ -60,9 +65,14 @@ function Sidebar() {
 
   return (
     <aside className="sticky top-8 hidden h-[calc(100dvh-2rem)] w-[72px] shrink-0 flex-col px-2 py-3 md:flex xl:w-[260px] xl:px-4">
-      <Link to="/" className="mb-3 flex items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-surface-hover xl:px-3">
-        <Logo size={36} />
-        <Wordmark className="hidden xl:inline" size="lg" />
+      <Link to="/" className="mb-3 flex items-center gap-3 rounded-xl px-1 py-2 hover:bg-surface-hover xl:px-2">
+        <Logo size={64} />
+        <span className="hidden min-w-0 flex-col xl:flex">
+          <Wordmark size="lg" />
+          <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-ink-3">
+            <img src="/robinhood-chain.png" alt="" width={12} height={12} className="rounded-sm" /> on Robinhood Chain
+          </span>
+        </span>
       </Link>
       <nav className="flex flex-col gap-0.5">
         {NAV.map((n) => {
@@ -102,10 +112,10 @@ function Sidebar() {
             className="w-full"
             trigger={() => (
               <button className="flex w-full items-center gap-3 rounded-xl p-2 hover:bg-surface-hover xl:px-3">
-                <Avatar src={me.pfp} name={me.displayName} fid={me.fid} size={36} />
+                <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={36} />
                 <span className="hidden min-w-0 flex-1 text-left xl:block">
-                  <span className="block truncate text-sm font-bold">{me.displayName}</span>
-                  <span className="block truncate text-xs text-ink-3">{me.method === 'farcaster' ? `@${me.username}` : me.username}</span>
+                  <span className="block truncate text-sm font-bold">{me.displayName || me.username}</span>
+                  <span className="block truncate text-xs text-ink-3">@{me.username} · {shortAddr(me.address)}</span>
                 </span>
                 <MoreIcon size={18} className="hidden text-ink-3 xl:block" />
               </button>
@@ -113,18 +123,16 @@ function Sidebar() {
           >
             {(close) => (
               <>
-                <MenuItem icon={<UserIcon />} onClick={() => { nav(`/u/${me.username}`); close() }}>
+                <MenuItem icon={<UserIcon />} onClick={() => { nav(userPath(me)); close() }}>
                   View profile
                 </MenuItem>
                 <MenuItem icon={<SettingsIcon />} onClick={() => { nav('/settings'); close() }}>
                   Settings
                 </MenuItem>
-                {me.method === 'farcaster' && (
-                  <MenuItem icon={<ExternalIcon />} onClick={() => { window.open(`https://warpcast.com/${me.username}`, '_blank', 'noopener'); close() }}>
-                    Open on Warpcast
-                  </MenuItem>
-                )}
-                <MenuItem icon={<LogoutIcon />} danger onClick={() => { signOut(); close() }}>
+                <MenuItem icon={<ExternalIcon />} onClick={() => { window.open(explorerUrl(session?.chainId ?? 1, me.address), '_blank', 'noopener'); close() }}>
+                  View wallet on explorer
+                </MenuItem>
+                <MenuItem icon={<LogoutIcon />} danger onClick={() => { void signOut(); close() }}>
                   Sign out
                 </MenuItem>
               </>
@@ -167,7 +175,7 @@ function MobileNav() {
           </NavLink>
         ))}
         <NavLink to={me ? '/portfolio' : '/profile'} className={({ isActive }) => cx('flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold', isActive ? 'text-accent' : 'text-ink-3')}>
-          {me ? <Avatar src={me.pfp} name={me.displayName} fid={me.fid} size={22} /> : <UserIcon size={22} />}
+          {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={22} /> : <UserIcon size={22} />}
           {me ? 'Portfolio' : 'Sign in'}
         </NavLink>
       </div>
@@ -183,8 +191,8 @@ export function MobileTopBar({ title }: { title?: React.ReactNode }) {
   const nav = useNavigate()
   return (
     <div className="flex h-14 items-center gap-3 px-4 md:hidden">
-      <button onClick={() => (me ? nav(`/u/${me.username}`) : openSignIn())} aria-label="Profile">
-        {me ? <Avatar src={me.pfp} name={me.displayName} fid={me.fid} size={32} /> : <Logo size={32} />}
+      <button onClick={() => (me ? nav(userPath(me)) : openSignIn())} aria-label="Profile">
+        {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={32} /> : <Logo size={40} />}
       </button>
       <div className="flex-1 text-center">{title ?? <Wordmark />}</div>
       <button className="icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
@@ -213,8 +221,8 @@ function MarketTape() {
           const p = mids[m.coin] ?? m.midPx
           const ch = change24h(m, p)
           return (
-            <Link key={m.coin + i} to={`/trade/${m.coin}`} className="flex items-center gap-2 text-xs hover:text-accent">
-              <span className="font-bold">{m.coin}</span>
+            <Link key={m.coin + i} to={`/trade/${encodeURIComponent(m.coin)}`} className="flex items-center gap-2 text-xs hover:text-accent">
+              <span className="font-bold">{m.symbol}</span>
               <LiveNumber value={p} format={(n) => px(n, m.szDecimals)} className="text-ink-2" />
               <span className={cx('mono', ch >= 0 ? 'text-long' : 'text-short')}>{pct(ch)}</span>
             </Link>
@@ -234,7 +242,11 @@ function RightRail() {
       <ChannelsWidget />
       <WhoToFollow />
       <footer className="px-1 pb-4 text-[11px] leading-relaxed text-ink-3">
-        Perpcast · Casts via Farcaster Hubs · Prices via Hyperliquid. Trading on Perpcast is a paper-trading simulation — no real funds are at risk.
+        <span className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2 py-1 text-[11px] font-semibold text-ink-2">
+          <img src="/robinhood-chain.png" alt="" width={14} height={14} className="rounded-sm" /> Built on Robinhood Chain
+        </span>
+        <br />
+        Perpcast · Sign in with your wallet · Prices via Hyperliquid (crypto, memes, stocks & RWAs). Trading on Perpcast is a paper-trading simulation — no real funds are at risk.
       </footer>
     </aside>
   )
@@ -284,12 +296,10 @@ function MarketsWidget() {
       </div>
       {list.length === 0 && <div className="px-4 pb-4 space-y-2">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton h-9" />)}</div>}
       {list.map(({ m, p, ch }) => (
-        <Link key={m.coin} to={`/trade/${m.coin}`} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-hover transition-colors">
-          <span className="flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: coinColor(m.coin) }}>
-            {m.coin.slice(0, 3)}
-          </span>
+        <Link key={m.coin} to={`/trade/${encodeURIComponent(m.coin)}`} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-hover transition-colors">
+          <CoinLogo coin={m.coin} size={32} />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold leading-tight">{m.coin}</span>
+            <span className="block text-sm font-bold leading-tight">{m.symbol}</span>
             <span className="block truncate text-[11px] text-ink-3">{coinName(m.coin)} · Vol {usd(m.dayNtlVlm, { compact: true })}</span>
           </span>
           <span className="text-right">
@@ -322,9 +332,9 @@ function PositionsWidget() {
         const mark = mids[p.coin] ?? p.entry
         const pnl = unrealized(p, mark)
         return (
-          <Link key={p.id} to={`/trade/${p.coin}`} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-hover transition-colors">
+          <Link key={p.id} to={`/trade/${encodeURIComponent(p.coin)}`} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-hover transition-colors">
             <span className={cx('badge', p.side === 'long' ? 'badge-long' : 'badge-short')}>{p.side}</span>
-            <span className="text-sm font-bold">{p.coin}</span>
+            <span className="text-sm font-bold">{displaySymbol(p.coin)}</span>
             <span className="mono text-xs text-ink-3">{p.leverage}x</span>
             <span className={cx('ml-auto mono text-sm font-semibold', pnl >= 0 ? 'text-long' : 'text-short')}>{usd(pnl, { sign: true })}</span>
           </Link>
@@ -345,9 +355,7 @@ function ChannelsWidget() {
       </div>
       {CHANNELS.slice(0, 5).map((c) => (
         <Link key={c.id} to={`/channel/${c.id}`} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-hover transition-colors">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg text-base" style={{ background: `${c.accent}22` }}>
-            {c.emoji}
-          </span>
+          <ChannelIcon channel={c} size={32} />
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold leading-tight">/{c.id}</span>
             <span className="block truncate text-[11px] text-ink-3">{c.description}</span>
@@ -362,22 +370,38 @@ function ChannelsWidget() {
   )
 }
 
-export const SUGGESTED_FIDS = [3, 2, 5650, 99, 12, 1317, 239, 194, 8152, 20591]
+const EXPLORERS: Record<number, string> = {
+  [ROBINHOOD_CHAIN.id]: ROBINHOOD_CHAIN.explorer,
+  [ROBINHOOD_TESTNET.id]: ROBINHOOD_TESTNET.explorer,
+  1: 'https://etherscan.io',
+  10: 'https://optimistic.etherscan.io',
+  56: 'https://bscscan.com',
+  137: 'https://polygonscan.com',
+  42161: 'https://arbiscan.io',
+  999: 'https://hyperevmscan.io',
+}
+
+export function explorerUrl(chainId: number, address: string): string {
+  return `${EXPLORERS[chainId] ?? EXPLORERS[1]}/address/${address}`
+}
 
 export function WhoToFollow({ limit = 4 }: { limit?: number }) {
-  const [users, setUsers] = useState<FcUser[]>([])
   const follows = useSocial((s) => s.follows)
   const toggleFollow = useSocial((s) => s.toggleFollow)
   const me = useAuth((s) => s.user)
   const openSignIn = useAuth((s) => s.openSignIn)
-  useEffect(() => {
-    let alive = true
-    Promise.all(SUGGESTED_FIDS.slice(0, limit + 3).map((f) => fetchUser(f))).then((u) => alive && setUsers(u))
-    return () => {
-      alive = false
-    }
-  }, [limit])
-  const shown = users.filter((u) => u.fid !== me?.fid).slice(0, limit)
+  const { data: users, loading } = useAsync<User[]>(() => api().suggestedUsers(limit + 3), [limit, me?.id])
+  const shown = (users ?? []).filter((u) => u.id !== me?.id).slice(0, limit)
+  if (!loading && shown.length === 0) {
+    return (
+      <section className="card overflow-hidden">
+        <div className="px-4 pt-3.5 pb-2">
+          <h3 className="font-display font-extrabold">Who to follow</h3>
+        </div>
+        <p className="px-4 pb-4 text-sm text-ink-3">No other traders here yet. Invite a friend — anyone with a wallet can join.</p>
+      </section>
+    )
+  }
   return (
     <section className="card overflow-hidden">
       <div className="px-4 pt-3.5 pb-2">
@@ -385,23 +409,23 @@ export function WhoToFollow({ limit = 4 }: { limit?: number }) {
       </div>
       {shown.length === 0 && <div className="px-4 pb-4 space-y-2">{Array.from({ length: limit }).map((_, i) => <div key={i} className="skeleton h-9" />)}</div>}
       {shown.map((u) => {
-        const on = !!follows[u.fid]
+        const on = !!follows[u.id]
         return (
-          <div key={u.fid} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-hover transition-colors">
-            <Link to={`/u/${u.username}`}>
-              <Avatar src={u.pfp} name={u.displayName} fid={u.fid} size={36} />
+          <div key={u.id} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-hover transition-colors">
+            <Link to={userPath(u)}>
+              <Avatar src={u.pfp} name={u.displayName || u.username} seed={u.id} size={36} />
             </Link>
-            <Link to={`/u/${u.username}`} className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold leading-tight hover:underline">{u.displayName}</span>
-              <span className="block truncate text-xs text-ink-3">@{u.username}</span>
+            <Link to={userPath(u)} className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold leading-tight hover:underline">{u.displayName || u.username}</span>
+              <span className="block truncate text-xs text-ink-3">@{u.username} · {shortAddr(u.address)}</span>
             </Link>
-            <button className={cx('btn !py-1.5 !px-3.5 text-xs', on ? 'btn-outline' : 'btn-ink')} onClick={() => (me ? toggleFollow(u.fid, u) : openSignIn('Sign in to follow people.'))}>
+            <button className={cx('btn !py-1.5 !px-3.5 text-xs', on ? 'btn-outline' : 'btn-ink')} onClick={() => (me ? void toggleFollow(u) : openSignIn('Sign in to follow people.'))}>
               {on ? 'Following' : 'Follow'}
             </button>
           </div>
         )
       })}
-      <div className="px-4 py-2 text-[11px] text-ink-3">{compact(follows ? Object.keys(follows).length : 0)} following</div>
+      <div className="px-4 py-2 text-[11px] text-ink-3">{compact(Object.keys(follows).length)} following</div>
     </section>
   )
 }

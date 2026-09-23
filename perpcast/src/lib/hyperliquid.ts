@@ -1,8 +1,22 @@
 const INFO_URL = 'https://api.hyperliquid.xyz/info'
 const WS_URL = 'wss://api.hyperliquid.xyz/ws'
 
+export type MarketCategory = 'crypto' | 'memes' | 'stocks' | 'rwa'
+
+export const CATEGORIES: Array<{ id: MarketCategory | 'all' | 'favs'; label: string; hint: string }> = [
+  { id: 'all', label: 'All', hint: 'Every perp market' },
+  { id: 'favs', label: 'Favorites', hint: 'Markets you starred' },
+  { id: 'crypto', label: 'Crypto', hint: 'Majors, L1s, DeFi' },
+  { id: 'memes', label: 'Memes', hint: 'Dog coins, frogs and culture' },
+  { id: 'stocks', label: 'Stocks', hint: 'Equities & ETFs via the xyz dex' },
+  { id: 'rwa', label: 'RWAs', hint: 'Commodities, indices, FX, rates' },
+]
+
 export interface Market {
-  coin: string
+  coin: string // canonical symbol e.g. BTC, kPEPE, xyz:TSLA
+  symbol: string // display symbol without dex prefix
+  dex: string // '' for the main Hyperliquid dex
+  category: MarketCategory
   szDecimals: number
   maxLeverage: number
   markPx: number
@@ -83,16 +97,47 @@ interface AssetCtx {
   midPx: string | null
 }
 
-export async function fetchMarkets(): Promise<Market[]> {
-  const [meta, ctxs] = await info<[{ universe: UniverseAsset[] }, AssetCtx[]]>({ type: 'metaAndAssetCtxs' })
+/** Builder-deployed perp dexes (HIP-3) that Perpcast lists next to the main dex. */
+export const DEXES = ['', 'xyz']
+
+const MEMES = new Set([
+  'DOGE', 'kPEPE', 'PEPE', 'WIF', 'kBONK', 'BONK', 'kSHIB', 'SHIB', 'kFLOKI', 'FLOKI', 'TRUMP', 'MELANIA', 'FARTCOIN', 'PUMP', 'POPCAT', 'MEW', 'BRETT', 'MOODENG', 'GOAT', 'PNUT', 'kNEIRO', 'NEIROETH', 'CHILLGUY', 'SPX', 'AI16Z', 'VINE', 'TURBO', 'PENGU', 'BOME', 'kDOGS', 'DEGEN', 'PEOPLE', 'MEME', 'HPOS', 'kLUNC', 'MOG', 'WOJAK', 'TOSHI', 'PONKE', 'GIGA', 'BAN', 'ACT', 'MYRO', 'SLERF', 'SHIA', 'LADYS', 'PURR', 'ANIME', 'PIPPIN', 'TST', 'BROCCOLI', 'DOOD', 'HOUSE', 'USELESS', 'MOODENG', 'TRUMPCOIN', 'BABYDOGE', 'kBABYDOGE', 'YZY', 'WLFI', 'FLOCK', 'PEPECOIN', 'SNEK', 'kSNEK', 'DOG', 'NEIRO', 'APU', 'RETARDIO', 'MICHI', 'CAT', 'TITCOIN', 'FWOG', 'BUTTHOLE', 'GORK', 'CHEEMS', 'PWEASE', 'BOBO',
+])
+
+const RWA = new Set([
+  'CL', 'BRENTOIL', 'NATGAS', 'TTF', 'HO', 'GOLD', 'SILVER', 'COPPER', 'PLATINUM', 'PALLADIUM', 'ALUMINIUM', 'URANIUM', 'CORN', 'WHEAT', 'DRAM', 'H100',
+  'SP500', 'XYZ100', 'JP225', 'KR200', 'NIFTY', 'IBOV', 'VIX', 'VOL', 'DXY', 'EUR', 'GBP', 'JPY', 'KRW', 'TLT',
+])
+
+function categorize(dex: string, symbol: string): MarketCategory {
+  if (dex === 'xyz') return RWA.has(symbol) ? 'rwa' : 'stocks'
+  if (MEMES.has(symbol)) return 'memes'
+  return 'crypto'
+}
+
+export function displaySymbol(coin: string): string {
+  const i = coin.indexOf(':')
+  return i >= 0 ? coin.slice(i + 1) : coin
+}
+export function dexOf(coin: string): string {
+  const i = coin.indexOf(':')
+  return i >= 0 ? coin.slice(0, i) : ''
+}
+
+async function fetchDexMarkets(dex: string): Promise<Market[]> {
+  const [meta, ctxs] = await info<[{ universe: UniverseAsset[] }, AssetCtx[]]>(dex ? { type: 'metaAndAssetCtxs', dex } : { type: 'metaAndAssetCtxs' })
   const out: Market[] = []
   meta.universe.forEach((u, i) => {
     const c = ctxs[i]
     if (!c || u.isDelisted) return
     const mark = parseFloat(c.markPx)
     if (!isFinite(mark) || mark <= 0) return
+    const symbol = displaySymbol(u.name)
     out.push({
       coin: u.name,
+      symbol,
+      dex,
+      category: categorize(dex, symbol),
       szDecimals: u.szDecimals,
       maxLeverage: u.maxLeverage,
       markPx: mark,
@@ -105,6 +150,15 @@ export async function fetchMarkets(): Promise<Market[]> {
       premium: c.premium ? parseFloat(c.premium) : 0,
     })
   })
+  return out
+}
+
+/** All markets across the main dex and the builder dexes Perpcast lists (stocks, RWAs). Builder dexes failing never hides the main dex. */
+export async function fetchMarkets(): Promise<Market[]> {
+  const results = await Promise.allSettled(DEXES.map((d) => fetchDexMarkets(d)))
+  const main = results[0]
+  if (main.status === 'rejected') throw main.reason instanceof Error ? main.reason : new Error(String(main.reason))
+  const out = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
   out.sort((a, b) => b.dayNtlVlm - a.dayNtlVlm)
   return out
 }
@@ -197,7 +251,8 @@ class HLSocket {
       if (!msg.channel || msg.channel === 'pong' || msg.channel === 'subscriptionResponse') return
       const d = msg.data as Record<string, unknown> | undefined
       let key = msg.channel
-      if (msg.channel === 'l2Book' && d && typeof d.coin === 'string') key = `l2Book:${d.coin}`
+      if (msg.channel === 'allMids') key = `allMids:${typeof d?.dex === 'string' ? d.dex : ''}`
+      else if (msg.channel === 'l2Book' && d && typeof d.coin === 'string') key = `l2Book:${d.coin}`
       else if (msg.channel === 'trades' && Array.isArray(d) && d.length) key = `trades:${(d[0] as { coin: string }).coin}`
       else if (msg.channel === 'candle' && d && typeof d.s === 'string') key = `candle:${d.s}:${d.i as string}`
       const s = this.subs.get(key)
@@ -247,7 +302,7 @@ class HLSocket {
 export const hlSocket = new HLSocket()
 
 export function subscribeAllMids(fn: (mids: Record<string, number>) => void) {
-  return hlSocket.subscribe('allMids', { type: 'allMids' }, (data) => {
+  const handler = (data: unknown) => {
     const d = data as { mids: Record<string, string> }
     if (!d?.mids) return
     const out: Record<string, number> = {}
@@ -256,7 +311,9 @@ export function subscribeAllMids(fn: (mids: Record<string, number>) => void) {
       out[k] = parseFloat(d.mids[k])
     }
     fn(out)
-  })
+  }
+  const offs = DEXES.map((dex) => hlSocket.subscribe(`allMids:${dex}`, dex ? { type: 'allMids', dex } : { type: 'allMids' }, handler))
+  return () => offs.forEach((off) => off())
 }
 
 export function subscribeBook(coin: string, fn: (book: L2Book) => void) {
@@ -321,11 +378,70 @@ export const COIN_META: Record<string, { name: string; color: string }> = {
   DEGEN: { name: 'Degen', color: '#a36efd' },
 }
 
+const XYZ_META: Record<string, { name: string; color: string }> = {
+  TSLA: { name: 'Tesla', color: '#cc0000' },
+  NVDA: { name: 'NVIDIA', color: '#76b900' },
+  AAPL: { name: 'Apple', color: '#555555' },
+  MSFT: { name: 'Microsoft', color: '#0078d4' },
+  AMZN: { name: 'Amazon', color: '#ff9900' },
+  GOOGL: { name: 'Alphabet', color: '#4285f4' },
+  META: { name: 'Meta', color: '#0866ff' },
+  AMD: { name: 'AMD', color: '#ed1c24' },
+  INTC: { name: 'Intel', color: '#0071c5' },
+  MU: { name: 'Micron', color: '#0084c9' },
+  COIN: { name: 'Coinbase', color: '#0052ff' },
+  HOOD: { name: 'Robinhood', color: '#00c805' },
+  MSTR: { name: 'Strategy', color: '#e8542a' },
+  CRCL: { name: 'Circle', color: '#1fb56b' },
+  PLTR: { name: 'Palantir', color: '#101113' },
+  NFLX: { name: 'Netflix', color: '#e50914' },
+  ORCL: { name: 'Oracle', color: '#f80000' },
+  TSM: { name: 'TSMC', color: '#c8102e' },
+  ASML: { name: 'ASML', color: '#0f238c' },
+  AVGO: { name: 'Broadcom', color: '#cc092f' },
+  GME: { name: 'GameStop', color: '#000000' },
+  RKLB: { name: 'Rocket Lab', color: '#1f1f1f' },
+  SP500: { name: 'S&P 500', color: '#1d4ed8' },
+  XYZ100: { name: 'XYZ 100', color: '#7c3aed' },
+  JP225: { name: 'Nikkei 225', color: '#bc002d' },
+  KR200: { name: 'KOSPI 200', color: '#0047a0' },
+  NIFTY: { name: 'Nifty 50', color: '#ff9933' },
+  IBOV: { name: 'Ibovespa', color: '#009c3b' },
+  VIX: { name: 'VIX', color: '#7f1d1d' },
+  DXY: { name: 'US Dollar Index', color: '#14532d' },
+  GOLD: { name: 'Gold', color: '#d4a017' },
+  SILVER: { name: 'Silver', color: '#a8a9ad' },
+  COPPER: { name: 'Copper', color: '#b87333' },
+  PLATINUM: { name: 'Platinum', color: '#8e8e93' },
+  PALLADIUM: { name: 'Palladium', color: '#6b7280' },
+  ALUMINIUM: { name: 'Aluminium', color: '#94a3b8' },
+  URANIUM: { name: 'Uranium', color: '#65a30d' },
+  CL: { name: 'WTI Crude Oil', color: '#1f2937' },
+  BRENTOIL: { name: 'Brent Crude', color: '#374151' },
+  NATGAS: { name: 'Natural Gas', color: '#0ea5e9' },
+  TTF: { name: 'Dutch TTF Gas', color: '#0284c7' },
+  HO: { name: 'Heating Oil', color: '#4b5563' },
+  CORN: { name: 'Corn', color: '#eab308' },
+  WHEAT: { name: 'Wheat', color: '#ca8a04' },
+  EUR: { name: 'Euro / USD', color: '#003399' },
+  GBP: { name: 'Pound / USD', color: '#012169' },
+  JPY: { name: 'Yen / USD', color: '#bc002d' },
+  KRW: { name: 'Won / USD', color: '#0047a0' },
+  TLT: { name: '20Y+ Treasury ETF', color: '#166534' },
+  DRAM: { name: 'DRAM Index', color: '#3b82f6' },
+  H100: { name: 'H100 GPU Rental', color: '#76b900' },
+}
+
+function metaOf(coin: string): { name: string; color: string } | undefined {
+  return dexOf(coin) === 'xyz' ? XYZ_META[displaySymbol(coin)] : COIN_META[coin]
+}
+
 export function coinName(coin: string): string {
-  return COIN_META[coin]?.name ?? coin
+  return metaOf(coin)?.name ?? displaySymbol(coin)
 }
 export function coinColor(coin: string): string {
-  if (COIN_META[coin]) return COIN_META[coin].color
+  const m = metaOf(coin)
+  if (m) return m.color
   let h = 0
   for (let i = 0; i < coin.length; i++) h = (h * 31 + coin.charCodeAt(i)) >>> 0
   return `hsl(${h % 360} 65% 55%)`

@@ -1,8 +1,8 @@
 import { Fragment, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { CHANNELS } from '../lib/farcaster'
+import { CHANNELS } from '../lib/social'
 
-const TOKEN_RE = /(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])|(@[a-z0-9][a-z0-9\-_.]*[a-z0-9])|(\$[A-Za-z]{2,10}\b)|(\/[a-z0-9\-]{2,32}\b)/gi
+const TOKEN_RE = /(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])|(@[a-z0-9][a-z0-9\-_.]*[a-z0-9])|(\$[A-Za-z][A-Za-z0-9]{1,10}\b)|(\/[a-z0-9\-]{2,32}\b)/gi
 
 export function CastText({ text, className, clamp }: { text: string; className?: string; clamp?: boolean }) {
   const parts: ReactNode[] = []

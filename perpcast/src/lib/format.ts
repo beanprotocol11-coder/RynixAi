@@ -1,9 +1,3 @@
-export const FARCASTER_EPOCH = 1609459200 // 2021-01-01 UTC, seconds
-
-export function fcTimeToMs(ts: number): number {
-  return (ts + FARCASTER_EPOCH) * 1000
-}
-
 export function timeAgo(ms: number, now = Date.now()): string {
   const diff = Math.max(0, now - ms) / 1000
   if (diff < 45) return 'now'

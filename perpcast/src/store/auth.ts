@@ -1,54 +1,70 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { primeUser, type FcUser } from '../lib/farcaster'
+import { api, getToken } from '../lib/api'
+import type { User } from '../lib/social'
 
-export type AuthMethod = 'farcaster' | 'wallet'
-
-export interface SessionUser extends FcUser {
-  method: AuthMethod
-  address?: string
+export interface Session {
+  user: User
+  walletId: string // discovered wallet id (EIP-6963 rdns or injected:*)
+  walletName: string
+  chainId: number
   signedInAt: number
-  verifications?: string[]
 }
 
 interface AuthState {
-  user: SessionUser | null
+  session: Session | null
+  user: User | null
   signInOpen: boolean
   signInReason: string | null
-  setUser: (u: SessionUser | null) => void
+  hydrated: boolean
+  setSession: (s: Session | null) => void
+  setUser: (u: User) => void
   openSignIn: (reason?: string) => void
   closeSignIn: () => void
-  signOut: () => void
+  signOut: () => Promise<void>
+  refresh: () => Promise<void>
 }
 
 export const useAuth = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
+      session: null,
       user: null,
       signInOpen: false,
       signInReason: null,
+      hydrated: false,
+      setSession: (s) => set({ session: s, user: s?.user ?? null, signInOpen: false, signInReason: null }),
       setUser: (u) => {
-        if (u) primeUser(u)
-        set({ user: u, signInOpen: false, signInReason: null })
+        const s = get().session
+        set({ user: u, session: s ? { ...s, user: u } : s })
       },
       openSignIn: (reason) => set({ signInOpen: true, signInReason: reason ?? null }),
       closeSignIn: () => set({ signInOpen: false, signInReason: null }),
-      signOut: () => set({ user: null }),
+      signOut: async () => {
+        set({ session: null, user: null })
+        await api().signOut()
+      },
+      /** Re-validate the stored token against the backend; drops the session if it expired. */
+      refresh: async () => {
+        const s = get().session
+        if (!s || !getToken()) {
+          set({ session: null, user: null, hydrated: true })
+          return
+        }
+        try {
+          const u = await api().me()
+          if (!u) set({ session: null, user: null, hydrated: true })
+          else set({ user: u, session: { ...s, user: u }, hydrated: true })
+        } catch {
+          set({ hydrated: true })
+        }
+      },
     }),
     {
       name: 'perpcast:auth',
-      partialize: (s) => ({ user: s.user }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.user) primeUser(state.user)
-      },
+      version: 2,
+      partialize: (s) => ({ session: s.session, user: s.user }),
+      migrate: () => ({ session: null, user: null }),
     },
   ),
 )
-
-/** Local pseudo-fid for wallet-only users (negative so it never collides with Farcaster fids). */
-export function walletFid(address: string): number {
-  let h = 0
-  const a = address.toLowerCase()
-  for (let i = 2; i < a.length; i++) h = (h * 33 + a.charCodeAt(i)) >>> 0
-  return -(h % 2_000_000_000) - 1
-}
