@@ -24,7 +24,12 @@ export default function Trade() {
   const loaded = useMarket((s) => s.loaded)
   const error = useMarket((s) => s.error)
   const wsStatus = useMarket((s) => s.wsStatus)
-  const coin = (param ?? localStorage.getItem('perpcast:lastCoin') ?? 'BTC').toUpperCase()
+  const requested = param ?? localStorage.getItem('perpcast:lastCoin') ?? 'BTC'
+  const coin = useMemo(() => {
+    if (byCoin[requested]) return requested
+    const lower = requested.toLowerCase()
+    return markets.find((m) => m.coin.toLowerCase() === lower)?.coin ?? requested.toUpperCase()
+  }, [requested, byCoin, markets])
   const market = byCoin[coin]
   const mid = useMarket((s) => s.mids[coin])
   const positions = useTrading((s) => s.positions)
@@ -33,8 +38,8 @@ export default function Trade() {
   const [mobile, setMobile] = useState<MobilePanel>('chart')
 
   useEffect(() => {
-    if (!param) nav(`/trade/${coin}`, { replace: true })
-  }, [param, coin, nav])
+    if (!param || (market && param !== coin)) nav(`/trade/${coin}`, { replace: true })
+  }, [param, coin, market, nav])
   useEffect(() => {
     if (market) localStorage.setItem('perpcast:lastCoin', coin)
   }, [coin, market])

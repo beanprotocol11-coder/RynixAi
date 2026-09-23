@@ -41,7 +41,7 @@ export const useMarket = create<MarketState>()((set, get) => ({
         })
         set({ markets, byCoin, mids, loaded: true, error: null, lastUpdate: Date.now() })
       } catch (e) {
-        set({ error: (e as Error).message, loaded: get().markets.length > 0 })
+        set({ error: (e as Error).message, loaded: true })
       }
     }
     void load()

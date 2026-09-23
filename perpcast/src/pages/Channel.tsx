@@ -9,19 +9,23 @@ import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
 import { cx } from '../lib/format'
 
+function readJoined(id: string): boolean {
+  try {
+    return (JSON.parse(localStorage.getItem('perpcast:channels') ?? '[]') as string[]).includes(id)
+  } catch {
+    return false
+  }
+}
+
 export default function Channel() {
   const { id = '' } = useParams()
   const nav = useNavigate()
   const channel = channelById(id)
   const me = useAuth((s) => s.user)
   const openSignIn = useAuth((s) => s.openSignIn)
-  const [joined, setJoined] = useState<boolean>(() => {
-    try {
-      return JSON.parse(localStorage.getItem('perpcast:channels') ?? '[]').includes(id)
-    } catch {
-      return false
-    }
-  })
+  const [joinedState, setJoinedState] = useState<{ id: string; joined: boolean } | null>(null)
+  const joined = joinedState?.id === id ? joinedState.joined : readJoined(id)
+  const setJoined = (v: boolean) => setJoinedState({ id, joined: v })
   const url = channel?.url
   const load = useMemo<Loader>(() => (url && !url.startsWith('perpcast://') ? (t?: string) => fetchChannelCasts(url, 25, t) : async () => ({ casts: [] })), [url])
 

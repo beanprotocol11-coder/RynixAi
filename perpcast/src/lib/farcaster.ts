@@ -106,18 +106,20 @@ async function hubGet<T>(path: string, params: Record<string, string | number | 
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
     .join('&')
   let lastErr: unknown
+  const start = hubIndex
   for (let attempt = 0; attempt < HUBS.length; attempt++) {
-    const base = HUBS[(hubIndex + attempt) % HUBS.length]
+    const idx = (start + attempt) % HUBS.length
+    const base = HUBS[idx]
     try {
       const ctrl = new AbortController()
       const t = setTimeout(() => ctrl.abort(), 9000)
       const res = await fetch(`${base}/v1/${path}?${qs}`, { signal: ctrl.signal })
       clearTimeout(t)
       if (!res.ok) throw new Error(`hub ${res.status}`)
+      hubIndex = idx
       return (await res.json()) as T
     } catch (e) {
       lastErr = e
-      hubIndex = (hubIndex + attempt + 1) % HUBS.length
     }
   }
   throw lastErr
@@ -172,7 +174,10 @@ export function fetchCast(fid: number, hash: string): Promise<Cast | null> {
   if (!p) {
     p = hubGet<HubCastMessage>('castById', { fid, hash })
       .then((m) => castMessageToCast(m))
-      .catch(() => null)
+      .catch(() => {
+        castCache.delete(key)
+        return null
+      })
     castCache.set(key, p)
   }
   return p
