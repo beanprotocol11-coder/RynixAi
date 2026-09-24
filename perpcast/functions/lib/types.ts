@@ -22,6 +22,8 @@ export interface D1Database {
 export interface Env {
   DB?: D1Database
   ASSETS?: { fetch: (req: Request) => Promise<Response> }
+  PINATA_JWT?: string
+  IPFS_GATEWAY?: string
 }
 
 export interface EventContext<Params extends Record<string, string | string[]> = Record<string, string | string[]>> {

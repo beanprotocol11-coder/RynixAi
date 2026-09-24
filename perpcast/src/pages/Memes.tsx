@@ -6,7 +6,8 @@ import { MobileTopBar } from '../components/Layout'
 import { CategoryBar } from '../components/CategoryBar'
 import { ArrowLeftIcon, ExternalIcon, RefreshIcon, RocketIcon, SearchIcon, TrendDownIcon, TrendUpIcon, MessageIcon, HashIcon } from '../components/Icons'
 import { fetchPonsTokens, fetchPoolOhlc, findPonsToken, geckoPoolUrl, valuation, VENUE_LABEL, type PonsSnapshot, type PonsTimeframe, type PonsToken, type PonsVenue } from '../lib/robinhood'
-import { explorerAddress, PONS_APP } from '../lib/pons'
+import { explorerAddress, PONS_APP, readTokenLogo } from '../lib/pons'
+import type { Address } from 'viem'
 import { CHART_PALETTE, CHART_LONG, CHART_SHORT, CHART_LONG_VOL, CHART_SHORT_VOL, chartOptions } from '../lib/chartTheme'
 import { useUI } from '../store/ui'
 import { useAuth } from '../store/auth'
@@ -162,7 +163,18 @@ function TokenList({ snap, loading, error, reload }: ReturnType<typeof usePons>)
 
 function TokenLogo({ t, size = 40 }: { t: PonsToken; size?: number }) {
   const [broken, setBroken] = useState(false)
-  if (t.image && !broken) return <img src={t.image} alt="" width={size} height={size} className="shrink-0 rounded-full bg-surface-2 object-cover" style={{ width: size, height: size }} loading="lazy" onError={() => setBroken(true)} />
+  const [onchain, setOnchain] = useState<string | null>(null)
+  const needsOnchain = !t.image || broken
+  useEffect(() => {
+    if (!needsOnchain) return
+    let alive = true
+    readTokenLogo(t.address as Address).then((u) => alive && setOnchain(u))
+    return () => {
+      alive = false
+    }
+  }, [needsOnchain, t.address])
+  const src = !broken && t.image ? t.image : onchain
+  if (src) return <img src={src} alt="" width={size} height={size} className="shrink-0 rounded-full bg-surface-2 object-cover" style={{ width: size, height: size }} loading="lazy" onError={() => (src === t.image ? setBroken(true) : setOnchain(null))} />
   const hue = Array.from(t.address).reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7)
   return (
     <span className="grid shrink-0 place-items-center rounded-full font-display font-extrabold text-white" style={{ width: size, height: size, fontSize: size * 0.38, background: `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue + 50) % 360} 70% 45%))` }}>

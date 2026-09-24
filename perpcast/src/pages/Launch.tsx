@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Address } from 'viem'
 import { useAuth } from '../store/auth'
@@ -7,9 +7,9 @@ import { toast } from '../store/notify'
 import { PageHeader, Spinner, Empty } from '../components/ui'
 import { MobileTopBar } from '../components/Layout'
 import { CategoryBar } from '../components/CategoryBar'
-import { CheckIcon, ExternalIcon, RefreshIcon, RocketIcon, ShieldIcon, WalletIcon, ZapIcon, MessageIcon } from '../components/Icons'
+import { CheckIcon, ExternalIcon, ImageIcon, RefreshIcon, RocketIcon, ShieldIcon, WalletIcon, ZapIcon, MessageIcon } from '../components/Icons'
 import { CoinLogo } from '../components/CoinLogo'
-import { canLaunch, explorerAddress, explorerTx, fmtEth, fmtPair, launchToken, PAIR_KIND_LABEL, PONS_APP, PONS_DOCS, PONS_V2_FACTORY, readFactoryState, readPairEconomics, validAddress, validSymbol, type FactoryState, type LaunchProgress, type LaunchResult, type PairAsset, type PairEconomics, type PairKind } from '../lib/pons'
+import { canLaunch, explorerAddress, explorerTx, fmtEth, fmtPair, launchToken, logoUrls, PAIR_KIND_LABEL, PONS_APP, PONS_DOCS, PONS_V2_FACTORY, readFactoryState, readPairEconomics, validAddress, validSymbol, type FactoryState, type LaunchProgress, type LaunchResult, type PairAsset, type PairEconomics, type PairKind } from '../lib/pons'
 import { currentChainId, findWallet, ROBINHOOD_CHAIN, switchToRobinhoodChain } from '../lib/wallet'
 import { cx, shortAddr } from '../lib/format'
 import { useWalletBalances } from '../components/WalletFunds'
@@ -72,6 +72,9 @@ export default function Launch() {
   const pair = useMemo(() => pairs.find((p) => p.address === pairAddr) ?? pairs[0] ?? null, [pairs, pairAddr])
   const wallet = session ? findWallet(session.walletId) : undefined
   const wallet$ = useWalletBalances().data
+  const logoFileRef = useRef<HTMLInputElement>(null)
+  const [logoBusy, setLogoBusy] = useState(false)
+  const [logoError, setLogoError] = useState<string | null>(null)
   const feeRecipient = form.feeRecipient.trim() || me?.address || ''
 
   useEffect(() => {
@@ -118,13 +121,31 @@ export default function Launch() {
   }, [wallet, session?.chainId])
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }))
+  const onPickLogo = async (file: File | null) => {
+    if (logoFileRef.current) logoFileRef.current.value = ''
+    if (!file) return
+    setLogoError(null)
+    setLogoBusy(true)
+    try {
+      const blob = await squareLogo(file)
+      const r = await fetch('/api/upload', { method: 'POST', headers: { 'content-type': blob.type }, body: blob })
+      const body = (await r.json()) as { uri?: string; error?: string }
+      if (!r.ok || !body.uri) throw new Error(body.error ?? `Upload failed (${r.status})`)
+      set('logo', body.uri)
+      toast({ kind: 'success', title: 'Logo pinned to IPFS' })
+    } catch (e) {
+      setLogoError((e as Error).message)
+    } finally {
+      setLogoBusy(false)
+    }
+  }
 
   const problems = useMemo(() => {
     const p: string[] = []
     if (form.name.trim().length < 2 || form.name.trim().length > 32) p.push('Name must be 2–32 characters.')
     if (!validSymbol(form.symbol)) p.push('Ticker must be 2–10 letters/numbers.')
     if (form.description.length > 400) p.push('Description is too long (400 max).')
-    if (form.logo && !/^https?:\/\/.+\..+/i.test(form.logo.trim())) p.push('Logo must be an http(s) URL.')
+    if (form.logo && !/^(https?:\/\/.+\..+|ipfs:\/\/.+)/i.test(form.logo.trim())) p.push('Logo must be an http(s) or ipfs:// URL.')
     if (!validAddress(feeRecipient)) p.push('Fee recipient must be a valid address.')
     if (factory.state && (form.creatorTaxBps < 0 || form.creatorTaxBps > factory.state.maxCreatorTaxBps)) p.push(`Creator tax must be between 0 and ${factory.state.maxCreatorTaxBps / 100}%.`)
     if (!pair) p.push('Pick a pair asset.')
@@ -248,11 +269,16 @@ export default function Launch() {
               <Field label="Description" hint={`${form.description.length}/400`}>
                 <textarea className="input min-h-20 resize-y py-2" placeholder="What is this token about?" value={form.description} maxLength={400} onChange={(e) => set('description', e.target.value)} />
               </Field>
-              <Field label="Logo URL" hint="optional · https://…png">
+              <Field label="Logo" hint="optional · upload from device or paste a link">
                 <div className="flex items-center gap-2">
                   <LogoPreview url={form.logo} symbol={form.symbol} />
-                  <input className="input flex-1" placeholder="https://…/logo.png" value={form.logo} onChange={(e) => set('logo', e.target.value)} />
+                  <input ref={logoFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void onPickLogo(e.target.files?.[0] ?? null)} />
+                  <button type="button" className="btn btn-ghost !py-2 shrink-0 gap-1.5" disabled={logoBusy} onClick={() => logoFileRef.current?.click()}>
+                    {logoBusy ? <Spinner size={14} /> : <ImageIcon size={15} />} {logoBusy ? 'Uploading…' : 'Upload'}
+                  </button>
+                  <input className="input min-w-0 flex-1" placeholder="https://…/logo.png or ipfs://…" value={form.logo} onChange={(e) => set('logo', e.target.value)} />
                 </div>
+                {logoError && <p className="mt-1.5 text-xs text-short">{logoError}</p>}
               </Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Website" hint="optional">
@@ -513,21 +539,58 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function PairChip({ p, active, onClick }: { p: PairAsset; active: boolean; onClick: () => void }) {
   return (
     <button type="button" className={cx('chip !py-1.5 gap-2', active && 'chip-active')} onClick={onClick} aria-pressed={active}>
-      <CoinLogo coin={p.symbol} size={18} />
+      {p.logo ? <PairLogo src={p.logo} symbol={p.symbol} /> : <CoinLogo coin={p.symbol} size={18} />}
       <span className="font-semibold">{p.symbol}</span>
     </button>
   )
 }
 
+function PairLogo({ src, symbol }: { src: string; symbol: string }) {
+  const [broken, setBroken] = useState(false)
+  if (broken) return <CoinLogo coin={symbol} size={18} />
+  return <img src={src} alt="" width={18} height={18} className="shrink-0 rounded-full bg-surface-2 object-cover" style={{ width: 18, height: 18 }} loading="lazy" onError={() => setBroken(true)} />
+}
+
 function LogoPreview({ url, symbol, size = 40 }: { url: string; symbol: string; size?: number }) {
   const [broken, setBroken] = useState(false)
   useEffect(() => setBroken(false), [url])
-  const ok = url && /^https?:\/\//i.test(url) && !broken
+  const src = logoUrls(url)[0]
+  const ok = !!src && !broken
   return ok ? (
-    <img src={url} alt="" width={size} height={size} className="shrink-0 rounded-full bg-surface-2 object-cover" style={{ width: size, height: size }} onError={() => setBroken(true)} />
+    <img src={src} alt="" width={size} height={size} className="shrink-0 rounded-full bg-surface-2 object-cover" style={{ width: size, height: size }} onError={() => setBroken(true)} />
   ) : (
     <span className="grid shrink-0 place-items-center rounded-full bg-surface-2 font-display font-extrabold text-ink-3" style={{ width: size, height: size, fontSize: size * 0.36 }}>
       {(symbol || '?').slice(0, 2)}
     </span>
   )
+}
+
+/** Center-crops and downsizes the picked image to a 512px square so the pinned logo stays small. */
+function squareLogo(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const side = Math.min(img.width, img.height)
+      const out = Math.min(512, side)
+      const canvas = document.createElement('canvas')
+      canvas.width = out
+      canvas.height = out
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        URL.revokeObjectURL(url)
+        reject(new Error('Could not read image'))
+        return
+      }
+      ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, out, out)
+      URL.revokeObjectURL(url)
+      const type = file.type === 'image/png' || file.type === 'image/gif' ? 'image/png' : 'image/jpeg'
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not encode image'))), type, 0.9)
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('That file is not an image'))
+    }
+    img.src = url
+  })
 }
