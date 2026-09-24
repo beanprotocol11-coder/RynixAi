@@ -10,6 +10,8 @@ export const PONS_APP = 'https://pons.family'
 export const PONS_DOCS = 'https://docs.pons.family'
 export const NATIVE_ETH: Address = '0x0000000000000000000000000000000000000000'
 const CG = 'https://coin-images.coingecko.com/coins/images'
+/** Company/fund logos for Robinhood tokenized stocks & ETFs (the CoinGecko art is just the Robinhood feather). */
+const PARQET = 'https://assets.parqet.com/logos/symbol'
 export const USDG_LOGO = `${CG}/51281/large/GDN_USDG_Token_200x200.png`
 
 export const PONS_ABI = parseAbi([
@@ -47,18 +49,18 @@ export interface PairAsset {
 export const PAIR_CANDIDATES: PairAsset[] = [
   { address: NATIVE_ETH, symbol: 'ETH', name: 'Ether', kind: 'native', decimals: 18, logo: 'https://coin-images.coingecko.com/coins/images/279/large/ethereum.png' },
   { address: '0x5fc5360d0400a0fd4f2af552add042d716f1d168', symbol: 'USDG', name: 'Global Dollar', kind: 'stable', decimals: 6, logo: USDG_LOGO },
-  { address: '0x322f0929c4625ed5bad873c95208d54e1c003b2d', symbol: 'TSLA', name: 'Tesla • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174112/large/0x322f0929c4625ed5bad873c95208d54e1c003b2d.png` },
-  { address: '0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec', symbol: 'NVDA', name: 'NVIDIA • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174110/large/0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec.png` },
-  { address: '0xaf3d76f1834a1d425780943c99ea8a608f8a93f9', symbol: 'AAPL', name: 'Apple • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174123/large/0xaf3d76f1834a1d425780943c99ea8a608f8a93f9.png` },
-  { address: '0xe93237c50d904957cf27e7b1133b510c669c2e74', symbol: 'MSFT', name: 'Microsoft • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174116/large/0xe93237c50d904957cf27e7b1133b510c669c2e74.png` },
-  { address: '0x12f190a9f9d7d37a250758b26824b97ce941bf54', symbol: 'AMZN', name: 'Amazon • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174126/large/0x12f190a9f9d7d37a250758b26824b97ce941bf54.png` },
-  { address: '0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3', symbol: 'GOOGL', name: 'Alphabet Class A • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174124/large/0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3.png` },
-  { address: '0xc0d6457c16cc70d6790dd43521c899c87ce02f35', symbol: 'META', name: 'Meta Platforms • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174122/large/0xc0d6457c16cc70d6790dd43521c899c87ce02f35.png` },
-  { address: '0xec262a75e413fafd0df80480274532c79d42da09', symbol: 'MSTR', name: 'Strategy Inc. • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174143/large/0xec262a75e413fafd0df80480274532c79d42da09.png` },
-  { address: '0x117cc2133c37b721f49de2a7a74833232b3b4c0c', symbol: 'SPY', name: 'SPDR S&P 500 ETF • Robinhood Token', kind: 'etf', decimals: 18, logo: `${CG}/102174115/large/0x117cc2133c37b721f49de2a7a74833232b3b4c0c.png` },
-  { address: '0xd5f3879160bc7c32ebb4dc785f8a4f505888de68', symbol: 'QQQ', name: 'Invesco QQQ • Robinhood Token', kind: 'etf', decimals: 18, logo: `${CG}/102174119/large/0xd5f3879160bc7c32ebb4dc785f8a4f505888de68.png` },
-  { address: '0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e', symbol: 'GLD', name: 'SPDR Gold Trust • Robinhood Token', kind: 'rwa', decimals: 18, logo: `${CG}/102175452/large/GLD.png` },
-  { address: '0x92fd66527192e3e61d4ddd13322aa222de86f9b5', symbol: 'SGOV', name: 'iShares 0-3M Treasury Bond • Robinhood Token', kind: 'rwa', decimals: 18, logo: `${CG}/102174130/large/0x92fd66527192e3e61d4ddd13322aa222de86f9b5.png` },
+  { address: '0x322f0929c4625ed5bad873c95208d54e1c003b2d', symbol: 'TSLA', name: 'Tesla • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/TSLA?format=png` },
+  { address: '0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec', symbol: 'NVDA', name: 'NVIDIA • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/NVDA?format=png` },
+  { address: '0xaf3d76f1834a1d425780943c99ea8a608f8a93f9', symbol: 'AAPL', name: 'Apple • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/AAPL?format=png` },
+  { address: '0xe93237c50d904957cf27e7b1133b510c669c2e74', symbol: 'MSFT', name: 'Microsoft • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/MSFT?format=png` },
+  { address: '0x12f190a9f9d7d37a250758b26824b97ce941bf54', symbol: 'AMZN', name: 'Amazon • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/AMZN?format=png` },
+  { address: '0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3', symbol: 'GOOGL', name: 'Alphabet Class A • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/GOOGL?format=png` },
+  { address: '0xc0d6457c16cc70d6790dd43521c899c87ce02f35', symbol: 'META', name: 'Meta Platforms • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/META?format=png` },
+  { address: '0xec262a75e413fafd0df80480274532c79d42da09', symbol: 'MSTR', name: 'Strategy Inc. • Robinhood Token', kind: 'stock', decimals: 18, logo: `${PARQET}/MSTR?format=png` },
+  { address: '0x117cc2133c37b721f49de2a7a74833232b3b4c0c', symbol: 'SPY', name: 'SPDR S&P 500 ETF • Robinhood Token', kind: 'etf', decimals: 18, logo: `${PARQET}/SPY?format=png` },
+  { address: '0xd5f3879160bc7c32ebb4dc785f8a4f505888de68', symbol: 'QQQ', name: 'Invesco QQQ • Robinhood Token', kind: 'etf', decimals: 18, logo: `${PARQET}/QQQ?format=png` },
+  { address: '0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e', symbol: 'GLD', name: 'SPDR Gold Trust • Robinhood Token', kind: 'rwa', decimals: 18, logo: `${PARQET}/GLD?format=png` },
+  { address: '0x92fd66527192e3e61d4ddd13322aa222de86f9b5', symbol: 'SGOV', name: 'iShares 0-3M Treasury Bond • Robinhood Token', kind: 'rwa', decimals: 18, logo: `${PARQET}/SGOV?format=png` },
 ]
 
 const IPFS_GATEWAYS = ['https://gateway.pinata.cloud/ipfs', 'https://ipfs.io/ipfs', 'https://cloudflare-ipfs.com/ipfs']

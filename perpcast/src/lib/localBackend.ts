@@ -181,6 +181,9 @@ export class LocalBackend implements Backend {
     if (patch.displayName !== undefined) u.displayName = patch.displayName
     if (patch.bio !== undefined) u.bio = patch.bio
     if (patch.pfp !== undefined) u.pfp = patch.pfp
+    if (patch.banner !== undefined) u.banner = patch.banner
+    if (patch.twitter !== undefined) u.twitter = patch.twitter
+    if (patch.website !== undefined) u.website = patch.website
     this.save()
     return this.user(id)
   }

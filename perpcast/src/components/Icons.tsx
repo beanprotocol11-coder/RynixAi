@@ -162,6 +162,11 @@ export const ImageIcon = (p: P) => (
     <path d="m21 16-5-5-9 9" />
   </svg>
 )
+export const XIcon = (p: P) => (
+  <svg {...base(p)} fill="currentColor" stroke="none">
+    <path d="M17.7 3h3.1l-6.8 7.8L22 21h-6.3l-4.9-6.4L5.2 21H2.1l7.3-8.3L1.8 3h6.4l4.4 5.9L17.7 3Zm-1.1 16.2h1.7L7.2 4.7H5.4l11.2 14.5Z" />
+  </svg>
+)
 export const LinkIcon = (p: P) => (
   <svg {...base(p)}>
     <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.5 1.5" />

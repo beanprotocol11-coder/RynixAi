@@ -152,7 +152,7 @@ route('POST', '/auth/logout', async (ctx) => {
 
 route('PATCH', '/me', async (ctx) => {
   const me = requireViewer(ctx)
-  const b = await body<{ username?: string; displayName?: string; bio?: string; pfp?: string }>(ctx.req)
+  const b = await body<{ username?: string; displayName?: string; bio?: string; pfp?: string; banner?: string; twitter?: string; website?: string }>(ctx.req)
   if (b.username !== undefined) {
     const u = str(b.username, 20).toLowerCase()
     if (!USERNAME_RE.test(u)) throw new HttpError(400, 'Username must be 3–20 chars: a–z, 0–9, _')
@@ -166,6 +166,17 @@ route('PATCH', '/me', async (ctx) => {
     const p = str(b.pfp, 500_000)
     if (p && !/^(https?:\/\/|data:image\/)/.test(p)) throw new HttpError(400, 'Avatar must be an image URL')
     await ctx.db.prepare('UPDATE users SET pfp = ? WHERE id = ?').bind(p, me.id).run()
+  }
+  if (b.banner !== undefined) {
+    const p = str(b.banner, 900_000)
+    if (p && !/^(https?:\/\/|data:image\/)/.test(p)) throw new HttpError(400, 'Banner must be an image URL')
+    await ctx.db.prepare('UPDATE users SET banner = ? WHERE id = ?').bind(p, me.id).run()
+  }
+  if (b.twitter !== undefined) await ctx.db.prepare('UPDATE users SET twitter = ? WHERE id = ?').bind(str(b.twitter, 30).replace(/^@/, '').trim(), me.id).run()
+  if (b.website !== undefined) {
+    const w = str(b.website, 200).trim()
+    if (w && !/^https?:\/\//.test(w)) throw new HttpError(400, 'Website must start with http(s)://')
+    await ctx.db.prepare('UPDATE users SET website = ? WHERE id = ?').bind(w, me.id).run()
   }
   return json({ user: await getUserById(ctx.db, me.id) })
 })

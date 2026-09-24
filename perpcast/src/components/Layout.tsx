@@ -16,6 +16,7 @@ import { cx, px, pct, usd, compact, shortAddr } from '../lib/format'
 import { ROBINHOOD_CHAIN, ROBINHOOD_TESTNET } from '../lib/wallet'
 import { useDMs } from '../store/dm'
 import { useAsync } from '../hooks/useAsync'
+import { useWalletBalances } from './WalletFunds'
 
 const NAV = [
   { to: '/', label: 'Home', icon: HomeIcon, end: true },
@@ -108,6 +109,7 @@ function Sidebar() {
           {theme === 'dark' ? <SunIcon size={22} /> : <MoonIcon size={22} />}
           <span className="hidden xl:inline">{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
         </button>
+        {me && <WalletChip className="hidden self-start xl:inline-flex" />}
         {me ? (
           <Menu
             align="left"
@@ -156,32 +158,69 @@ function MobileNav() {
   const openSignIn = useAuth((s) => s.openSignIn)
   const openComposer = useUI((s) => s.openComposer)
   const unread = useNotify((s) => s.notifications.filter((n) => !n.read).length)
-  const items = [NAV[0], NAV[1], NAV[3], NAV[5]]
+  const item = (isActive: boolean) =>
+    cx('group relative flex h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl text-[10px] font-semibold transition-colors', isActive ? 'text-accent' : 'text-ink-3 active:text-ink')
+  const dot = (isActive: boolean) => <span className={cx('absolute -bottom-0.5 h-1 w-1 rounded-full bg-accent transition-opacity', isActive ? 'opacity-100' : 'opacity-0')} />
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 glass border-t border-line md:hidden">
-      <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
-        {items.slice(0, 2).map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => cx('flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold', isActive ? 'text-accent' : 'text-ink-3')}>
-            <n.icon size={22} />
-            {n.label}
-          </NavLink>
-        ))}
-        <button className="btn btn-primary -mt-6 h-12 w-12 !p-0 shadow-pop" onClick={() => (me ? openComposer() : openSignIn('Sign in to cast.'))} aria-label="New cast">
-          <PlusIcon size={22} />
-        </button>
-        {items.slice(2).map((n) => (
-          <NavLink key={n.to} to={n.to} className={({ isActive }) => cx('relative flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold', isActive ? 'text-accent' : 'text-ink-3')}>
-            <n.icon size={22} />
-            {n.label}
-            {n.to === '/notifications' && unread > 0 && <span className="absolute right-2 top-0 h-2 w-2 rounded-full bg-accent" />}
-          </NavLink>
-        ))}
-        <NavLink to={me ? '/portfolio' : '/profile'} className={({ isActive }) => cx('flex flex-col items-center gap-0.5 px-3 py-1 text-[10px] font-semibold', isActive ? 'text-accent' : 'text-ink-3')}>
-          {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={22} /> : <UserIcon size={22} />}
-          {me ? 'Portfolio' : 'Sign in'}
+    <nav className="fixed inset-x-0 bottom-0 z-40 md:hidden">
+      <div className="glass mx-auto flex h-[60px] max-w-md items-stretch justify-between rounded-t-[22px] border border-b-0 border-line px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_-12px_rgba(0,0,0,.45)]">
+        <NavLink to="/" end className={({ isActive }) => item(isActive)}>
+          <HomeIcon size={23} />
+          Home
+          {dot(false)}
+        </NavLink>
+        <NavLink to="/trade" className={({ isActive }) => item(isActive)}>
+          <ChartIcon size={23} />
+          Trade
+        </NavLink>
+        <div className="flex flex-1 items-center justify-center">
+          <button
+            className="-mt-7 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent-2 text-white shadow-pop ring-4 ring-bg transition-transform active:scale-95"
+            onClick={() => (me ? openComposer() : openSignIn('Sign in to cast.'))}
+            aria-label="New cast"
+          >
+            <PlusIcon size={26} />
+          </button>
+        </div>
+        <NavLink to="/notifications" className={({ isActive }) => item(isActive)}>
+          <span className="relative">
+            <BellIcon size={23} />
+            {unread > 0 && (
+              <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-white ring-2 ring-bg">
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
+          </span>
+          Alerts
+        </NavLink>
+        <NavLink to={me ? '/portfolio' : '/profile'} className={({ isActive }) => item(isActive)}>
+          {me ? (
+            <span className="rounded-full ring-2 ring-transparent transition-shadow group-[.text-accent]:ring-accent">
+              <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={24} />
+            </span>
+          ) : (
+            <UserIcon size={23} />
+          )}
+          {me ? 'Wallet' : 'Sign in'}
         </NavLink>
       </div>
     </nav>
+  )
+}
+
+/** Compact live balance (Hyperliquid + Robinhood Chain) for the connected wallet. */
+export function WalletChip({ className }: { className?: string }) {
+  const me = useAuth((s) => s.user)
+  const { data } = useWalletBalances()
+  const mids = useMarket((s) => s.mids)
+  if (!me) return null
+  const eth = Number(mids['ETH'] ?? 0)
+  const total = data ? data.hlAccountValue + data.hlSpotUsdc + data.rhUsdg + data.arbUsdc + data.rhEth * eth : null
+  return (
+    <Link to="/portfolio" className={cx('chip mono !gap-1.5 !py-1 text-xs tabular-nums', className)} title="Your wallet balance (live)">
+      <span className="inline-block h-1.5 w-1.5 rounded-full bg-long" />
+      {total === null ? '…' : usd(total)}
+    </Link>
   )
 }
 
@@ -197,6 +236,7 @@ export function MobileTopBar({ title }: { title?: React.ReactNode }) {
         {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={32} /> : <Logo size={44} className="logo-glow" />}
       </button>
       <div className="flex-1 text-center">{title ?? <Wordmark />}</div>
+      <WalletChip />
       <button className="icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
         {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
       </button>

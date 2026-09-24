@@ -5,7 +5,7 @@ import { Avatar, PageHeader, Tabs, Empty, Skeleton } from '../components/ui'
 import { BackBtn } from './Channel'
 import { CastText } from '../components/CastText'
 import { explorerUrl } from '../components/Layout'
-import { ExternalIcon, MessageIcon, ShareIcon, UserIcon, WalletIcon, ShieldIcon, CopyIcon } from '../components/Icons'
+import { ExternalIcon, MessageIcon, ShareIcon, UserIcon, WalletIcon, ShieldIcon, CopyIcon, XIcon, GlobeIcon } from '../components/Icons'
 import { api } from '../lib/api'
 import { userPath, type User } from '../lib/social'
 import { displaySymbol } from '../lib/hyperliquid'
@@ -99,9 +99,15 @@ export default function Profile() {
   return (
     <div>
       <PageHeader title={name} sub={`@${user.username}`} back={<BackBtn />} />
-      <div className="relative h-32 overflow-hidden">
-        <div className="absolute inset-0 dot-grid opacity-70" />
-        <div className="absolute inset-0" style={{ background: `linear-gradient(120deg, hsl(${hue} 45% 45% / .45), var(--accent-soft), transparent)` }} />
+      <div className="relative h-32 overflow-hidden sm:h-40">
+        {user.banner ? (
+          <img src={user.banner} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : (
+          <>
+            <div className="absolute inset-0 dot-grid opacity-70" />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(120deg, hsl(${hue} 45% 45% / .45), var(--accent-soft), transparent)` }} />
+          </>
+        )}
       </div>
       <div className="px-4">
         <div className="-mt-11 flex items-end justify-between">
@@ -173,6 +179,20 @@ export default function Profile() {
           {user.bio && (
             <div className="mt-2">
               <CastText text={user.bio} className="!text-[15px] text-ink-2" />
+            </div>
+          )}
+          {(user.twitter || user.website) && (
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {user.twitter && (
+                <a href={`https://x.com/${user.twitter}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-accent hover:underline">
+                  <XIcon size={14} /> @{user.twitter}
+                </a>
+              )}
+              {user.website && (
+                <a href={user.website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-accent hover:underline">
+                  <GlobeIcon size={14} /> {user.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                </a>
+              )}
             </div>
           )}
           <div className="mt-3 flex flex-wrap gap-4 text-sm">

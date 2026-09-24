@@ -7,6 +7,9 @@ export interface User {
   displayName: string
   pfp: string
   bio: string
+  banner?: string
+  twitter?: string
+  website?: string
   createdAt: number
   followers: number
   following: number

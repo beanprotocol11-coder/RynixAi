@@ -23,6 +23,9 @@ export interface ProfilePatch {
   displayName?: string
   bio?: string
   pfp?: string
+  banner?: string
+  twitter?: string
+  website?: string
 }
 
 /** Everything the UI needs from a social backend. Implemented by the HTTP client (Pages Functions + D1) and by the localStorage fallback. */

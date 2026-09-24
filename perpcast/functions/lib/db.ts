@@ -31,6 +31,9 @@ export interface UserRow {
   display_name: string
   pfp: string
   bio: string
+  banner: string | null
+  twitter: string | null
+  website: string | null
   created_at: number
   followers?: number
   following?: number
@@ -44,6 +47,9 @@ export interface User {
   displayName: string
   pfp: string
   bio: string
+  banner: string
+  twitter: string
+  website: string
   createdAt: number
   followers: number
   following: number
@@ -85,7 +91,7 @@ export interface Cast {
 }
 
 export const USER_SELECT = `
-  u.id, u.address, u.username, u.display_name, u.pfp, u.bio, u.created_at,
+  u.id, u.address, u.username, u.display_name, u.pfp, u.bio, u.banner, u.twitter, u.website, u.created_at,
   (SELECT COUNT(*) FROM follows f WHERE f.followee_id = u.id) AS followers,
   (SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS following,
   (SELECT COUNT(*) FROM casts c WHERE c.author_id = u.id AND c.parent_id IS NULL) AS cast_count`
@@ -98,6 +104,9 @@ export function toUser(r: UserRow): User {
     displayName: r.display_name || r.username,
     pfp: r.pfp,
     bio: r.bio,
+    banner: r.banner ?? '',
+    twitter: r.twitter ?? '',
+    website: r.website ?? '',
     createdAt: r.created_at,
     followers: r.followers ?? 0,
     following: r.following ?? 0,
@@ -133,7 +142,7 @@ export async function getUsers(db: D1Database, ids: string[]): Promise<Map<strin
 
 function placeholderUser(id: string): User {
   const name = defaultUsername(id)
-  return { id, address: id, username: name, displayName: name, pfp: '', bio: '', createdAt: 0, followers: 0, following: 0, castCount: 0 }
+  return { id, address: id, username: name, displayName: name, pfp: '', bio: '', banner: '', twitter: '', website: '', createdAt: 0, followers: 0, following: 0, castCount: 0 }
 }
 
 /** Attach authors, parent authors, quotes and the viewer's reactions to raw cast rows. */

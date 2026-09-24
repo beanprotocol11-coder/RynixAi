@@ -7,7 +7,7 @@ import { useSocial } from '../store/social'
 import { useNotify } from '../store/notify'
 import { Avatar, PageHeader, Modal, ModalHeader, Spinner } from '../components/ui'
 import { MobileTopBar, explorerUrl } from '../components/Layout'
-import { SunIcon, MoonIcon, LogoutIcon, ExternalIcon, CopyIcon, ShieldIcon, TrashIcon, ImageIcon } from '../components/Icons'
+import { SunIcon, MoonIcon, LogoutIcon, ExternalIcon, CopyIcon, ShieldIcon, TrashIcon, ImageIcon, XIcon, GlobeIcon } from '../components/Icons'
 import { api } from '../lib/api'
 import { USERNAME_RE, userPath, type User } from '../lib/social'
 import { chainName, findWallet, ROBINHOOD_CHAIN, ROBINHOOD_TESTNET, switchToRobinhoodChain } from '../lib/wallet'
@@ -225,6 +225,21 @@ function ProfileForm({ me }: { me: User }) {
   const [displayName, setDisplayName] = useState(me.displayName)
   const [bio, setBio] = useState(me.bio)
   const [pfp, setPfp] = useState(me.pfp)
+  const [banner, setBanner] = useState(me.banner ?? '')
+  const [twitter, setTwitter] = useState(me.twitter ?? '')
+  const [website, setWebsite] = useState(me.website ?? '')
+  const bannerFileRef = useRef<HTMLInputElement>(null)
+  const [bannerError, setBannerError] = useState<string | null>(null)
+  const onPickBanner = async (file: File | null) => {
+    if (bannerFileRef.current) bannerFileRef.current.value = ''
+    if (!file) return
+    setBannerError(null)
+    try {
+      setBanner(await bannerDataUrl(file))
+    } catch (e) {
+      setBannerError((e as Error).message)
+    }
+  }
   const pfpFileRef = useRef<HTMLInputElement>(null)
   const [pfpError, setPfpError] = useState<string | null>(null)
   const onPickPfp = async (file: File | null) => {
@@ -244,17 +259,31 @@ function ProfileForm({ me }: { me: User }) {
     setDisplayName(me.displayName)
     setBio(me.bio)
     setPfp(me.pfp)
+    setBanner(me.banner ?? '')
+    setTwitter(me.twitter ?? '')
+    setWebsite(me.website ?? '')
   }, [me])
 
   const uname = username.trim().toLowerCase()
   const validName = USERNAME_RE.test(uname)
-  const dirty = uname !== me.username || displayName.trim() !== me.displayName || bio.trim() !== me.bio || pfp.trim() !== me.pfp
+  const handle = twitter.trim().replace(/^@/, '').replace(/^(https?:\/\/)?(www\.)?(x|twitter)\.com\//i, '').replace(/\/.*$/, '')
+  const validHandle = handle === '' || /^[A-Za-z0-9_]{1,15}$/.test(handle)
+  const site = website.trim()
+  const validSite = site === '' || /^https?:\/\/\S+\.\S+$/.test(site)
+  const dirty =
+    uname !== me.username ||
+    displayName.trim() !== me.displayName ||
+    bio.trim() !== me.bio ||
+    pfp.trim() !== me.pfp ||
+    banner.trim() !== (me.banner ?? '') ||
+    handle !== (me.twitter ?? '') ||
+    site !== (me.website ?? '')
 
   const save = async () => {
-    if (!validName || busy) return
+    if (!validName || !validHandle || !validSite || busy) return
     setBusy(true)
     try {
-      const u = await api().updateProfile({ username: uname, displayName: displayName.trim(), bio: bio.trim(), pfp: pfp.trim() })
+      const u = await api().updateProfile({ username: uname, displayName: displayName.trim(), bio: bio.trim(), pfp: pfp.trim(), banner: banner.trim(), twitter: handle, website: site })
       setUser(u)
       toast({ kind: 'success', title: 'Profile updated' })
     } catch (e) {
@@ -272,6 +301,29 @@ function ProfileForm({ me }: { me: User }) {
         void save()
       }}
     >
+      <div className="text-sm">
+        <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-3">Banner</span>
+        <div className="relative h-28 overflow-hidden rounded-xl border border-line bg-bg-2">
+          {banner.trim() ? (
+            <img src={banner.trim()} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 dot-grid opacity-70" />
+          )}
+          <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/60 to-transparent p-2">
+            <input ref={bannerFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void onPickBanner(e.target.files?.[0] ?? null)} />
+            <button type="button" className="btn btn-ghost !py-1.5 !text-xs gap-1.5 !bg-black/40 !text-white" onClick={() => bannerFileRef.current?.click()}>
+              <ImageIcon size={14} /> Upload banner
+            </button>
+            {banner && (
+              <button type="button" className="icon-btn !bg-black/40 !text-white" title="Remove banner" aria-label="Remove banner" onClick={() => setBanner('')}>
+                <TrashIcon size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+        <p className="mt-1 text-xs text-ink-3">Recommended 3:1 (e.g. 1500×500). Saved when you press Save profile.</p>
+        {bannerError && <p className="mt-1 text-xs text-short">{bannerError}</p>}
+      </div>
       <div className="flex items-center gap-4">
         <Avatar src={pfp.trim()} name={displayName || uname} seed={me.id} size={64} />
         <div className="min-w-0 flex-1 text-sm">
@@ -311,8 +363,30 @@ function ProfileForm({ me }: { me: User }) {
         <textarea className="input min-h-[72px] resize-y" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={160} placeholder="What do you trade?" />
         <span className="mt-1 block text-right text-xs text-ink-3">{bio.length}/160</span>
       </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="text-sm">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-3">X (Twitter)</span>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3"><XIcon size={14} /></span>
+            <input className={cx('input !pl-9', !validHandle && 'border-short')} value={twitter} onChange={(e) => setTwitter(e.target.value)} maxLength={60} spellCheck={false} placeholder="username or x.com/username" />
+          </div>
+          {!validHandle ? (
+            <span className="mt-1 block text-xs text-short">1–15 letters, numbers or underscores.</span>
+          ) : handle ? (
+            <span className="mt-1 block text-xs text-ink-3">Shown on your profile as a link to x.com/{handle}.</span>
+          ) : null}
+        </label>
+        <label className="text-sm">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-3">Website</span>
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-3"><GlobeIcon size={14} /></span>
+            <input className={cx('input !pl-9', !validSite && 'border-short')} value={website} onChange={(e) => setWebsite(e.target.value)} maxLength={200} spellCheck={false} placeholder="https://" />
+          </div>
+          {!validSite && <span className="mt-1 block text-xs text-short">Must start with http:// or https://</span>}
+        </label>
+      </div>
       <div className="flex justify-end">
-        <button type="submit" className="btn btn-primary !py-2" disabled={!dirty || !validName || busy}>
+        <button type="submit" className="btn btn-primary !py-2" disabled={!dirty || !validName || !validHandle || !validSite || busy}>
           {busy ? <Spinner /> : 'Save profile'}
         </button>
       </div>
@@ -330,6 +404,35 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /** Center-crops an avatar to a 256px square JPEG data URL (fits the 500 KB profile limit). */
+function bannerDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const W = Math.min(1200, img.width)
+      const H = Math.round(W / 3)
+      const srcH = Math.min(img.height, img.width / 3)
+      const srcW = srcH * 3
+      const canvas = document.createElement('canvas')
+      canvas.width = W
+      canvas.height = H
+      const ctx = canvas.getContext('2d')
+      URL.revokeObjectURL(url)
+      if (!ctx) {
+        reject(new Error('Could not read image'))
+        return
+      }
+      ctx.drawImage(img, (img.width - srcW) / 2, (img.height - srcH) / 2, srcW, srcH, 0, 0, W, H)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('That file is not an image'))
+    }
+    img.src = url
+  })
+}
+
 function avatarDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
