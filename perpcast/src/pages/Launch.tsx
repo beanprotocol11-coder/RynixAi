@@ -12,6 +12,7 @@ import { CoinLogo } from '../components/CoinLogo'
 import { canLaunch, explorerAddress, explorerTx, fmtEth, fmtPair, launchToken, PAIR_KIND_LABEL, PONS_APP, PONS_DOCS, PONS_V2_FACTORY, readFactoryState, readPairEconomics, validAddress, validSymbol, type FactoryState, type LaunchProgress, type LaunchResult, type PairAsset, type PairEconomics, type PairKind } from '../lib/pons'
 import { currentChainId, findWallet, ROBINHOOD_CHAIN, switchToRobinhoodChain } from '../lib/wallet'
 import { cx, shortAddr } from '../lib/format'
+import { useWalletBalances } from '../components/WalletFunds'
 
 const KIND_ORDER: PairKind[] = ['native', 'stable', 'stock', 'etf', 'rwa']
 
@@ -70,6 +71,7 @@ export default function Launch() {
   const pairs = useMemo(() => factory.state?.pairs ?? [], [factory.state])
   const pair = useMemo(() => pairs.find((p) => p.address === pairAddr) ?? pairs[0] ?? null, [pairs, pairAddr])
   const wallet = session ? findWallet(session.walletId) : undefined
+  const wallet$ = useWalletBalances().data
   const feeRecipient = form.feeRecipient.trim() || me?.address || ''
 
   useEffect(() => {
@@ -330,6 +332,14 @@ export default function Launch() {
               <dl className="mt-4 grid grid-cols-[1fr_auto] gap-y-2 text-sm">
                 <dt className="text-ink-3">Launch fee</dt>
                 <dd className="mono text-right font-semibold">{fmtEth(factory.state.launchFee)}</dd>
+                {me && (
+                  <>
+                    <dt className="text-ink-3">Your ETH (Robinhood Chain)</dt>
+                    <dd className={cx('mono text-right', wallet$ && Number(factory.state.launchFee) / 1e18 > wallet$.rhEth && 'text-short')}>
+                      {wallet$ ? `${wallet$.rhEth.toFixed(5)} ETH` : '…'}
+                    </dd>
+                  </>
+                )}
                 <dt className="text-ink-3">Supply</dt>
                 <dd className="mono text-right">{Number(factory.state.configs[configId]?.supply ?? 0n) / 1e18 >= 1e9 ? '1B' : (Number(factory.state.configs[configId]?.supply ?? 0n) / 1e18).toLocaleString()}</dd>
                 <dt className="text-ink-3">Curve fee</dt>

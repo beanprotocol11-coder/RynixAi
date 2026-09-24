@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Avatar, Modal, Menu, MenuItem } from './ui'
 import { CastText } from './CastText'
 import { QuoteCard, PositionCard, castPath } from './CastCard'
-import { ChartIcon, ChevronDownIcon, CloseIcon, HashIcon, ImageIcon, GlobeIcon } from './Icons'
+import { ChartIcon, ChevronDownIcon, CloseIcon, HashIcon, ImageIcon, GlobeIcon, LinkIcon } from './Icons'
 import { CHANNELS, channelById, marketOfChannel, type PositionEmbed } from '../lib/social'
 import { useAuth } from '../store/auth'
 import { useSocial } from '../store/social'
@@ -141,6 +141,7 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
       setImgInput(null)
     } catch (e) {
       setImgError((e as Error).message)
+      toast({ kind: 'error', title: 'Could not add image', body: (e as Error).message })
     } finally {
       setImgBusy(false)
       if (fileRef.current) fileRef.current.value = ''
@@ -340,8 +341,11 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
                 )}
               </Menu>
             )}
-            <button className={cx('icon-btn text-accent', imgInput !== null && 'bg-accent/10')} type="button" title="Add image" aria-label="Add image" onClick={() => { setImgError(null); setImgInput((v) => (v === null ? '' : null)) }}>
+            <button className="icon-btn text-accent" type="button" title="Upload photo from device" aria-label="Upload photo from device" disabled={imgBusy || images.length >= MAX_IMAGES} onClick={() => { setImgError(null); fileRef.current?.click() }}>
               <ImageIcon size={19} />
+            </button>
+            <button className={cx('icon-btn text-accent', imgInput !== null && 'bg-accent/10')} type="button" title="Add image by link" aria-label="Add image by link" onClick={() => { setImgError(null); setImgInput((v) => (v === null ? '' : null)) }}>
+              <LinkIcon size={19} />
             </button>
             <Menu
               align="left"

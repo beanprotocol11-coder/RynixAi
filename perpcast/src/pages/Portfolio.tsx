@@ -9,7 +9,8 @@ import { Desk } from '../components/TradePanels'
 import { CoinLogo } from '../components/CoinLogo'
 import { PageHeader, Modal, ModalHeader, Empty } from '../components/ui'
 import { MobileTopBar } from '../components/Layout'
-import { WalletIcon, RefreshIcon, PlusIcon, ChartIcon } from '../components/Icons'
+import { RefreshIcon, ChartIcon } from '../components/Icons'
+import { WalletFunds } from '../components/WalletFunds'
 import { cx, usd, pct, compact } from '../lib/format'
 
 export default function Portfolio() {
@@ -51,37 +52,30 @@ export default function Portfolio() {
       <div className="hidden md:block">
         <PageHeader
           title="Portfolio"
-          sub="Paper trading desk · live marks from Hyperliquid"
-          right={
-            <div className="flex gap-2">
-              <button className="btn btn-ghost !py-2 gap-1.5" onClick={() => setResetOpen(true)}>
-                <RefreshIcon size={15} /> Reset
-              </button>
-              <button className="btn btn-primary !py-2 gap-1.5" onClick={() => (me ? setDepositOpen(true) : openSignIn('Sign in to manage your desk.'))}>
-                <PlusIcon size={15} /> Deposit
-              </button>
-            </div>
-          }
+          sub="Real wallet balances · non-custodial"
         />
       </div>
 
       <div className="grid gap-3 p-4 sm:grid-cols-2">
-        <div className="card relative overflow-hidden p-5 sm:col-span-2">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-accent/15 blur-3xl" />
+        <WalletFunds className="sm:col-span-2" />
+
+        <div className="card p-5 sm:col-span-2">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wider text-ink-3">Total equity</div>
-              <div className="mono mt-1 text-4xl font-bold tabular-nums">{usd(equity)}</div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-ink-3">
+                Paper desk <span className="chip !py-0.5 text-[10px] normal-case tracking-normal">Simulated · practice only</span>
+              </div>
+              <div className="mono mt-1 text-3xl font-bold tabular-nums">{usd(equity)}</div>
               <div className={cx('mono mt-1 text-sm font-semibold', ret >= 0 ? 'text-long' : 'text-short')}>
-                {usd(equity - totalDeposited, { sign: true })} ({pct(ret)}) all time
+                {usd(equity - totalDeposited, { sign: true })} ({pct(ret)}) all time · live marks from Hyperliquid
               </div>
             </div>
-            <div className="flex gap-2 md:hidden">
-              <button className="btn btn-ghost !py-2" onClick={() => setResetOpen(true)}>
-                Reset
+            <div className="flex gap-2">
+              <button className="btn btn-ghost !py-2 gap-1.5" onClick={() => setResetOpen(true)}>
+                <RefreshIcon size={15} /> Reset
               </button>
-              <button className="btn btn-primary !py-2" onClick={() => (me ? setDepositOpen(true) : openSignIn('Sign in to manage your desk.'))}>
-                Deposit
+              <button className="btn btn-ghost !py-2" onClick={() => (me ? setDepositOpen(true) : openSignIn('Sign in to manage your desk.'))}>
+                Add paper funds
               </button>
             </div>
           </div>
@@ -138,18 +132,6 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {!me && (
-        <div className="mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-line bg-surface-2/50 p-4 text-sm">
-          <WalletIcon className="shrink-0 text-accent" />
-          <span className="flex-1">
-            Sign in to trade. Your desk starts with {usd(START_BALANCE)} of paper USDC and follows real Hyperliquid prices.
-          </span>
-          <button className="btn btn-primary !py-2" onClick={() => openSignIn()}>
-            Sign in
-          </button>
-        </div>
-      )}
-
       {positions.length + orders.length + fills.length === 0 ? (
         <Empty title="Your desk is empty" body="Head to the trading terminal to open your first position." icon={<ChartIcon />} action={<Link to="/trade" className="btn btn-primary">Open terminal</Link>} />
       ) : (
@@ -157,7 +139,7 @@ export default function Portfolio() {
       )}
 
       <Modal open={depositOpen} onClose={() => setDepositOpen(false)} size="sm" label="Deposit">
-        <ModalHeader title="Deposit paper USDC" sub="Simulated funds — nothing leaves your wallet" onClose={() => setDepositOpen(false)} />
+        <ModalHeader title="Add paper USDC" sub="Practice balance only — not real money. Use Deposit in the wallet card above for real funds." onClose={() => setDepositOpen(false)} />
         <div className="grid grid-cols-2 gap-2 px-5 pb-5">
           {[1_000, 5_000, 10_000, 50_000].map((a) => (
             <button
