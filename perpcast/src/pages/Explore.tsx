@@ -13,6 +13,7 @@ import { useAuth } from '../store/auth'
 import { useAsync } from '../hooks/useAsync'
 import { cx, px, pct, usd, shortAddr } from '../lib/format'
 import { MobileTopBar } from '../components/Layout'
+import { CategoryBar } from '../components/CategoryBar'
 import { Feed, feedLoader } from '../components/Feed'
 
 export default function Explore() {
@@ -27,6 +28,7 @@ export default function Explore() {
       <div className="px-4 py-3 lg:hidden">
         <SearchBox />
       </div>
+      {!q && <CategoryBar className="border-b border-line" />}
       {q ? <SearchResults q={q} /> : <Discover />}
     </div>
   )

@@ -138,7 +138,7 @@ export default function Settings() {
           <div className="grid grid-cols-2 gap-2">
             {(['light', 'dark'] as const).map((t) => (
               <button key={t} className={cx('flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors', theme === t ? 'border-accent bg-accent-soft text-accent' : 'border-line hover:bg-surface-hover')} onClick={() => setTheme(t)}>
-                {t === 'dark' ? <MoonIcon size={16} /> : <SunIcon size={16} />} {t === 'dark' ? 'Espresso' : 'Cream'}
+                {t === 'dark' ? <MoonIcon size={16} /> : <SunIcon size={16} />} {t === 'dark' ? 'Dark' : 'Light'}
               </button>
             ))}
           </div>

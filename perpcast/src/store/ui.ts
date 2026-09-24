@@ -29,7 +29,7 @@ function readTheme(): Theme {
   } catch {
     /* ignore */
   }
-  return 'light'
+  return 'dark'
 }
 
 function applyTheme(t: Theme) {
@@ -40,7 +40,7 @@ function applyTheme(t: Theme) {
     /* ignore */
   }
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.setAttribute('content', t === 'dark' ? '#1d140e' : '#f3e9d8')
+  if (meta) meta.setAttribute('content', t === 'dark' ? '#08060f' : '#fafafb')
 }
 
 export const useUI = create<UIState>()((set, get) => ({

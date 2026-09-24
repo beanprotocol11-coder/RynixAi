@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Feed, feedLoader } from '../components/Feed'
 import { ComposerBody } from '../components/Composer'
+import { CategoryBar } from '../components/CategoryBar'
 import { PageHeader, Empty, ChannelIcon } from '../components/ui'
 import { ArrowLeftIcon, ArrowRightIcon, HashIcon, ShareIcon } from '../components/Icons'
 import { channelById, CHANNELS } from '../lib/social'
@@ -92,6 +93,7 @@ export default function Channel() {
           </div>
         </div>
       </div>
+      <CategoryBar className="border-b border-line" />
       <div className="flex gap-2 overflow-x-auto no-scrollbar border-b border-line px-4 py-2.5">
         {CHANNELS.map((c) => (
           <button key={c.id} className={cx('chip shrink-0', c.id === id && 'chip-active')} onClick={() => nav(`/channel/${c.id}`)}>

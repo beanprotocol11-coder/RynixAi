@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Modal, ModalHeader, Spinner, Logo } from './ui'
-import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon } from './Icons'
+import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon, ArrowUpRightIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { toast, notify } from '../store/notify'
 import { api } from '../lib/api'
-import { chainName, currentChainId, discoverWallets, isMobile, MOBILE_WALLETS, onAccountsChanged, onChainChanged, requestAccounts, signMessage, walletIcon, type WalletOption } from '../lib/wallet'
+import { brandWallet, chainName, currentChainId, discoverWallets, isMobile, onAccountsChanged, onChainChanged, requestAccounts, signMessage, unbrandedWallets, WALLET_BRANDS, walletIcon, type WalletOption } from '../lib/wallet'
 import { shortAddr, cx } from '../lib/format'
 
 type Phase = 'idle' | 'connecting' | 'signing' | 'verifying' | 'done'
@@ -44,11 +44,12 @@ function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void 
   const [phase, setPhase] = useState<Phase>('idle')
   const [error, setError] = useState<string | null>(null)
   const alive = useRef(true)
+  const lastWallet = useRef<WalletOption | null>(null)
 
   useEffect(() => {
     alive.current = true
     const off = discoverWallets(setWallets)
-    const t = setTimeout(() => setScanned(true), 400)
+    const t = setTimeout(() => setScanned(true), 600)
     return () => {
       alive.current = false
       off()
@@ -57,6 +58,7 @@ function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void 
   }, [])
 
   const connect = async (w: WalletOption) => {
+    lastWallet.current = w
     setBusy(w.id)
     setError(null)
     try {
@@ -103,72 +105,36 @@ function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void 
           Perpcast is built on <b className="text-ink">Robinhood Chain</b>. Any EVM wallet works — you can switch networks later in Settings.
         </span>
       </div>
-      <div className="px-5 pb-5 space-y-2">
-        {wallets.map((w) => {
-          const icon = walletIcon(w)
-          return (
-            <button key={w.id} disabled={!!busy} onClick={() => void connect(w)} className={cx('flex w-full items-center gap-3 rounded-2xl border border-line bg-surface-2 p-3 text-left transition-all hover:border-line-strong hover:bg-surface-hover disabled:opacity-60', busy === w.id && 'ring-2 ring-accent/40')}>
-              {icon ? <img src={icon} alt="" className="h-10 w-10 rounded-xl" /> : <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink text-bg"><WalletIcon size={18} /></span>}
-              <span className="flex-1 min-w-0">
-                <span className="block font-semibold">{w.name}</span>
-                <span className="block text-xs text-ink-3">{busy === w.id ? PHASE_LABEL[phase] : w.rdns ?? 'Injected wallet'}</span>
-              </span>
-              {busy === w.id ? <Spinner size={16} /> : <span className="text-xs text-ink-3 flex items-center gap-1"><ZapIcon size={12} /> Detected</span>}
-            </button>
-          )
-        })}
-
-        {wallets.length === 0 && !scanned && (
-          <div className="flex items-center justify-center gap-2 py-6 text-sm text-ink-3">
-            <Spinner size={16} /> Looking for wallets…
+      <div className="px-5 pb-5 space-y-3">
+        {!scanned && wallets.length === 0 && (
+          <div className="flex items-center justify-center gap-2 py-2 text-xs text-ink-3">
+            <Spinner size={14} /> Looking for wallets…
           </div>
         )}
 
-        {wallets.length === 0 && scanned && mobile && (
-          <div className="space-y-2">
-            <p className="px-1 text-xs text-ink-3">No wallet detected in this browser. Open Perpcast inside your wallet app:</p>
-            {MOBILE_WALLETS.map((m) => (
-              <a key={m.id} href={m.link(here)} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface-2 p-3 text-left transition-all hover:border-line-strong hover:bg-surface-hover">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink text-bg"><WalletIcon size={18} /></span>
-                <span className="flex-1 font-semibold">{m.name}</span>
-                <ExternalIcon size={16} className="text-ink-3" />
-              </a>
-            ))}
-          </div>
+        <WalletGrid wallets={wallets} busy={busy} phase={phase} mobile={mobile} url={here} onConnect={(w) => void connect(w)} />
+
+        {scanned && wallets.length === 0 && (
+          <p className="px-1 text-center text-xs text-ink-3">
+            {mobile ? 'No wallet detected in this browser — tap a wallet to open Perpcast inside its app.' : 'No browser wallet detected — install one above, or open Perpcast on your phone.'}
+          </p>
         )}
 
-        {wallets.length === 0 && scanned && !mobile && (
-          <div className="rounded-2xl border border-dashed border-line-strong p-5 text-center">
-            <WalletIcon size={26} className="mx-auto text-ink-3" />
-            <p className="mt-2 text-sm font-semibold">No wallet detected</p>
-            <p className="mt-1 text-xs text-ink-3">Install a browser wallet like MetaMask or Rabby, or open Perpcast on your phone in a wallet app.</p>
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              <a className="btn btn-outline !py-1.5 text-xs" href="https://metamask.io/download/" target="_blank" rel="noreferrer">
-                Get MetaMask <ExternalIcon size={14} />
-              </a>
-              <a className="btn btn-outline !py-1.5 text-xs" href="https://rabby.io" target="_blank" rel="noreferrer">
-                Get Rabby <ExternalIcon size={14} />
-              </a>
-              <button className="btn btn-outline !py-1.5 text-xs" onClick={onQr}>
-                <QrIcon size={14} /> Open on phone
-              </button>
-            </div>
-          </div>
-        )}
-
-        {wallets.length > 0 && !mobile && (
+        {!mobile && (
           <button className="btn btn-ghost w-full text-sm" onClick={onQr}>
             <QrIcon size={16} /> Use a mobile wallet instead
           </button>
         )}
 
         {error && (
-          <p className="flex items-center justify-between gap-2 rounded-xl bg-short/10 px-3 py-2 text-sm text-short">
+          <div className="flex items-center justify-between gap-2 rounded-xl bg-short/10 px-3 py-2 text-sm text-short">
             <span>{error}</span>
-            <button className="icon-btn !h-7 !w-7" onClick={() => setError(null)} aria-label="Dismiss">
-              <RefreshIcon size={14} />
-            </button>
-          </p>
+            {lastWallet.current && (
+              <button className="btn btn-outline !py-1 text-xs shrink-0" disabled={!!busy} onClick={() => lastWallet.current && void connect(lastWallet.current)}>
+                <RefreshIcon size={12} /> Try again
+              </button>
+            )}
+          </div>
         )}
 
         <p className="pt-1 text-center text-[11px] leading-relaxed text-ink-3">
@@ -192,10 +158,15 @@ function QrStep({ onBack }: { onBack: () => void }) {
         <span className="font-display font-bold">Open on your phone</span>
       </div>
       <div className="px-5 pb-5 pt-2 flex flex-col items-center text-center">
-        <div className="rounded-2xl bg-[#fbf5ea] p-3 shadow-card">
-          <QRCodeSVG value={url} size={200} level="M" bgColor="#fbf5ea" fgColor="#2b1d14" imageSettings={{ src: '/logo.svg', height: 44, width: 44, excavate: true }} />
+        <div className="rounded-2xl bg-white p-3 shadow-card">
+          <QRCodeSVG value={url} size={200} level="M" bgColor="#ffffff" fgColor="#0f1014" imageSettings={{ src: '/logo.svg', height: 44, width: 44, excavate: true }} />
         </div>
-        <p className="mt-4 text-sm text-ink-2">Scan with your phone, then open the link inside MetaMask, Trust, Coinbase Wallet, Rainbow, Phantom or OKX to sign in.</p>
+        <p className="mt-4 text-sm text-ink-2">Scan with your phone, then open the link inside your wallet app's browser to sign in.</p>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          {WALLET_BRANDS.filter((b) => b.mobile).map((m) => (
+            <img key={m.id} src={m.icon} alt={m.name} title={m.name} className="h-7 w-7 rounded-lg" />
+          ))}
+        </div>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           <button
             className="btn btn-outline"
@@ -215,6 +186,61 @@ function QrStep({ onBack }: { onBack: () => void }) {
   )
 }
 
+function WalletGrid({ wallets, busy, phase, mobile, url, onConnect }: { wallets: WalletOption[]; busy: string | null; phase: Phase; mobile: boolean; url: string; onConnect: (w: WalletOption) => void }) {
+  const extra = unbrandedWallets(wallets)
+  const cards = [
+    ...WALLET_BRANDS.map((b) => ({ brand: b, wallet: brandWallet(b, wallets) })),
+    ...extra.map((w) => ({ brand: null, wallet: w })),
+  ].sort((a, b) => Number(!!b.wallet) - Number(!!a.wallet))
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {cards.map(({ brand, wallet }) => {
+        const key = brand?.id ?? wallet!.id
+        const name = brand?.name ?? wallet!.name
+        const icon = brand?.icon ?? (wallet ? walletIcon(wallet) : '')
+        const isBusy = !!wallet && busy === wallet.id
+        const inner = (
+          <>
+            {icon ? <img src={icon} alt="" className="h-10 w-10 rounded-xl" /> : <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-ink text-bg"><WalletIcon size={18} /></span>}
+            <span className="mt-2 block w-full truncate text-sm font-semibold">{name}</span>
+            <span className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-ink-3">
+              {isBusy ? (
+                <Spinner size={11} />
+              ) : wallet ? (
+                <>
+                  <ZapIcon size={11} className="text-long" /> Detected
+                </>
+              ) : mobile && brand?.mobile ? (
+                <>
+                  Open app <ArrowUpRightIcon size={11} />
+                </>
+              ) : (
+                <>
+                  Install <ExternalIcon size={11} />
+                </>
+              )}
+            </span>
+          </>
+        )
+        const cls = cx('wallet-card', wallet && 'wallet-card-live', isBusy && 'ring-2 ring-accent/40')
+        if (wallet) {
+          return (
+            <button key={key} disabled={!!busy} onClick={() => onConnect(wallet)} className={cls} title={isBusy ? PHASE_LABEL[phase] : `Connect ${name}`}>
+              {inner}
+            </button>
+          )
+        }
+        const href = mobile && brand?.mobile ? brand.mobile(url) : brand?.install
+        return (
+          <a key={key} href={href} target={mobile && brand?.mobile ? undefined : '_blank'} rel="noreferrer" className={cls}>
+            {inner}
+          </a>
+        )
+      })}
+    </div>
+  )
+}
+
 /** Keeps the session in sync with the wallet: signs out when the account changes, tracks chain switches. */
 export function WalletSessionWatcher() {
   const session = useAuth((s) => s.session)
@@ -226,7 +252,7 @@ export function WalletSessionWatcher() {
     let offA = () => {}
     let offC = () => {}
     const stop = discoverWallets((ws) => {
-      const w = ws.find((x) => x.id === session.walletId)
+      const w = ws.find((x) => x.id === session.walletId) ?? ws.find((x) => x.name === session.walletName)
       if (!w) return
       offA()
       offC()

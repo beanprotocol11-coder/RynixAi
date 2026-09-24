@@ -1,13 +1,43 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cx } from '../lib/format'
 import type { Channel } from '../lib/social'
 import { CloseIcon } from './Icons'
 import { useNotify } from '../store/notify'
 
-/** Transparent brand mark — no box, no background; sized generously so it reads at a glance. */
-export function Logo({ size = 44, className }: { size?: number; className?: string }) {
-  return <img src="/logo.svg" alt="Perpcast" width={size} height={size} className={cx('shrink-0 select-none', className)} draggable={false} />
+/** Brand mark: rounded square, dark hill, two big round eyes that blink. Inline SVG so the eyes animate everywhere. */
+export function Logo({ size = 44, className, blink = true }: { size?: number; className?: string; blink?: boolean }) {
+  const uid = useId().replace(/:/g, '')
+  return (
+    <svg viewBox="0 0 128 128" width={size} height={size} className={cx('shrink-0 select-none overflow-visible', className)} role="img" aria-label="Perpcast" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id={`${uid}-box`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#c7b6ff" />
+          <stop offset="0.5" stopColor="#e9a8ff" />
+          <stop offset="1" stopColor="#ffb08a" />
+        </linearGradient>
+        <linearGradient id={`${uid}-hill`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2b1e4d" />
+          <stop offset="1" stopColor="#0a0713" />
+        </linearGradient>
+        <clipPath id={`${uid}-clip`}>
+          <rect width="128" height="128" rx="32" />
+        </clipPath>
+      </defs>
+      <rect width="128" height="128" rx="32" fill={`url(#${uid}-box)`} />
+      <g clipPath={`url(#${uid}-clip)`}>
+        <path d="M-6 104 C 10 56, 44 26, 90 28 C 114 30, 130 44, 136 60 L136 136 L-6 136 Z" fill={`url(#${uid}-hill)`} />
+      </g>
+      <g className={cx(blink && 'logo-eye')}>
+        <rect x="42" y="50" width="18" height="26" rx="8" fill="#fff" />
+        <circle cx="52.5" cy="66" r="3.4" fill="#0a0713" />
+      </g>
+      <g className={cx(blink && 'logo-eye eye-r')}>
+        <rect x="70" y="50" width="18" height="26" rx="8" fill="#fff" />
+        <circle cx="80.5" cy="66" r="3.4" fill="#0a0713" />
+      </g>
+    </svg>
+  )
 }
 
 export function ChannelIcon({ channel, size = 32, className }: { channel: Channel; size?: number; className?: string }) {

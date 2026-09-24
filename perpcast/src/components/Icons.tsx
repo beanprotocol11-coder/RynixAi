@@ -258,3 +258,45 @@ export const VerifiedIcon = (p: P) => (
     <path d="m8.5 12.2 2.3 2.3 4.7-4.9" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 )
+export const RocketIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M14 4c3 0 6 3 6 6-2 4-6 8-9 9l-4-4c1-3 5-7 7-11z" />
+    <path d="M9 15 4 20M7 13l-3-1 3-3M11 17l1 3 3-3" />
+    <circle cx="14.5" cy="9.5" r="1.4" />
+  </svg>
+)
+export const BuildingIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M3 21h18M5 21V8l7-4 7 4v13" />
+    <path d="M9 21v-5h6v5M9 11h.01M15 11h.01M12 8h.01" />
+  </svg>
+)
+export const GemIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M6 3h12l4 6-10 12L2 9z" />
+    <path d="M2 9h20M12 21 8 9l4-6 4 6-4 12" />
+  </svg>
+)
+export const DropIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" />
+  </svg>
+)
+export const CodeIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
+  </svg>
+)
+export const SmileIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M8.5 14.5s1.2 2 3.5 2 3.5-2 3.5-2M9 9.5h.01M15 9.5h.01" />
+  </svg>
+)
+export const CoinsIcon = (p: P) => (
+  <svg {...base(p)}>
+    <ellipse cx="9" cy="7" rx="6" ry="3" />
+    <path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7" />
+    <path d="M3 12v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5M15 10.5c3 .3 5 1.5 5 3v4c0 1.4-1.6 2.5-4 2.9" />
+  </svg>
+)

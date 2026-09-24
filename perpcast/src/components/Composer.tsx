@@ -15,6 +15,53 @@ import { cx, usd, pct } from '../lib/format'
 import { displaySymbol } from '../lib/hyperliquid'
 
 const MAX = 1024
+const MAX_IMAGES = 4
+const IMG_MAX_EDGE = 1280
+
+function normalizeImageUrl(raw: string): string | null {
+  let u = raw.trim()
+  if (!u) return null
+  if (/^data:image\//i.test(u)) return u
+  if (!/^[a-z]+:\/\//i.test(u)) u = 'https://' + u
+  try {
+    const parsed = new URL(u)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null
+    if (!parsed.hostname.includes('.')) return null
+    return parsed.toString()
+  } catch {
+    return null
+  }
+}
+
+function probeImage(src: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    const t = setTimeout(() => resolve(false), 8000)
+    img.onload = () => { clearTimeout(t); resolve(true) }
+    img.onerror = () => { clearTimeout(t); resolve(false) }
+    img.src = src
+  })
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, IMG_MAX_EDGE / Math.max(img.width, img.height))
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(img.width * scale))
+      canvas.height = Math.max(1, Math.round(img.height * scale))
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { URL.revokeObjectURL(url); reject(new Error('Could not read image')); return }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', 0.82))
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That file is not an image')) }
+    img.src = url
+  })
+}
 
 export function ComposerModal() {
   const opts = useUI((s) => s.composer)
@@ -36,8 +83,11 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
   const [position, setPosition] = useState<PositionEmbed | undefined>(opts.position)
   const [images, setImages] = useState<string[]>([])
   const [imgInput, setImgInput] = useState<string | null>(null)
+  const [imgError, setImgError] = useState<string | null>(null)
+  const [imgBusy, setImgBusy] = useState(false)
   const [busy, setBusy] = useState(false)
   const ref = useRef<HTMLTextAreaElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const positions = useTrading((s) => s.positions)
   const mids = useMarket((s) => s.mids)
   const parentAuthor = opts.parent?.author
@@ -47,8 +97,55 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
     setChannelId(opts.channel ?? null)
     setPosition(opts.position)
     setImages([])
+    setImgInput(null)
+    setImgError(null)
     if (autoFocus) setTimeout(() => ref.current?.focus(), 30)
   }, [opts, autoFocus])
+
+  const addImage = (src: string) => {
+    setImages((a) => (a.includes(src) || a.length >= MAX_IMAGES ? a : [...a, src]))
+  }
+
+  const addImageUrl = async () => {
+    if (imgBusy) return
+    const u = normalizeImageUrl(imgInput ?? '')
+    if (!u) {
+      setImgError('Paste a full image link, e.g. https://site.com/photo.jpg')
+      return
+    }
+    if (images.length >= MAX_IMAGES) {
+      setImgError(`Up to ${MAX_IMAGES} images per cast`)
+      return
+    }
+    setImgBusy(true)
+    setImgError(null)
+    const ok = await probeImage(u)
+    setImgBusy(false)
+    if (!ok) {
+      setImgError('That link did not load as an image. Use a direct link ending in .jpg/.png/.gif/.webp, or upload from your device.')
+      return
+    }
+    addImage(u)
+    setImgInput(null)
+  }
+
+  const onPickFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setImgBusy(true)
+    setImgError(null)
+    try {
+      for (const f of Array.from(files).slice(0, MAX_IMAGES - images.length)) {
+        if (!f.type.startsWith('image/')) throw new Error(`${f.name} is not an image`)
+        addImage(await fileToDataUrl(f))
+      }
+      setImgInput(null)
+    } catch (e) {
+      setImgError((e as Error).message)
+    } finally {
+      setImgBusy(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   useEffect(() => {
     const el = ref.current
@@ -164,24 +261,49 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
             </div>
           )}
 
+          <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => void onPickFiles(e.target.files)} />
+
           {imgInput !== null && (
             <form
-              className="mt-2 flex gap-2"
+              className="mt-2 rounded-2xl border border-line bg-surface-2/60 p-2.5"
               onSubmit={(e) => {
                 e.preventDefault()
-                const u = imgInput.trim()
-                if (!/^https?:\/\//.test(u)) return toast({ kind: 'error', title: 'Enter a valid image URL' })
-                setImages((a) => (a.includes(u) || a.length >= 4 ? a : [...a, u]))
-                setImgInput(null)
+                void addImageUrl()
               }}
             >
-              <input className="input !py-2 text-sm flex-1" placeholder="Paste image URL (https://…)" value={imgInput} onChange={(e) => setImgInput(e.target.value)} autoFocus />
-              <button type="submit" className="btn btn-ink !py-2 text-sm">
-                Add
-              </button>
-              <button type="button" className="btn btn-ghost !py-2 text-sm" onClick={() => setImgInput(null)}>
-                Cancel
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  className={cx('input !py-2 text-sm flex-1', imgError && '!border-short')}
+                  placeholder="Paste image link (https://…)"
+                  value={imgInput}
+                  onChange={(e) => { setImgInput(e.target.value); setImgError(null) }}
+                  inputMode="url"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoFocus
+                  aria-invalid={!!imgError}
+                />
+                <div className="flex gap-2">
+                  <button type="submit" className="btn btn-ink !py-2 text-sm flex-1 sm:flex-none" disabled={imgBusy}>
+                    {imgBusy ? 'Checking…' : 'Add link'}
+                  </button>
+                  <button type="button" className="btn btn-ghost !py-2 text-sm" onClick={() => { setImgInput(null); setImgError(null) }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-3">
+                <button type="button" className="chip !py-1" onClick={() => fileRef.current?.click()} disabled={imgBusy}>
+                  <ImageIcon size={13} /> Upload from device
+                </button>
+                <span>{images.length}/{MAX_IMAGES} images · JPG, PNG, GIF, WEBP</span>
+              </div>
+              {imgError && (
+                <p className="mt-2 text-xs text-short" role="alert">
+                  {imgError}
+                </p>
+              )}
             </form>
           )}
 
@@ -218,7 +340,7 @@ export function ComposerBody({ opts, onDone, modal, autoFocus = true }: { opts: 
                 )}
               </Menu>
             )}
-            <button className="icon-btn text-accent" type="button" title="Add image" aria-label="Add image" onClick={() => setImgInput((v) => (v === null ? '' : null))}>
+            <button className={cx('icon-btn text-accent', imgInput !== null && 'bg-accent/10')} type="button" title="Add image" aria-label="Add image" onClick={() => { setImgError(null); setImgInput((v) => (v === null ? '' : null)) }}>
               <ImageIcon size={19} />
             </button>
             <Menu

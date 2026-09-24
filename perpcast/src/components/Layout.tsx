@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, ChannelIcon, Logo, Menu, MenuItem, Wordmark, LiveNumber } from './ui'
-import { BellIcon, BookmarkIcon, ChartIcon, CompassIcon, HomeIcon, LogoutIcon, MessageIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, WalletIcon, MoreIcon, ExternalIcon, HashIcon, TrendUpIcon, TrendDownIcon } from './Icons'
+import { BellIcon, BookmarkIcon, ChartIcon, CompassIcon, HomeIcon, LogoutIcon, MessageIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, WalletIcon, MoreIcon, ExternalIcon, HashIcon, TrendUpIcon, TrendDownIcon, SmileIcon, RocketIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { useUI } from '../store/ui'
 import { useNotify } from '../store/notify'
@@ -21,6 +21,8 @@ const NAV = [
   { to: '/', label: 'Home', icon: HomeIcon, end: true },
   { to: '/trade', label: 'Trade', icon: ChartIcon },
   { to: '/explore', label: 'Explore', icon: CompassIcon },
+  { to: '/memes', label: 'Memes', icon: SmileIcon },
+  { to: '/launch', label: 'Launch', icon: RocketIcon },
   { to: '/notifications', label: 'Notifications', icon: BellIcon },
   { to: '/messages', label: 'Messages', icon: MessageIcon },
   { to: '/bookmarks', label: 'Bookmarks', icon: BookmarkIcon },
@@ -66,7 +68,7 @@ function Sidebar() {
   return (
     <aside className="sticky top-8 hidden h-[calc(100dvh-2rem)] w-[72px] shrink-0 flex-col px-2 py-3 md:flex xl:w-[260px] xl:px-4">
       <Link to="/" className="mb-3 flex items-center gap-3 rounded-xl px-1 py-2 hover:bg-surface-hover xl:px-2">
-        <Logo size={64} />
+        <Logo size={56} className="logo-glow xl:h-16 xl:w-16" />
         <span className="hidden min-w-0 flex-col xl:flex">
           <Wordmark size="lg" />
           <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-ink-3">
@@ -154,7 +156,7 @@ function MobileNav() {
   const openSignIn = useAuth((s) => s.openSignIn)
   const openComposer = useUI((s) => s.openComposer)
   const unread = useNotify((s) => s.notifications.filter((n) => !n.read).length)
-  const items = [NAV[0], NAV[1], NAV[2], NAV[3]]
+  const items = [NAV[0], NAV[1], NAV[3], NAV[5]]
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 glass border-t border-line md:hidden">
       <div className="mx-auto flex h-16 max-w-md items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
@@ -192,7 +194,7 @@ export function MobileTopBar({ title }: { title?: React.ReactNode }) {
   return (
     <div className="flex h-14 items-center gap-3 px-4 md:hidden">
       <button onClick={() => (me ? nav(userPath(me)) : openSignIn())} aria-label="Profile">
-        {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={32} /> : <Logo size={40} />}
+        {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={32} /> : <Logo size={44} className="logo-glow" />}
       </button>
       <div className="flex-1 text-center">{title ?? <Wordmark />}</div>
       <button className="icon-btn" onClick={toggleTheme} aria-label="Toggle theme">

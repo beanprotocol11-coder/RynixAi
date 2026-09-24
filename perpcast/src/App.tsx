@@ -18,6 +18,8 @@ const Messages = lazy(() => import('./pages/Messages'))
 const Bookmarks = lazy(() => import('./pages/Bookmarks'))
 const Portfolio = lazy(() => import('./pages/Portfolio'))
 const Settings = lazy(() => import('./pages/Settings'))
+const Memes = lazy(() => import('./pages/Memes'))
+const Launch = lazy(() => import('./pages/Launch'))
 
 function PageFallback() {
   return (
@@ -73,6 +75,9 @@ export default function App() {
                   <Route path="trade" element={<Trade />} />
                   <Route path="trade/:coin" element={<Trade />} />
                   <Route path="explore" element={<Explore />} />
+                  <Route path="memes" element={<Memes />} />
+                  <Route path="memes/:address" element={<Memes />} />
+                  <Route path="launch" element={<Launch />} />
                   <Route path="search" element={<Navigate to="/explore" replace />} />
                   <Route path="channel/:id" element={<Channel />} />
                   <Route path="cast/:id" element={<CastDetail />} />

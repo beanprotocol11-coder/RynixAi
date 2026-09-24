@@ -26,6 +26,9 @@ type InjectedFlags = {
   isTrust?: boolean
   isOkxWallet?: boolean
   isRainbow?: boolean
+  isBitKeep?: boolean
+  isTokenPocket?: boolean
+  isZerion?: boolean
   providers?: Array<EIP1193Provider & InjectedFlags>
 }
 
@@ -52,23 +55,38 @@ function nameOf(eth: InjectedFlags): string {
   if (eth.isTrust) return 'Trust Wallet'
   if (eth.isOkxWallet) return 'OKX Wallet'
   if (eth.isRainbow) return 'Rainbow'
+  if (eth.isBitKeep) return 'Bitget Wallet'
+  if (eth.isTokenPocket) return 'TokenPocket'
+  if (eth.isZerion) return 'Zerion'
   if (eth.isMetaMask) return 'MetaMask'
   return 'Browser wallet'
 }
 
-function addLegacy() {
+/** Register the legacy `window.ethereum` provider(s) that no EIP-6963 announcement already covers. */
+function addLegacy(): boolean {
   const eth = window.ethereum
-  if (!eth) return
+  if (!eth) return false
   const list = eth.providers?.length ? eth.providers : [eth]
+  let added = false
   for (const p of list) {
+    const known = Array.from(discovered.values())
+    if (known.some((w) => w.provider === p)) continue
     const name = nameOf(p)
+    if (known.some((w) => w.name === name)) continue
     const id = `injected:${name.toLowerCase().replace(/\s+/g, '-')}`
-    if (Array.from(discovered.values()).some((w) => w.name === name)) continue
     discovered.set(id, { id, name, icon: '', provider: p })
+    added = true
   }
+  return added
 }
 
-/** Discover wallets via EIP-6963, falling back to the legacy `window.ethereum` provider. */
+const DISCOVERY_WINDOW_MS = 4000
+const DISCOVERY_TICK_MS = 250
+
+/**
+ * Discover wallets via EIP-6963 and the legacy `window.ethereum` provider.
+ * Mobile in-app browsers and some extensions inject late, so discovery keeps polling for a few seconds.
+ */
 export function discoverWallets(onUpdate: (wallets: WalletOption[]) => void): () => void {
   listeners.add(onUpdate)
   if (!listening) {
@@ -77,18 +95,25 @@ export function discoverWallets(onUpdate: (wallets: WalletOption[]) => void): ()
       const d = (e as CustomEvent<EIP6963Detail>).detail
       if (!d?.info?.uuid || !d.provider) return
       const id = d.info.rdns || d.info.uuid
+      for (const [k, w] of discovered) if (k.startsWith('injected:') && w.provider === d.provider) discovered.delete(k)
       discovered.set(id, { id, name: d.info.name, icon: d.info.icon, rdns: d.info.rdns, provider: d.provider })
       emit()
     })
+    window.addEventListener('ethereum#initialized', () => {
+      if (addLegacy()) emit()
+    })
   }
   window.dispatchEvent(new Event('eip6963:requestProvider'))
-  const t = setTimeout(() => {
-    if (discovered.size === 0) addLegacy()
-    emit()
-  }, 150)
+  if (addLegacy()) emit()
+  const started = Date.now()
+  const t = setInterval(() => {
+    window.dispatchEvent(new Event('eip6963:requestProvider'))
+    if (addLegacy()) emit()
+    if (Date.now() - started > DISCOVERY_WINDOW_MS) clearInterval(t)
+  }, DISCOVERY_TICK_MS)
   onUpdate(Array.from(discovered.values()))
   return () => {
-    clearTimeout(t)
+    clearInterval(t)
     listeners.delete(onUpdate)
   }
 }
@@ -97,14 +122,20 @@ export function isMobile(): boolean {
   return /android|iphone|ipad|ipod/i.test(navigator.userAgent)
 }
 
+export interface MobileWallet {
+  id: string
+  name: string
+  icon: string
+  link: (url: string) => string
+}
+
 /** Mobile wallets open the dapp inside their in-app browser through these universal links. */
-export const MOBILE_WALLETS = [
-  { id: 'metamask', name: 'MetaMask', link: (url: string) => `https://metamask.app.link/dapp/${url.replace(/^https?:\/\//, '')}` },
-  { id: 'trust', name: 'Trust Wallet', link: (url: string) => `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(url)}` },
-  { id: 'coinbase', name: 'Coinbase Wallet', link: (url: string) => `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(url)}` },
-  { id: 'rainbow', name: 'Rainbow', link: (url: string) => `https://rnbwapp.com/dapp?url=${encodeURIComponent(url)}` },
-  { id: 'phantom', name: 'Phantom', link: (url: string) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(location.origin)}` },
-  { id: 'okx', name: 'OKX Wallet', link: (url: string) => `https://www.okx.com/download?deeplink=${encodeURIComponent(`okx://wallet/dapp/url?dappUrl=${encodeURIComponent(url)}`)}` },
+export const MOBILE_WALLETS: MobileWallet[] = [
+  { id: 'metamask', name: 'MetaMask', icon: '/wallets/metamask.svg', link: (url) => `https://metamask.app.link/dapp/${url.replace(/^https?:\/\//, '')}` },
+  { id: 'trust', name: 'Trust Wallet', icon: '/wallets/trust.svg', link: (url) => `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(url)}` },
+  { id: 'coinbase', name: 'Coinbase Wallet', icon: '/wallets/coinbase.svg', link: (url) => `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(url)}` },
+  { id: 'phantom', name: 'Phantom', icon: '/wallets/phantom.svg', link: (url) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(location.origin)}` },
+  { id: 'okx', name: 'OKX Wallet', icon: '/wallets/okx.svg', link: (url) => `https://www.okx.com/download?deeplink=${encodeURIComponent(`okx://wallet/dapp/url?dappUrl=${encodeURIComponent(url)}`)}` },
 ]
 
 export class WalletError extends Error {
@@ -142,11 +173,29 @@ export async function currentChainId(provider: EIP1193Provider): Promise<number>
   }
 }
 
+function isSignature(v: unknown): v is string {
+  return typeof v === 'string' && /^0x[0-9a-fA-F]{130,}$/.test(v)
+}
+
+/**
+ * `personal_sign` with the hex-encoded message (EIP-191). Some wallets only accept the raw UTF-8
+ * string, so that is retried once unless the user explicitly rejected the request.
+ */
 export async function signMessage(provider: EIP1193Provider, address: string, message: string): Promise<string> {
   try {
-    return (await provider.request({ method: 'personal_sign', params: [toHex(message), address] })) as string
+    const sig = await provider.request({ method: 'personal_sign', params: [toHex(message), address] })
+    if (isSignature(sig)) return sig
+    throw new WalletError(-1, 'Wallet returned an invalid signature')
   } catch (e) {
-    throw asWalletError(e)
+    const err = asWalletError(e)
+    if (err.code === 4001 || err.code === -32002) throw err
+    try {
+      const sig = await provider.request({ method: 'personal_sign', params: [message, address] })
+      if (isSignature(sig)) return sig
+    } catch (e2) {
+      throw asWalletError(e2)
+    }
+    throw err
   }
 }
 
@@ -245,6 +294,13 @@ export function chainName(id: number): string {
 }
 
 export const WALLET_ICONS: Record<string, string> = {
+  trust: '/wallets/trust.svg',
+  coinbase: '/wallets/coinbase.svg',
+  phantom: '/wallets/phantom.svg',
+  okx: '/wallets/okx.svg',
+  brave: '/wallets/brave.svg',
+  bitget: '/wallets/bitget.svg',
+  tokenpocket: '/wallets/tokenpocket.svg',
   metamask:
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
@@ -257,3 +313,43 @@ export function walletIcon(w: WalletOption): string {
   const key = w.name.toLowerCase().split(' ')[0]
   return WALLET_ICONS[key] ?? ''
 }
+
+export interface WalletBrand {
+  id: string
+  name: string
+  icon: string
+  /** EIP-6963 rdns values this brand announces under. */
+  rdns: string[]
+  install: string
+  /** Universal link that opens the dapp inside the wallet's in-app browser. */
+  mobile?: (url: string) => string
+}
+
+/**
+ * Wallets Perpcast always lists in the sign-in grid. A brand is "detected" when discovery finds a
+ * provider with a matching rdns or name; otherwise the card links to install / open-in-app.
+ */
+export const WALLET_BRANDS: WalletBrand[] = [
+  { id: 'metamask', name: 'MetaMask', icon: '/wallets/metamask.svg', rdns: ['io.metamask', 'io.metamask.flask'], install: 'https://metamask.io/download/', mobile: (url) => `https://metamask.app.link/dapp/${url.replace(/^https?:\/\//, '')}` },
+  { id: 'rabby', name: 'Rabby', icon: '/wallets/rabby.svg', rdns: ['io.rabby'], install: 'https://rabby.io' },
+  { id: 'bitget', name: 'Bitget Wallet', icon: '/wallets/bitget.svg', rdns: ['com.bitget.web3'], install: 'https://web3.bitget.com/en/wallet-download', mobile: (url) => `https://bkcode.vip?action=dapp&url=${encodeURIComponent(url)}` },
+  { id: 'phantom', name: 'Phantom', icon: '/wallets/phantom.svg', rdns: ['app.phantom'], install: 'https://phantom.com/download', mobile: (url) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(location.origin)}` },
+  { id: 'trust', name: 'Trust Wallet', icon: '/wallets/trust.svg', rdns: ['com.trustwallet.app'], install: 'https://trustwallet.com/download', mobile: (url) => `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(url)}` },
+  { id: 'okx', name: 'OKX Wallet', icon: '/wallets/okx.svg', rdns: ['com.okex.wallet'], install: 'https://www.okx.com/web3', mobile: (url) => `https://www.okx.com/download?deeplink=${encodeURIComponent(`okx://wallet/dapp/url?dappUrl=${encodeURIComponent(url)}`)}` },
+  { id: 'coinbase', name: 'Coinbase Wallet', icon: '/wallets/coinbase.svg', rdns: ['com.coinbase.wallet'], install: 'https://www.coinbase.com/wallet/downloads', mobile: (url) => `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(url)}` },
+  { id: 'brave', name: 'Brave Wallet', icon: '/wallets/brave.svg', rdns: ['com.brave.wallet'], install: 'https://brave.com/wallet/' },
+  { id: 'tokenpocket', name: 'TokenPocket', icon: '/wallets/tokenpocket.svg', rdns: ['pro.tokenpocket'], install: 'https://www.tokenpocket.pro/en/download/app', mobile: (url) => `tpdapp://open?params=${encodeURIComponent(JSON.stringify({ url, chain: 'ETH' }))}` },
+]
+
+/** Find the discovered provider that belongs to a brand (by rdns, then by name). */
+export function brandWallet(brand: WalletBrand, wallets: WalletOption[]): WalletOption | undefined {
+  return wallets.find((w) => w.rdns && brand.rdns.includes(w.rdns)) ?? wallets.find((w) => w.name.toLowerCase().split(' ')[0] === brand.id || w.name.toLowerCase() === brand.name.toLowerCase())
+}
+
+/** Discovered wallets that don't match any catalog brand (still shown so nothing detected is hidden). */
+export function unbrandedWallets(wallets: WalletOption[]): WalletOption[] {
+  return wallets.filter((w) => !WALLET_BRANDS.some((b) => brandWallet(b, [w])))
+}
+
+/** WalletConnect / Reown is only offered once a Project ID is configured at build time. */
+export const REOWN_PROJECT_ID: string = (import.meta.env.VITE_REOWN_PROJECT_ID as string | undefined) ?? ''
