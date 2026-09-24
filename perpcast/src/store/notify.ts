@@ -52,7 +52,14 @@ export const useNotify = create<NotifyState>()(
       markRead: (id) => set((s) => ({ notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) })),
       clear: () => set({ notifications: [] }),
     }),
-    { name: 'perpcast:notify', partialize: (s) => ({ notifications: s.notifications }) },
+    {
+      name: 'perpcast:notify',
+      partialize: (s) => ({ notifications: s.notifications }),
+      merge: (persisted, current) => {
+        const p = persisted as Partial<Pick<NotifyState, 'notifications'>> | undefined
+        return { ...current, notifications: (p?.notifications ?? []).filter((n) => !/^Signed in with /.test(n.title)) }
+      },
+    },
   ),
 )
 

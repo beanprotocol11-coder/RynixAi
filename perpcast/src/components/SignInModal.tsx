@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { Modal, ModalHeader, Spinner, Logo } from './ui'
 import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon, ArrowUpRightIcon } from './Icons'
 import { useAuth } from '../store/auth'
-import { toast, notify } from '../store/notify'
+import { toast } from '../store/notify'
 import { api } from '../lib/api'
 import { brandWallet, chainName, currentChainId, discoverWallets, isMobile, onAccountsChanged, onChainChanged, requestAccounts, signMessage, unbrandedWallets, WALLET_BRANDS, WALLETCONNECT_ID, walletIcon, type WalletOption } from '../lib/wallet'
 import { shortAddr, cx } from '../lib/format'
@@ -75,7 +75,6 @@ function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void 
       setPhase('done')
       setSession({ user, walletId: w.id, walletName: w.name, chainId, signedInAt: Date.now() })
       toast({ kind: 'success', title: `Welcome, ${user.displayName || user.username}`, body: `${w.name} · ${shortAddr(address)} · ${chainName(chainId)}` })
-      notify({ kind: 'system', title: `Signed in with ${w.name}`, body: `${shortAddr(address)} on ${chainName(chainId)}` })
     } catch (e) {
       if (!alive.current) return
       setPhase('idle')

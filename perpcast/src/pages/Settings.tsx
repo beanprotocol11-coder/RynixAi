@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../store/auth'
 import { useUI } from '../store/ui'
@@ -7,7 +7,7 @@ import { useSocial } from '../store/social'
 import { useNotify } from '../store/notify'
 import { Avatar, PageHeader, Modal, ModalHeader, Spinner } from '../components/ui'
 import { MobileTopBar, explorerUrl } from '../components/Layout'
-import { SunIcon, MoonIcon, LogoutIcon, ExternalIcon, CopyIcon, ShieldIcon, TrashIcon } from '../components/Icons'
+import { SunIcon, MoonIcon, LogoutIcon, ExternalIcon, CopyIcon, ShieldIcon, TrashIcon, ImageIcon } from '../components/Icons'
 import { api } from '../lib/api'
 import { USERNAME_RE, userPath, type User } from '../lib/social'
 import { chainName, findWallet, ROBINHOOD_CHAIN, ROBINHOOD_TESTNET, switchToRobinhoodChain } from '../lib/wallet'
@@ -225,6 +225,18 @@ function ProfileForm({ me }: { me: User }) {
   const [displayName, setDisplayName] = useState(me.displayName)
   const [bio, setBio] = useState(me.bio)
   const [pfp, setPfp] = useState(me.pfp)
+  const pfpFileRef = useRef<HTMLInputElement>(null)
+  const [pfpError, setPfpError] = useState<string | null>(null)
+  const onPickPfp = async (file: File | null) => {
+    if (pfpFileRef.current) pfpFileRef.current.value = ''
+    if (!file) return
+    setPfpError(null)
+    try {
+      setPfp(await avatarDataUrl(file))
+    } catch (e) {
+      setPfpError((e as Error).message)
+    }
+  }
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -262,10 +274,23 @@ function ProfileForm({ me }: { me: User }) {
     >
       <div className="flex items-center gap-4">
         <Avatar src={pfp.trim()} name={displayName || uname} seed={me.id} size={64} />
-        <label className="flex-1 text-sm">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-3">Avatar URL</span>
-          <input className="input" placeholder="https://… (leave empty for a generated avatar)" value={pfp} onChange={(e) => setPfp(e.target.value)} />
-        </label>
+        <div className="min-w-0 flex-1 text-sm">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-3">Avatar</span>
+          <div className="flex items-center gap-2">
+            <input ref={pfpFileRef} type="file" accept="image/*" className="hidden" onChange={(e) => void onPickPfp(e.target.files?.[0] ?? null)} />
+            <button type="button" className="btn btn-ghost !py-2 shrink-0 gap-1.5" onClick={() => pfpFileRef.current?.click()}>
+              <ImageIcon size={15} /> Upload
+            </button>
+            <input className="input min-w-0 flex-1" placeholder="or paste https://… (empty = generated)" value={pfp.startsWith('data:') ? '' : pfp} onChange={(e) => setPfp(e.target.value)} />
+            {pfp && (
+              <button type="button" className="icon-btn shrink-0" title="Remove avatar" aria-label="Remove avatar" onClick={() => setPfp('')}>
+                <TrashIcon size={15} />
+              </button>
+            )}
+          </div>
+          {pfp.startsWith('data:') && <p className="mt-1 text-xs text-ink-3">Photo from your device — saved when you press Save profile.</p>}
+          {pfpError && <p className="mt-1 text-xs text-short">{pfpError}</p>}
+        </div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="text-sm">
@@ -302,4 +327,32 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       {children}
     </section>
   )
+}
+
+/** Center-crops an avatar to a 256px square JPEG data URL (fits the 500 KB profile limit). */
+function avatarDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const side = Math.min(img.width, img.height)
+      const out = Math.min(256, side)
+      const canvas = document.createElement('canvas')
+      canvas.width = out
+      canvas.height = out
+      const ctx = canvas.getContext('2d')
+      URL.revokeObjectURL(url)
+      if (!ctx) {
+        reject(new Error('Could not read image'))
+        return
+      }
+      ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, out, out)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('That file is not an image'))
+    }
+    img.src = url
+  })
 }

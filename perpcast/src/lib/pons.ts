@@ -10,6 +10,7 @@ export const PONS_APP = 'https://pons.family'
 export const PONS_DOCS = 'https://docs.pons.family'
 export const NATIVE_ETH: Address = '0x0000000000000000000000000000000000000000'
 const CG = 'https://coin-images.coingecko.com/coins/images'
+export const USDG_LOGO = `${CG}/51281/large/GDN_USDG_Token_200x200.png`
 
 export const PONS_ABI = parseAbi([
   'struct Socials { string twitter; string telegram; string discord; string website; string farcaster; }',
@@ -45,7 +46,7 @@ export interface PairAsset {
  */
 export const PAIR_CANDIDATES: PairAsset[] = [
   { address: NATIVE_ETH, symbol: 'ETH', name: 'Ether', kind: 'native', decimals: 18, logo: 'https://coin-images.coingecko.com/coins/images/279/large/ethereum.png' },
-  { address: '0x5fc5360d0400a0fd4f2af552add042d716f1d168', symbol: 'USDG', name: 'Global Dollar', kind: 'stable', decimals: 6, logo: 'https://coin-images.coingecko.com/coins/images/51281/large/GDN_USDG_Token_200x200.png' },
+  { address: '0x5fc5360d0400a0fd4f2af552add042d716f1d168', symbol: 'USDG', name: 'Global Dollar', kind: 'stable', decimals: 6, logo: USDG_LOGO },
   { address: '0x322f0929c4625ed5bad873c95208d54e1c003b2d', symbol: 'TSLA', name: 'Tesla • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174112/large/0x322f0929c4625ed5bad873c95208d54e1c003b2d.png` },
   { address: '0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec', symbol: 'NVDA', name: 'NVIDIA • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174110/large/0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec.png` },
   { address: '0xaf3d76f1834a1d425780943c99ea8a608f8a93f9', symbol: 'AAPL', name: 'Apple • Robinhood Token', kind: 'stock', decimals: 18, logo: `${CG}/102174123/large/0xaf3d76f1834a1d425780943c99ea8a608f8a93f9.png` },

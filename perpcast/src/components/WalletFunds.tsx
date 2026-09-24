@@ -4,6 +4,7 @@ import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
 import { Modal, ModalHeader } from './ui'
 import { CoinLogo } from './CoinLogo'
+import { USDG_LOGO } from '../lib/pons'
 import { CopyIcon, ExternalIcon, RefreshIcon, WalletIcon } from './Icons'
 import { ARBITRUM, depositToHyperliquid, fetchBalances, HL_APP, HL_BRIDGE, HL_MIN_DEPOSIT, type WalletBalances } from '../lib/balances'
 import { findWallet, ROBINHOOD_CHAIN } from '../lib/wallet'
@@ -93,8 +94,8 @@ export function WalletFunds({ className }: { className?: string }) {
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
         <Row logo="USDC" label="Hyperliquid perps" value={data ? usd(data.hlAccountValue) : '—'} sub={data ? `${usd(data.hlWithdrawable)} withdrawable · ${data.hlPositions} open` : undefined} />
         <Row logo="USDC" label="Hyperliquid spot" value={data ? usd(data.hlSpotUsdc) : '—'} sub="USDC" />
-        <Row logo="ETH" label="Robinhood Chain ETH" value={data ? `${data.rhEth.toFixed(5)} ETH` : '—'} sub="gas + Pons launch fee" />
-        <Row logo="USDG" label="Robinhood Chain USDG" value={data ? usd(data.rhUsdg) : '—'} sub={data ? `${usd(data.arbUsdc)} USDC on Arbitrum` : undefined} />
+        <Row logo="/robinhood-chain.png" label="Robinhood Chain ETH" value={data ? `${data.rhEth.toFixed(5)} ETH` : '—'} sub="gas + Pons launch fee" />
+        <Row logo={USDG_LOGO} label="Robinhood Chain USDG" value={data ? usd(data.rhUsdg) : '—'} sub={data ? `${usd(data.arbUsdc)} USDC on Arbitrum` : undefined} />
       </div>
       {data?.errors.length ? <div className="mt-3 text-xs text-ink-3">Could not load: {data.errors.join(', ')}. Retrying…</div> : null}
 
@@ -106,7 +107,7 @@ export function WalletFunds({ className }: { className?: string }) {
 function Row({ logo, label, value, sub }: { logo: string; label: string; value: string; sub?: string }) {
   return (
     <div className="flex items-start gap-2">
-      <CoinLogo coin={logo} size={22} />
+      {logo.includes('/') ? <img src={logo} alt="" width={22} height={22} className="shrink-0 rounded-full object-cover" style={{ width: 22, height: 22 }} /> : <CoinLogo coin={logo} size={22} />}
       <div className="min-w-0">
         <div className="text-[11px] text-ink-3">{label}</div>
         <div className="mono truncate font-semibold tabular-nums">{value}</div>
