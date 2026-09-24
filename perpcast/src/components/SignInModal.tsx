@@ -5,7 +5,7 @@ import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIco
 import { useAuth } from '../store/auth'
 import { toast, notify } from '../store/notify'
 import { api } from '../lib/api'
-import { brandWallet, chainName, currentChainId, discoverWallets, isMobile, onAccountsChanged, onChainChanged, requestAccounts, signMessage, unbrandedWallets, WALLET_BRANDS, walletIcon, type WalletOption } from '../lib/wallet'
+import { brandWallet, chainName, currentChainId, discoverWallets, isMobile, onAccountsChanged, onChainChanged, requestAccounts, signMessage, unbrandedWallets, WALLET_BRANDS, WALLETCONNECT_ID, walletIcon, type WalletOption } from '../lib/wallet'
 import { shortAddr, cx } from '../lib/format'
 
 type Phase = 'idle' | 'connecting' | 'signing' | 'verifying' | 'done'
@@ -114,9 +114,9 @@ function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void 
 
         <WalletGrid wallets={wallets} busy={busy} phase={phase} mobile={mobile} url={here} onConnect={(w) => void connect(w)} />
 
-        {scanned && wallets.length === 0 && (
+        {scanned && wallets.every((w) => w.id === WALLETCONNECT_ID) && (
           <p className="px-1 text-center text-xs text-ink-3">
-            {mobile ? 'No wallet detected in this browser — tap a wallet to open Perpcast inside its app.' : 'No browser wallet detected — install one above, or open Perpcast on your phone.'}
+            {mobile ? 'No wallet detected in this browser — use WalletConnect, or tap a wallet to open Perpcast inside its app.' : 'No browser wallet detected — use WalletConnect to scan with your phone, or install one above.'}
           </p>
         )}
 
@@ -206,6 +206,10 @@ function WalletGrid({ wallets, busy, phase, mobile, url, onConnect }: { wallets:
             <span className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-ink-3">
               {isBusy ? (
                 <Spinner size={11} />
+              ) : wallet?.id === WALLETCONNECT_ID ? (
+                <>
+                  <QrIcon size={11} /> Scan QR
+                </>
               ) : wallet ? (
                 <>
                   <ZapIcon size={11} className="text-long" /> Detected

@@ -330,6 +330,7 @@ export interface WalletBrand {
  * provider with a matching rdns or name; otherwise the card links to install / open-in-app.
  */
 export const WALLET_BRANDS: WalletBrand[] = [
+  { id: 'walletconnect', name: 'WalletConnect', icon: '/wallets/walletconnect.svg', rdns: [], install: 'https://walletconnect.network' },
   { id: 'metamask', name: 'MetaMask', icon: '/wallets/metamask.svg', rdns: ['io.metamask', 'io.metamask.flask'], install: 'https://metamask.io/download/', mobile: (url) => `https://metamask.app.link/dapp/${url.replace(/^https?:\/\//, '')}` },
   { id: 'rabby', name: 'Rabby', icon: '/wallets/rabby.svg', rdns: ['io.rabby'], install: 'https://rabby.io' },
   { id: 'bitget', name: 'Bitget Wallet', icon: '/wallets/bitget.svg', rdns: ['com.bitget.web3'], install: 'https://web3.bitget.com/en/wallet-download', mobile: (url) => `https://bkcode.vip?action=dapp&url=${encodeURIComponent(url)}` },
@@ -351,5 +352,53 @@ export function unbrandedWallets(wallets: WalletOption[]): WalletOption[] {
   return wallets.filter((w) => !WALLET_BRANDS.some((b) => brandWallet(b, [w])))
 }
 
-/** WalletConnect / Reown is only offered once a Project ID is configured at build time. */
-export const REOWN_PROJECT_ID: string = (import.meta.env.VITE_REOWN_PROJECT_ID as string | undefined) ?? ''
+/** WalletConnect / Reown project ID (public, client-side). Override with VITE_REOWN_PROJECT_ID. */
+export const REOWN_PROJECT_ID: string = (import.meta.env.VITE_REOWN_PROJECT_ID as string | undefined) || 'af278a63d0fdcb04640235a3af975504'
+
+export const WALLETCONNECT_ID = 'walletconnect'
+
+type WcProvider = EIP1193Provider & { connect: () => Promise<void>; disconnect: () => Promise<void>; session?: unknown; accounts: string[] }
+let wcProvider: Promise<WcProvider> | null = null
+
+/** Loads @walletconnect/ethereum-provider lazily so the ~300 kB SDK only ships when someone picks WalletConnect. */
+function walletConnect(): Promise<WcProvider> {
+  if (!wcProvider) {
+    wcProvider = import('@walletconnect/ethereum-provider').then(({ EthereumProvider }) =>
+      EthereumProvider.init({
+        projectId: REOWN_PROJECT_ID,
+        optionalChains: [ROBINHOOD_CHAIN.id, 1, 8453, 42161, 10, 137, ROBINHOOD_TESTNET.id],
+        rpcMap: { [ROBINHOOD_CHAIN.id]: ROBINHOOD_CHAIN.rpc, [ROBINHOOD_TESTNET.id]: ROBINHOOD_TESTNET.rpc },
+        showQrModal: true,
+        metadata: { name: 'Perpcast', description: 'Cast, chat and trade perps on Robinhood Chain', url: location.origin, icons: [`${location.origin}/logo.svg`] },
+      }) as Promise<WcProvider>,
+    )
+    wcProvider.catch(() => {
+      wcProvider = null
+    })
+  }
+  return wcProvider
+}
+
+/** EIP-1193 facade that defers SDK loading until the first request. */
+const wcFacade: EIP1193Provider = {
+  request: async (args) => {
+    const p = await walletConnect()
+    if (args.method === 'eth_requestAccounts') {
+      if (!p.session) await p.connect()
+      return p.accounts.length ? p.accounts : p.request({ method: 'eth_accounts' })
+    }
+    return p.request(args)
+  },
+  on: (event, cb) => void walletConnect().then((p) => p.on?.(event, cb)),
+  removeListener: (event, cb) => void walletConnect().then((p) => p.removeListener?.(event, cb)),
+}
+
+export async function disconnectWalletConnect(): Promise<void> {
+  if (!wcProvider) return
+  const p = await wcProvider.catch(() => null)
+  if (p?.session) await p.disconnect().catch(() => {})
+}
+
+if (REOWN_PROJECT_ID && typeof window !== 'undefined') {
+  discovered.set(WALLETCONNECT_ID, { id: WALLETCONNECT_ID, name: 'WalletConnect', icon: '/wallets/walletconnect.svg', provider: wcFacade })
+}

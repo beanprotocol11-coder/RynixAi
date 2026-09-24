@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { api, getToken } from '../lib/api'
 import type { User } from '../lib/social'
+import { disconnectWalletConnect, WALLETCONNECT_ID } from '../lib/wallet'
 
 export interface Session {
   user: User
@@ -41,8 +42,10 @@ export const useAuth = create<AuthState>()(
       openSignIn: (reason) => set({ signInOpen: true, signInReason: reason ?? null }),
       closeSignIn: () => set({ signInOpen: false, signInReason: null }),
       signOut: async () => {
+        const wasWc = get().session?.walletId === WALLETCONNECT_ID
         set({ session: null, user: null })
         await api().signOut()
+        if (wasWc) await disconnectWalletConnect()
       },
       /** Re-validate the stored token against the backend; drops the session if it expired. */
       refresh: async () => {
