@@ -110,7 +110,7 @@ function CollectionGrid() {
           <img src="/logo.svg" alt="" width={44} height={44} className="rounded-xl" />
           <div className="min-w-0 flex-1">
             <div className="font-display text-lg font-extrabold">Perpcast Mascots</div>
-            <div className="text-xs text-ink-3">Our own {MASCOT_SUPPLY}-piece generative collection · free mint · OpenSea</div>
+            <div className="text-xs text-ink-3">Perpcast NFTs Collection · {MASCOT_SUPPLY} generative pieces · minting soon</div>
           </div>
           <span className="btn btn-primary !h-9 !px-3 !text-xs">Open →</span>
         </div>

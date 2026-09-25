@@ -4,6 +4,11 @@ import { useMarket, change24h } from '../store/market'
 import { mascotImage } from '../lib/mascots'
 import { CoinLogo } from '../components/CoinLogo'
 import { cx, px, pct } from '../lib/format'
+import { PAIR_CANDIDATES } from '../lib/pons'
+import { fetchPonsTokens, type PonsToken } from '../lib/robinhood'
+
+const PAIR_LOGO = Object.fromEntries(PAIR_CANDIDATES.map((p) => [p.symbol, p.logo ?? '']))
+const LAUNCH_ORBIT = ['ETH', 'USDG', 'TSLA', 'NVDA', 'AAPL', 'GLD', 'SPY', 'MSTR']
 
 const NAMES = ['nova', 'kenji', 'aria', 'degen.eth', 'maya', 'zed', 'luna', 'satoshi_jr', 'pixel', 'rio', 'hana', 'orbit']
 const COINS = ['BTC', 'ETH', 'SOL', 'HYPE', 'DOGE', 'PEPE']
@@ -91,8 +96,8 @@ function ActRow({ a, i }: { a: Act; i: number }) {
 
 const SLIDES = [
   { to: '/trade', tag: 'Perps', title: 'Trade perps while you cast', sub: 'Live Hyperliquid prices · share positions to the feed', cls: 'from-accent to-accent-2' },
-  { to: '/launch', tag: 'Launch', title: 'Launch a token on Pons', sub: 'Pair with ETH, USDG, stocks or gold on Robinhood Chain', cls: 'from-emerald-500 to-cyan-500' },
-  { to: '/nfts/perpcast', tag: 'NFTs', title: 'Perpcast Mascots', sub: '100 generative mascots · free mint · on OpenSea', cls: 'from-fuchsia-500 to-orange-400' },
+  { to: '/launch', tag: 'Pons Launchpad', title: 'Launch on Pons', sub: 'Memes · Stocks · RWAs — paired with real Robinhood tokens', cls: 'from-[#0f0c29] via-[#302b63] to-[#24243e]' },
+  { to: '/nfts/perpcast', tag: 'NFTs', title: 'Perpcast NFTs Collection', sub: '100 generative pieces · minting soon on Robinhood Chain', cls: 'from-fuchsia-500 to-orange-400' },
 ] as const
 
 export function HomeShowcase() {
@@ -107,6 +112,12 @@ export function HomeShowcase() {
   }, [])
   const ticker = useMemo(() => COINS.filter((c) => byCoin[c]).map((c) => ({ c, px: mids[c] ?? byCoin[c].midPx, ch: change24h(byCoin[c], mids[c]) })), [byCoin, mids])
   const acts = [...ACTS, ...ACTS]
+  const [memes, setMemes] = useState<PonsToken[]>([])
+  useEffect(() => {
+    fetchPonsTokens()
+      .then((s) => setMemes(s.tokens.filter((t) => t.image).slice(0, 6)))
+      .catch(() => {})
+  }, [])
 
   return (
     <section className="showcase mx-3 mt-3 space-y-2 md:mx-4">
@@ -142,9 +153,10 @@ export function HomeShowcase() {
                 ))}
               </div>
             ) : (
-              <div className="hidden items-center gap-1 sm:flex">
-                {['ETH', 'USDG', 'TSLA', 'GLD'].map((c) => (
-                  <span key={c} className="rounded-lg bg-white/15 px-2 py-1 text-xs font-bold backdrop-blur">{c}</span>
+              <div className="launch-orbit" aria-hidden>
+                <img src="/robinhood-chain.png" alt="" width={40} height={40} className="launch-core" />
+                {[...memes.map((m) => m.image as string), ...LAUNCH_ORBIT.map((c) => PAIR_LOGO[c])].slice(0, 10).map((src, i, arr) => (
+                  <img key={i} src={src} alt="" width={26} height={26} loading="lazy" className="launch-sat" style={{ ['--i' as string]: i, ['--n' as string]: arr.length }} />
                 ))}
               </div>
             )}

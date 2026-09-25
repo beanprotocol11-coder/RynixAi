@@ -630,7 +630,46 @@
 .mascot-hero:hover .mascot-hero-strip {
   animation-play-state: paused;
 }
+.launch-orbit {
+  position: relative;
+  width: 108px;
+  height: 108px;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+.launch-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  border-radius: 12px;
+  box-shadow: 0 0 24px rgba(180, 120, 255, 0.6);
+  animation: float 4s ease-in-out infinite;
+}
+.launch-sat {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -13px;
+  border-radius: 999px;
+  background: #fff;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --a: calc(var(--i) * 360deg / var(--n));
+  animation: orbit 16s linear infinite;
+  animation-delay: calc(var(--i) * -16s / var(--n));
+}
+@keyframes orbit {
+  from {
+    transform: rotate(0deg) translateX(46px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(46px) rotate(-360deg);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
+  .launch-sat,
+  .launch-core,
   .tape,
   .showcase-tape,
   .mascot-hero-strip,
