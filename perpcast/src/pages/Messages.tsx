@@ -9,7 +9,7 @@ import { useAuth } from '../store/auth'
 import { api } from '../lib/api'
 import { userPath, type DMThread, type User } from '../lib/social'
 import { useAsync } from '../hooks/useAsync'
-import { cx, timeAgo, fullDate, shortAddr } from '../lib/format'
+import { cx, timeAgo, fullDate } from '../lib/format'
 import { toast } from '../store/notify'
 
 export default function Messages() {
@@ -197,7 +197,7 @@ function UserPick({ u, onPick }: { u: User; onPick: (u: User) => void }) {
       <Avatar src={u.pfp} name={u.displayName || u.username} seed={u.id} size={36} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-bold">{u.displayName || u.username}</span>
-        <span className="block truncate text-xs text-ink-3">@{u.username} · {shortAddr(u.address)}</span>
+        <span className="block truncate text-xs text-ink-3">@{u.username}</span>
       </span>
       <MessageIcon size={16} className="text-ink-3" />
     </button>
@@ -254,7 +254,7 @@ function Chat({ thread, me }: { thread: DMThread; me: User }) {
             {name}
           </Link>
         }
-        sub={`@${peer.username} · ${shortAddr(peer.address)}`}
+        sub={`@${peer.username}`}
         back={<BackBtn />}
         right={
           <Menu trigger={() => <button className="icon-btn" aria-label="Options"><MoreIcon size={18} /></button>}>

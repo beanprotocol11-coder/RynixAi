@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, ChannelIcon, Logo, Menu, MenuItem, Wordmark, LiveNumber } from './ui'
-import { BellIcon, BookmarkIcon, ChartIcon, CompassIcon, HomeIcon, LogoutIcon, MessageIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, WalletIcon, MoreIcon, ExternalIcon, HashIcon, TrendUpIcon, TrendDownIcon, SmileIcon, RocketIcon } from './Icons'
+import { BellIcon, BookmarkIcon, ChartIcon, CompassIcon, HomeIcon, LogoutIcon, MessageIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, WalletIcon, MoreIcon, ExternalIcon, HashIcon, TrendUpIcon, TrendDownIcon, SmileIcon, RocketIcon, GalleryIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { useUI } from '../store/ui'
 import { useNotify } from '../store/notify'
@@ -12,7 +12,7 @@ import { CHANNELS, userPath, type User } from '../lib/social'
 import { api } from '../lib/api'
 import { coinName, displaySymbol } from '../lib/hyperliquid'
 import { CoinLogo } from './CoinLogo'
-import { cx, px, pct, usd, compact, shortAddr } from '../lib/format'
+import { cx, px, pct, usd, compact } from '../lib/format'
 import { ROBINHOOD_CHAIN, ROBINHOOD_TESTNET } from '../lib/wallet'
 import { useDMs } from '../store/dm'
 import { useAsync } from '../hooks/useAsync'
@@ -23,6 +23,7 @@ const NAV = [
   { to: '/trade', label: 'Trade', icon: ChartIcon },
   { to: '/explore', label: 'Explore', icon: CompassIcon },
   { to: '/memes', label: 'Memes', icon: SmileIcon },
+  { to: '/nfts', label: 'NFTs', icon: GalleryIcon },
   { to: '/launch', label: 'Launch', icon: RocketIcon },
   { to: '/notifications', label: 'Notifications', icon: BellIcon },
   { to: '/messages', label: 'Messages', icon: MessageIcon },
@@ -119,7 +120,7 @@ function Sidebar() {
                 <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={36} />
                 <span className="hidden min-w-0 flex-1 text-left xl:block">
                   <span className="block truncate text-sm font-bold">{me.displayName || me.username}</span>
-                  <span className="block truncate text-xs text-ink-3">@{me.username} · {shortAddr(me.address)}</span>
+                  <span className="block truncate text-xs text-ink-3">@{me.username}</span>
                 </span>
                 <MoreIcon size={18} className="hidden text-ink-3 xl:block" />
               </button>
@@ -459,7 +460,7 @@ export function WhoToFollow({ limit = 4 }: { limit?: number }) {
             </Link>
             <Link to={userPath(u)} className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold leading-tight hover:underline">{u.displayName || u.username}</span>
-              <span className="block truncate text-xs text-ink-3">@{u.username} · {shortAddr(u.address)}</span>
+              <span className="block truncate text-xs text-ink-3">@{u.username}</span>
             </Link>
             <button className={cx('btn !py-1.5 !px-3.5 text-xs', on ? 'btn-outline' : 'btn-ink')} onClick={() => (me ? void toggleFollow(u) : openSignIn('Sign in to follow people.'))}>
               {on ? 'Following' : 'Follow'}

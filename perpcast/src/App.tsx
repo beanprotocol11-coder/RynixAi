@@ -19,6 +19,7 @@ const Bookmarks = lazy(() => import('./pages/Bookmarks'))
 const Portfolio = lazy(() => import('./pages/Portfolio'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Memes = lazy(() => import('./pages/Memes'))
+const Nfts = lazy(() => import('./pages/Nfts'))
 const Launch = lazy(() => import('./pages/Launch'))
 
 function PageFallback() {
@@ -77,6 +78,8 @@ export default function App() {
                   <Route path="explore" element={<Explore />} />
                   <Route path="memes" element={<Memes />} />
                   <Route path="memes/:address" element={<Memes />} />
+                  <Route path="nfts" element={<Nfts />} />
+                  <Route path="nfts/:address" element={<Nfts />} />
                   <Route path="launch" element={<Launch />} />
                   <Route path="search" element={<Navigate to="/explore" replace />} />
                   <Route path="channel/:id" element={<Channel />} />

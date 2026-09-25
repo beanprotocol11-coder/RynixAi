@@ -292,6 +292,14 @@ export const CodeIcon = (p: P) => (
     <path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" />
   </svg>
 )
+export const GalleryIcon = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <path d="M17.5 14v7M14 17.5h7" />
+  </svg>
+)
 export const SmileIcon = (p: P) => (
   <svg {...base(p)}>
     <circle cx="12" cy="12" r="9" />

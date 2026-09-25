@@ -29,6 +29,7 @@ export default function Settings() {
   const toggleMute = useSocial((s) => s.toggleMute)
   const clearNotifs = useNotify((s) => s.clear)
   const [wipe, setWipe] = useState(false)
+  const [revealAddr, setRevealAddr] = useState(false)
   const local = api().mode === 'local'
 
   const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => toast({ kind: 'success', title: 'Copied' }))
@@ -81,7 +82,9 @@ export default function Settings() {
                 <dd>{session.walletName}</dd>
                 <dt>Address</dt>
                 <dd className="mono flex items-center gap-2">
-                  {shortAddr(me.address)}
+                  <button className="chip !py-0 !text-[11px]" onClick={() => setRevealAddr((v) => !v)}>
+                    {revealAddr ? shortAddr(me.address) : 'Hidden · tap to reveal'}
+                  </button>
                   <button className="icon-btn !h-6 !w-6" onClick={() => copy(me.address)} aria-label="Copy address">
                     <CopyIcon size={13} />
                   </button>

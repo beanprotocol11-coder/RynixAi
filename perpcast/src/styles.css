@@ -283,28 +283,52 @@
   }
   /* Big, obvious category pills (Memes / Stocks / RWAs / Hyperliquid / Macro / Dev) */
   .cat-pill {
-    @apply inline-flex shrink-0 items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-semibold transition-all duration-150 select-none active:scale-[0.98];
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-2);
-    box-shadow: var(--shadow);
+    @apply relative inline-flex shrink-0 items-center gap-2 rounded-2xl px-3.5 py-2 text-sm font-bold transition-all duration-200 select-none active:scale-[0.97];
+    --c1: var(--cat, var(--accent));
+    --c2: var(--cat2, var(--accent-2));
+    background:
+      linear-gradient(135deg, color-mix(in oklab, var(--c1) 16%, var(--surface)) 0%, var(--surface) 55%, color-mix(in oklab, var(--c2) 14%, var(--surface)) 100%);
+    border: 1px solid color-mix(in oklab, var(--c1) 28%, var(--border));
+    color: var(--text);
+    box-shadow: 0 8px 20px -14px var(--c1), inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+  .cat-pill::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    opacity: 0;
+    z-index: -1;
+    filter: blur(10px);
+    transition: opacity 0.2s;
   }
   .cat-pill:hover {
-    color: var(--text);
-    border-color: var(--border-strong);
-    transform: translateY(-1px);
+    border-color: color-mix(in oklab, var(--c1) 60%, var(--border));
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px -14px var(--c1);
+  }
+  .cat-pill:hover::after {
+    opacity: 0.35;
   }
   .cat-pill .cat-dot {
     @apply inline-flex h-7 w-7 items-center justify-center rounded-xl text-white;
-    background: var(--cat, var(--accent));
-    box-shadow: 0 6px 14px -8px var(--cat, var(--accent));
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    box-shadow: 0 6px 14px -6px var(--c1), inset 0 1px 0 rgb(255 255 255 / 0.35);
   }
   .cat-pill[aria-pressed="true"],
   .cat-pill[aria-current="page"] {
-    color: var(--text);
-    border-color: color-mix(in oklab, var(--cat, var(--accent)) 55%, transparent);
-    background: color-mix(in oklab, var(--cat, var(--accent)) 12%, var(--surface));
-    box-shadow: 0 0 0 1px color-mix(in oklab, var(--cat, var(--accent)) 30%, transparent), 0 10px 24px -14px var(--cat, var(--accent));
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    box-shadow: 0 12px 28px -12px var(--c1), 0 0 0 1px color-mix(in oklab, var(--c2) 50%, transparent);
+  }
+  .cat-pill[aria-current="page"]::after {
+    opacity: 0.5;
+  }
+  .cat-pill[aria-current="page"] .cat-dot {
+    background: rgb(255 255 255 / 0.22);
+    box-shadow: none;
   }
   .dreamy-card {
     position: relative;

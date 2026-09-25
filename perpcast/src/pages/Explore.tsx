@@ -11,7 +11,7 @@ import { useMarket, change24h } from '../store/market'
 import { useSocial } from '../store/social'
 import { useAuth } from '../store/auth'
 import { useAsync } from '../hooks/useAsync'
-import { cx, px, pct, usd, shortAddr } from '../lib/format'
+import { cx, px, pct, usd } from '../lib/format'
 import { MobileTopBar } from '../components/Layout'
 import { CategoryBar } from '../components/CategoryBar'
 import { Feed, feedLoader } from '../components/Feed'
@@ -139,7 +139,7 @@ export function UserRow({ u }: { u: User }) {
       </Link>
       <Link to={userPath(u)} className="min-w-0 flex-1">
         <span className="block truncate text-sm font-bold hover:underline">{u.displayName || u.username}</span>
-        <span className="block truncate text-xs text-ink-3">@{u.username} · {shortAddr(u.address)}</span>
+        <span className="block truncate text-xs text-ink-3">@{u.username}</span>
         {u.bio && <span className="mt-0.5 block truncate text-xs text-ink-2">{u.bio}</span>}
       </Link>
       {me?.id !== u.id && (

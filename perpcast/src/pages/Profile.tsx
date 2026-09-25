@@ -4,8 +4,7 @@ import { Feed, feedLoader } from '../components/Feed'
 import { Avatar, PageHeader, Tabs, Empty, Skeleton } from '../components/ui'
 import { BackBtn } from './Channel'
 import { CastText } from '../components/CastText'
-import { explorerUrl } from '../components/Layout'
-import { ExternalIcon, MessageIcon, ShareIcon, UserIcon, WalletIcon, ShieldIcon, CopyIcon, XIcon, GlobeIcon } from '../components/Icons'
+import { MessageIcon, ShareIcon, UserIcon, ShieldIcon, XIcon, GlobeIcon } from '../components/Icons'
 import { api } from '../lib/api'
 import { userPath, type User } from '../lib/social'
 import { displaySymbol } from '../lib/hyperliquid'
@@ -15,7 +14,7 @@ import { useDMs } from '../store/dm'
 import { useTrading, unrealized } from '../store/trading'
 import { useMarket } from '../store/market'
 import { toast } from '../store/notify'
-import { cx, compact, usd, shortAddr, fullDate } from '../lib/format'
+import { cx, compact, usd, fullDate } from '../lib/format'
 
 type Tab = 'casts' | 'replies' | 'likes' | 'positions'
 
@@ -136,9 +135,6 @@ export default function Profile() {
                 <MessageIcon size={18} />
               </button>
             )}
-            <a className="icon-btn border border-line" title="View wallet on explorer" href={explorerUrl(session?.chainId ?? 1, user.address)} target="_blank" rel="noreferrer noopener">
-              <ExternalIcon size={18} />
-            </a>
             {isMe ? (
               <Link to="/settings" className="btn btn-outline !py-2">
                 Edit profile
@@ -165,16 +161,9 @@ export default function Profile() {
           <h2 className="font-display text-xl font-extrabold tracking-tight flex items-center gap-1.5">{name}</h2>
           <div className="flex flex-wrap items-center gap-2 text-sm text-ink-3">
             <span>@{user.username}</span>
-            <button
-              className="chip !py-0 !text-[11px] gap-1 mono"
-              title="Copy wallet address"
-              onClick={() => {
-                void navigator.clipboard.writeText(user.address)
-                toast({ kind: 'info', title: 'Address copied' })
-              }}
-            >
-              <WalletIcon size={11} /> {shortAddr(user.address)} <CopyIcon size={10} />
-            </button>
+            <span className="chip !py-0 !text-[11px] gap-1" title="Wallet verified by signature — address kept private">
+              <ShieldIcon size={11} /> Wallet verified
+            </span>
           </div>
           {user.bio && (
             <div className="mt-2">

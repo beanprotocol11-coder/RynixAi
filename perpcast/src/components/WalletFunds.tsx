@@ -78,7 +78,7 @@ export function WalletFunds({ className }: { className?: string }) {
           </div>
           <div className="mono mt-1 text-4xl font-bold tabular-nums">{data ? usd(hlTotal) : '—'}</div>
           <div className="mt-1 text-sm text-ink-3">
-            Hyperliquid account · {shortAddr(me.address)} · {session?.walletName}
+            Hyperliquid account · {session?.walletName ?? 'your wallet'}
           </div>
         </div>
         <div className="flex gap-2">

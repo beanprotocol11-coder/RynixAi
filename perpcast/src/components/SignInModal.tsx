@@ -6,7 +6,7 @@ import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
 import { api } from '../lib/api'
 import { brandWallet, chainName, currentChainId, discoverWallets, isMobile, onAccountsChanged, onChainChanged, requestAccounts, signMessage, unbrandedWallets, WALLET_BRANDS, WALLETCONNECT_ID, walletIcon, type WalletOption } from '../lib/wallet'
-import { shortAddr, cx } from '../lib/format'
+import { cx } from '../lib/format'
 
 type Phase = 'idle' | 'connecting' | 'signing' | 'verifying' | 'done'
 
@@ -74,7 +74,7 @@ function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void 
       if (!alive.current) return
       setPhase('done')
       setSession({ user, walletId: w.id, walletName: w.name, chainId, signedInAt: Date.now() })
-      toast({ kind: 'success', title: `Welcome, ${user.displayName || user.username}`, body: `${w.name} · ${shortAddr(address)} · ${chainName(chainId)}` })
+      toast({ kind: 'success', title: `Welcome, ${user.displayName || user.username}`, body: `${w.name} · ${chainName(chainId)}` })
     } catch (e) {
       if (!alive.current) return
       setPhase('idle')
