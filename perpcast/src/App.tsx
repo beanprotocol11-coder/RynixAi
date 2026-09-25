@@ -80,6 +80,7 @@ export default function App() {
                   <Route path="memes/:address" element={<Memes />} />
                   <Route path="nfts" element={<Nfts />} />
                   <Route path="nfts/:address" element={<Nfts />} />
+                  <Route path="nfts/perpcast/:id" element={<Nfts />} />
                   <Route path="launch" element={<Launch />} />
                   <Route path="search" element={<Navigate to="/explore" replace />} />
                   <Route path="channel/:id" element={<Channel />} />

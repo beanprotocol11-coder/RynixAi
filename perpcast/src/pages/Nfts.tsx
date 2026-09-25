@@ -8,13 +8,15 @@ import { fetchCollections, fetchCollection, fetchCover, fetchItems, explorerNft,
 import { useUI } from '../store/ui'
 import { useAuth } from '../store/auth'
 import { cx, compact } from '../lib/format'
+import { MascotsGallery } from './Mascots'
+import { MASCOT_SUPPLY, mascotImage } from '../lib/mascots'
 
 export default function Nfts() {
-  const { address } = useParams()
+  const { address, id } = useParams()
   return (
     <div>
       <MobileTopBar title={<span className="font-display font-extrabold">NFT Gallery</span>} />
-      {address ? <CollectionDetail address={address} /> : <CollectionGrid />}
+      {address === 'perpcast' || id ? <MascotsGallery id={id} /> : address ? <CollectionDetail address={address} /> : <CollectionGrid />}
     </div>
   )
 }
@@ -98,6 +100,21 @@ function CollectionGrid() {
         />
       </div>
       <CategoryBar />
+      <Link to="/nfts/perpcast" className="mascot-hero group mx-4 mb-3 block overflow-hidden rounded-3xl p-4">
+        <div className="mascot-hero-strip" aria-hidden>
+          {Array.from({ length: 24 }, (_, i) => (
+            <img key={i} src={mascotImage((i % 12) + 1)} alt="" width={64} height={64} loading="lazy" />
+          ))}
+        </div>
+        <div className="relative mt-3 flex items-center gap-3">
+          <img src="/logo.svg" alt="" width={44} height={44} className="rounded-xl" />
+          <div className="min-w-0 flex-1">
+            <div className="font-display text-lg font-extrabold">Perpcast Mascots</div>
+            <div className="text-xs text-ink-3">Our own {MASCOT_SUPPLY}-piece generative collection · free mint · OpenSea</div>
+          </div>
+          <span className="btn btn-primary !h-9 !px-3 !text-xs">Open →</span>
+        </div>
+      </Link>
       <div className="dreamy-card mx-4 mb-3 flex flex-wrap items-center gap-3 rounded-2xl p-4">
         <img src="/robinhood-chain.png" alt="" width={40} height={40} className="rounded-xl" />
         <div className="min-w-0 flex-1">

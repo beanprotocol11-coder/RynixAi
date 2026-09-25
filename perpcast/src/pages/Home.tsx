@@ -4,6 +4,7 @@ import { Feed, feedLoader } from '../components/Feed'
 import { ComposerBody } from '../components/Composer'
 import { MobileTopBar } from '../components/Layout'
 import { CategoryBar } from '../components/CategoryBar'
+import { HomeShowcase } from '../components/HomeShowcase'
 import { Tabs } from '../components/ui'
 import { useAuth } from '../store/auth'
 import { useSocial } from '../store/social'
@@ -49,6 +50,7 @@ export default function Home() {
       </div>
 
       <CategoryBar className="border-b border-line" />
+      <HomeShowcase />
 
       <div className="hidden border-b border-line px-4 py-3 md:block">
         <ComposerBody opts={{ channel: tab === 'traders' ? 'perpcast' : null }} autoFocus={false} />
