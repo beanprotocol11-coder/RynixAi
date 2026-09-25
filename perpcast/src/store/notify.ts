@@ -13,7 +13,7 @@ export interface Toast {
   action?: { label: string; onClick: () => void }
 }
 
-export type NotificationKind = 'fill' | 'close' | 'liquidation' | 'tp' | 'sl' | 'system' | 'cast' | 'reply' | 'like' | 'recast' | 'follow'
+export type NotificationKind = 'fill' | 'close' | 'liquidation' | 'tp' | 'sl' | 'system' | 'cast' | 'reply' | 'like' | 'recast' | 'follow' | 'joined'
 
 export interface AppNotification {
   id: string

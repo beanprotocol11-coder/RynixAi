@@ -33,6 +33,9 @@ export interface Backend {
   readonly mode: 'server' | 'local'
   nonce(address: string, chainId: number): Promise<AuthNonce>
   verify(address: string, message: string, signature: string): Promise<AuthResult>
+  emailStart(email: string): Promise<void>
+  emailVerify(email: string, code: string): Promise<AuthResult>
+  recentUsers(since: number): Promise<User[]>
   me(): Promise<User | null>
   signOut(): Promise<void>
   updateProfile(patch: ProfilePatch): Promise<User>
@@ -123,6 +126,17 @@ class HttpBackend implements Backend {
     const r = await this.post<AuthResult>('/auth/verify', { address, message, signature })
     setToken(r.token)
     return r
+  }
+  async emailStart(email: string) {
+    await this.post('/auth/email/start', { email })
+  }
+  async emailVerify(email: string, code: string) {
+    const r = await this.post<AuthResult>('/auth/email/verify', { email, code })
+    setToken(r.token)
+    return r
+  }
+  async recentUsers(since: number) {
+    return (await this.get<{ users: User[] }>(`/users/recent?since=${since}`)).users
   }
   async me() {
     if (!getToken()) return null

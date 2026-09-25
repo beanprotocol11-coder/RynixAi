@@ -277,6 +277,25 @@
     border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent), 0 8px 24px -14px color-mix(in srgb, var(--accent) 60%, transparent);
   }
+  .signin-email {
+    @apply flex w-full items-center gap-3 rounded-2xl border p-3 transition-all;
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--surface-2)), var(--surface-2));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent), 0 10px 30px -18px color-mix(in srgb, var(--accent) 80%, transparent);
+  }
+  .signin-email:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .signin-email-ic {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 6px 18px -8px var(--accent);
+  }
+  .link {
+    @apply font-semibold underline-offset-2 hover:underline disabled:opacity-50 disabled:no-underline;
+    color: var(--accent);
+  }
   .chip-active:hover {
     background: var(--text);
     color: var(--bg);

@@ -23,6 +23,8 @@ export interface Env {
   DB?: D1Database
   ASSETS?: { fetch: (req: Request) => Promise<Response> }
   PINATA_JWT?: string
+  RESEND_API_KEY?: string
+  EMAIL_FROM?: string
   IPFS_GATEWAY?: string
 }
 

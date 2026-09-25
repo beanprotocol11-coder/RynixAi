@@ -160,6 +160,19 @@ export class LocalBackend implements Backend {
     setToken(token)
     return { token, user: this.user(id) }
   }
+  async emailStart(): Promise<void> {
+    throw new Error('Email sign-in needs the Perpcast server, which is unreachable right now — use a wallet instead')
+  }
+  async emailVerify(): Promise<AuthResult> {
+    throw new Error('Email sign-in needs the Perpcast server, which is unreachable right now — use a wallet instead')
+  }
+  async recentUsers(since: number): Promise<User[]> {
+    return Object.values(this.db.users)
+      .filter((u) => u.createdAt > since)
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 20)
+      .map((u) => this.user(u.id))
+  }
   async me() {
     const id = this.meId()
     return id ? this.user(id) : null

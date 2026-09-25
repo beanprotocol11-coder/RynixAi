@@ -1,5 +1,5 @@
 import { verifyMessage } from 'viem'
-import type { D1Database, PagesFunction } from '../lib/types'
+import type { D1Database, Env, PagesFunction } from '../lib/types'
 import { HttpError, USERNAME_RE, USER_SELECT, defaultUsername, fetchCastRows, getUserByHandle, getUserById, getUsers, hydrateCasts, json, pushActivity, rid, toUser, type Cast, type CastRow, type User, type UserRow } from '../lib/db'
 
 const PAGE = 25
@@ -9,6 +9,7 @@ const MAX_TEXT = 1024
 
 interface Ctx {
   db: D1Database
+  env: Env
   req: Request
   url: URL
   viewer: User | null
@@ -125,19 +126,111 @@ route('POST', '/auth/verify', async (ctx) => {
 
   let user = await getUserById(ctx.db, id)
   if (!user) {
-    let username = defaultUsername(id)
-    const clash = await ctx.db.prepare('SELECT 1 FROM users WHERE username = ? COLLATE NOCASE').bind(username).first()
-    if (clash) username = `${username}${rid().slice(0, 3)}`
+    const username = await freeUsername(ctx.db, defaultUsername(id))
     await ctx.db.prepare('INSERT INTO users (id, address, username, display_name, pfp, bio, created_at) VALUES (?, ?, ?, ?, "", "", ?)').bind(id, b.address, username, username, Date.now()).run()
     user = await getUserById(ctx.db, id)
   }
+  return json(await openSession(ctx.db, id, user))
+})
+
+async function freeUsername(db: D1Database, base: string): Promise<string> {
+  const clash = await db.prepare('SELECT 1 FROM users WHERE username = ? COLLATE NOCASE').bind(base).first()
+  return clash ? `${base}${rid().slice(0, 3)}` : base
+}
+
+async function openSession(db: D1Database, userId: string, user: User | null) {
   const token = rid() + rid()
   const now = Date.now()
-  await ctx.db.batch([
-    ctx.db.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
-    ctx.db.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').bind(token, id, now, now + SESSION_TTL),
+  await db.batch([
+    db.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),
+    db.prepare('INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)').bind(token, userId, now, now + SESSION_TTL),
   ])
-  return json({ token, user })
+  return { token, user }
+}
+
+/* ---------------- email OTP ---------------- */
+
+const CODE_TTL = 1000 * 60 * 10
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+async function sha256(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+function otpHtml(code: string, host: string): string {
+  const digits = code.split('').map((d) => `<td style="width:44px;height:56px;border-radius:12px;background:#15102a;color:#fff;font:700 28px/56px ui-monospace,Menlo,monospace;text-align:center">${d}</td>`).join('<td style="width:8px"></td>')
+  return `<!doctype html><html><body style="margin:0;background:#07050f;padding:32px 16px;font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;color:#e7e2ff">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+  <table role="presentation" width="420" cellpadding="0" cellspacing="0" style="max-width:420px;background:#0e0a1f;border:1px solid #2a2347;border-radius:24px;padding:32px">
+    <tr><td align="center" style="padding-bottom:16px"><img src="https://${host}/logo.svg" width="56" height="56" alt="Perpcast" style="border-radius:16px"></td></tr>
+    <tr><td align="center" style="font-size:22px;font-weight:800;padding-bottom:6px">Your Perpcast sign-in code</td></tr>
+    <tr><td align="center" style="font-size:14px;color:#9d95bd;padding-bottom:24px">Enter this code on ${host}. It expires in 10 minutes.</td></tr>
+    <tr><td align="center" style="padding-bottom:24px"><table role="presentation" cellpadding="0" cellspacing="0"><tr>${digits}</tr></table></td></tr>
+    <tr><td align="center" style="font-size:12px;color:#6f679a">If you didn't request this, you can safely ignore this email. Nobody from Perpcast will ever ask you for this code.</td></tr>
+  </table></td></tr></table></body></html>`
+}
+
+async function sendCode(env: Env, host: string, to: string, code: string) {
+  if (!env.RESEND_API_KEY) throw new HttpError(503, 'Email sign-in is not configured yet')
+  const from = env.EMAIL_FROM || `Perpcast <login@${host.replace(/^www\./, '')}>`
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ from, to: [to], subject: `${code} is your Perpcast code`, html: otpHtml(code, host), text: `Your Perpcast sign-in code is ${code}. It expires in 10 minutes.` }),
+  })
+  if (!res.ok) {
+    const msg = (await res.json().catch(() => ({}))) as { message?: string }
+    console.error('resend', res.status, msg)
+    throw new HttpError(502, msg.message ? `Email failed: ${msg.message}` : 'Could not send the email, try again')
+  }
+}
+
+route('POST', '/auth/email/start', async (ctx) => {
+  const b = await body<{ email?: string }>(ctx.req)
+  const email = str(b.email, 254).trim().toLowerCase()
+  if (!EMAIL_RE.test(email)) throw new HttpError(400, 'Enter a valid email address')
+  const now = Date.now()
+  const last = await ctx.db.prepare('SELECT created_at FROM email_codes WHERE email = ?').bind(email).first<{ created_at: number }>()
+  if (last && now - last.created_at < 30_000) throw new HttpError(429, 'Code already sent — check your inbox (and spam), or retry in 30s')
+  const code = String(Math.floor(100000 + Math.random() * 900000))
+  await sendCode(ctx.env, ctx.url.host, email, code)
+  await ctx.db.batch([
+    ctx.db.prepare('DELETE FROM email_codes WHERE created_at < ?').bind(now - CODE_TTL),
+    ctx.db.prepare('INSERT OR REPLACE INTO email_codes (email, code_hash, created_at, attempts) VALUES (?, ?, ?, 0)').bind(email, await sha256(`${email}:${code}`), now),
+  ])
+  return json({ ok: true })
+})
+
+route('POST', '/auth/email/verify', async (ctx) => {
+  const b = await body<{ email?: string; code?: string }>(ctx.req)
+  const email = str(b.email, 254).trim().toLowerCase()
+  const code = str(b.code, 6).replace(/\D/g, '')
+  if (!EMAIL_RE.test(email) || code.length !== 6) throw new HttpError(400, 'Enter the 6-digit code')
+  const row = await ctx.db.prepare('SELECT code_hash, created_at, attempts FROM email_codes WHERE email = ?').bind(email).first<{ code_hash: string; created_at: number; attempts: number }>()
+  if (!row || row.created_at < Date.now() - CODE_TTL) throw new HttpError(400, 'Code expired — request a new one')
+  if (row.attempts >= 5) throw new HttpError(429, 'Too many attempts — request a new code')
+  if (row.code_hash !== (await sha256(`${email}:${code}`))) {
+    await ctx.db.prepare('UPDATE email_codes SET attempts = attempts + 1 WHERE email = ?').bind(email).run()
+    throw new HttpError(401, 'Wrong code, try again')
+  }
+  await ctx.db.prepare('DELETE FROM email_codes WHERE email = ?').bind(email).run()
+
+  let id = (await ctx.db.prepare('SELECT id FROM users WHERE email = ?').bind(email).first<{ id: string }>())?.id
+  if (!id) {
+    id = `em_${rid().slice(0, 20)}`
+    const base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 15) || 'caster'
+    const username = await freeUsername(ctx.db, base.length >= 3 ? base : `${base}${rid().slice(0, 3)}`)
+    await ctx.db.prepare('INSERT INTO users (id, address, username, display_name, pfp, bio, email, created_at) VALUES (?, "", ?, ?, "", "", ?, ?)').bind(id, username, username, email, Date.now()).run()
+  }
+  return json(await openSession(ctx.db, id, await getUserById(ctx.db, id)))
+})
+
+/** Newest accounts, for the cross-device "just joined Perpcast" feed. */
+route('GET', '/users/recent', async (ctx) => {
+  const since = Number(ctx.url.searchParams.get('since')) || 0
+  const rows = await ctx.db.prepare(`SELECT ${USER_SELECT} FROM users u WHERE u.created_at > ? ORDER BY u.created_at DESC LIMIT 20`).bind(since).all<UserRow>()
+  return json({ users: rows.results.map(toUser) })
 })
 
 route('GET', '/auth/me', async (ctx) => json({ user: ctx.viewer }))
@@ -530,7 +623,7 @@ export const onRequest: PagesFunction<{ route?: string[] }> = async ({ request, 
       const p: Record<string, string> = {}
       r.keys.forEach((k, i) => (p[k] = decodeURIComponent(m[i + 1])))
       const viewer = path === '/health' ? null : await viewerFromRequest(env.DB, request)
-      return await r.handler({ db: env.DB, req: request, url, viewer }, p)
+      return await r.handler({ db: env.DB, env, req: request, url, viewer }, p)
     }
     return json({ error: 'Not found' }, 404)
   } catch (e) {

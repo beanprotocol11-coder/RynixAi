@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader, Empty, Tabs } from '../components/ui'
 import { MobileTopBar } from '../components/Layout'
-import { BellIcon, HeartIcon, RecastIcon, ReplyIcon, UserIcon, ZapIcon, ShieldIcon, TrendUpIcon, TrendDownIcon, CheckIcon, TrashIcon } from '../components/Icons'
+import { BellIcon, HeartIcon, RecastIcon, ReplyIcon, UserIcon, ZapIcon, ShieldIcon, TrendUpIcon, TrendDownIcon, CheckIcon, TrashIcon, SparkIcon } from '../components/Icons'
 import { useNotify, type AppNotification, type NotificationKind } from '../store/notify'
 import { cx, timeAgo } from '../lib/format'
 
@@ -21,6 +21,7 @@ const ICON: Record<NotificationKind, { icon: React.ReactNode; cls: string }> = {
   like: { icon: <HeartIcon size={16} filled />, cls: 'bg-short-soft text-short' },
   recast: { icon: <RecastIcon size={16} />, cls: 'bg-long-soft text-long' },
   follow: { icon: <UserIcon size={16} />, cls: 'bg-accent-soft text-accent' },
+  joined: { icon: <SparkIcon size={16} />, cls: 'bg-accent-soft text-accent' },
 }
 
 export default function Notifications() {

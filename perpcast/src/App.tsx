@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react
 import { Layout } from './components/Layout'
 import { Toasts, Spinner, Empty } from './components/ui'
 import { SignInModal, WalletSessionWatcher } from './components/SignInModal'
+import { JoinWatcher } from './components/JoinWatcher'
 import { ComposerModal } from './components/Composer'
 import { useUI } from './store/ui'
 import { useAuth } from './store/auth'
@@ -103,6 +104,7 @@ export default function App() {
       <Toasts />
       <SignInModal />
       <WalletSessionWatcher />
+      <JoinWatcher />
       <ComposerModal />
     </BrowserRouter>
   )

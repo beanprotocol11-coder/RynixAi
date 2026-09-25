@@ -134,9 +134,11 @@ function Sidebar() {
                 <MenuItem icon={<SettingsIcon />} onClick={() => { nav('/settings'); close() }}>
                   Settings
                 </MenuItem>
-                <MenuItem icon={<ExternalIcon />} onClick={() => { window.open(explorerUrl(session?.chainId ?? 1, me.address), '_blank', 'noopener'); close() }}>
-                  View wallet on explorer
-                </MenuItem>
+                {me.address && (
+                  <MenuItem icon={<ExternalIcon />} onClick={() => { window.open(explorerUrl(session?.chainId ?? 1, me.address), '_blank', 'noopener'); close() }}>
+                    View wallet on explorer
+                  </MenuItem>
+                )}
                 <MenuItem icon={<LogoutIcon />} danger onClick={() => { void signOut(); close() }}>
                   Sign out
                 </MenuItem>

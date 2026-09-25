@@ -34,6 +34,7 @@ export default function Settings() {
 
   const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => toast({ kind: 'success', title: 'Copied' }))
 
+  const isEmail = session?.walletId === 'email'
   const onRobinhood = session ? session.chainId === ROBINHOOD_CHAIN.id || session.chainId === ROBINHOOD_TESTNET.id : false
   const switchChain = async () => {
     if (!session) return
@@ -78,22 +79,31 @@ export default function Settings() {
                 </Link>
               </div>
               <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm [&>dt]:text-ink-3">
-                <dt>Wallet</dt>
+                <dt>{isEmail ? 'Sign-in' : 'Wallet'}</dt>
                 <dd>{session.walletName}</dd>
-                <dt>Address</dt>
-                <dd className="mono flex items-center gap-2">
-                  <button className="chip !py-0 !text-[11px]" onClick={() => setRevealAddr((v) => !v)}>
-                    {revealAddr ? shortAddr(me.address) : 'Hidden · tap to reveal'}
-                  </button>
-                  <button className="icon-btn !h-6 !w-6" onClick={() => copy(me.address)} aria-label="Copy address">
-                    <CopyIcon size={13} />
-                  </button>
-                  <a className="icon-btn !h-6 !w-6" href={explorerUrl(session.chainId, me.address)} target="_blank" rel="noreferrer noopener" aria-label="View on explorer">
-                    <ExternalIcon size={13} />
-                  </a>
-                </dd>
-                <dt>Network</dt>
-                <dd className="flex flex-wrap items-center gap-2">
+                {isEmail ? (
+                  <>
+                    <dt>Wallet</dt>
+                    <dd className="text-ink-3">Not connected — connect one from Trade or Launch for on-chain actions</dd>
+                  </>
+                ) : (
+                  <>
+                    <dt>Address</dt>
+                    <dd className="mono flex items-center gap-2">
+                      <button className="chip !py-0 !text-[11px]" onClick={() => setRevealAddr((v) => !v)}>
+                        {revealAddr ? shortAddr(me.address) : 'Hidden · tap to reveal'}
+                      </button>
+                      <button className="icon-btn !h-6 !w-6" onClick={() => copy(me.address)} aria-label="Copy address">
+                        <CopyIcon size={13} />
+                      </button>
+                      <a className="icon-btn !h-6 !w-6" href={explorerUrl(session.chainId, me.address)} target="_blank" rel="noreferrer noopener" aria-label="View on explorer">
+                        <ExternalIcon size={13} />
+                      </a>
+                    </dd>
+                  </>
+                )}
+                {!isEmail && <dt>Network</dt>}
+                {!isEmail && <dd className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5">
                     {onRobinhood && <img src="/robinhood-chain.png" alt="" width={14} height={14} className="rounded-sm" />}
                     {chainName(session.chainId)}
@@ -103,7 +113,7 @@ export default function Settings() {
                       <img src="/robinhood-chain.png" alt="" width={12} height={12} className="rounded-sm" /> Switch to Robinhood Chain
                     </button>
                   )}
-                </dd>
+                </dd>}
                 <dt>Signed in</dt>
                 <dd>{fullDate(session.signedInAt)}</dd>
                 <dt>Storage</dt>

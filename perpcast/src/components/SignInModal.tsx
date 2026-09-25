@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Modal, ModalHeader, Spinner, Logo } from './ui'
-import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon, ArrowUpRightIcon } from './Icons'
+import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon, ArrowUpRightIcon, MessageIcon, CheckIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
 import { api } from '../lib/api'
@@ -22,20 +22,151 @@ export function SignInModal() {
   const open = useAuth((s) => s.signInOpen)
   const reason = useAuth((s) => s.signInReason)
   const close = useAuth((s) => s.closeSignIn)
-  const [showQr, setShowQr] = useState(false)
+  const [step, setStep] = useState<'main' | 'qr' | 'email'>('main')
 
   useEffect(() => {
-    if (open) setShowQr(false)
+    if (open) setStep('main')
   }, [open])
 
   return (
     <Modal open={open} onClose={close} size="sm" label="Sign in to Perpcast">
-      {showQr ? <QrStep onBack={() => setShowQr(false)} /> : <WalletStep reason={reason} onQr={() => setShowQr(true)} />}
+      {step === 'qr' ? <QrStep onBack={() => setStep('main')} /> : step === 'email' ? <EmailStep onBack={() => setStep('main')} /> : <WalletStep reason={reason} onQr={() => setStep('qr')} onEmail={() => setStep('email')} />}
     </Modal>
   )
 }
 
-function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void }) {
+function EmailStep({ onBack }: { onBack: () => void }) {
+  const close = useAuth((s) => s.closeSignIn)
+  const setSession = useAuth((s) => s.setSession)
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0)
+  const codeRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [cooldown])
+
+  const send = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await api().emailStart(email.trim())
+      setSent(true)
+      setCooldown(30)
+      setTimeout(() => codeRef.current?.focus(), 50)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  const verify = async (c = code) => {
+    if (c.length !== 6) return
+    setBusy(true)
+    setError(null)
+    try {
+      const { user } = await api().emailVerify(email.trim(), c)
+      setSession({ user, walletId: 'email', walletName: 'Email', chainId: 0, signedInAt: Date.now() })
+      toast({ kind: 'success', title: `Welcome, ${user.displayName || user.username}`, body: 'Signed in with email · connect a wallet any time in Settings' })
+    } catch (e) {
+      setError((e as Error).message)
+      setCode('')
+      codeRef.current?.focus()
+    } finally {
+      setBusy(false)
+    }
+  }
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 px-3 pt-3">
+        <button className="icon-btn" onClick={onBack} aria-label="Back">
+          <ArrowLeftIcon size={18} />
+        </button>
+        <span className="font-display font-bold">Continue with email</span>
+      </div>
+      <form
+        className="px-5 pb-5 pt-2 space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          void (sent ? verify() : send())
+        }}
+      >
+        {!sent ? (
+          <>
+            <p className="text-sm text-ink-2">We'll email you a 6-digit code. No password to remember.</p>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoFocus
+              className="input w-full !h-12 text-base"
+              placeholder="you@gmail.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <button type="submit" className="btn btn-primary w-full !h-12 text-base" disabled={!valid || busy}>
+              {busy ? <Spinner size={16} /> : <MessageIcon size={16} />} Send code
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 py-2 text-xs text-ink-2">
+              <CheckIcon size={14} className="text-long" />
+              <span>
+                Code sent to <b className="text-ink">{email.trim()}</b>. Check Gmail (and spam).
+              </span>
+            </div>
+            <input
+              ref={codeRef}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]*"
+              maxLength={6}
+              className="input w-full !h-14 text-center font-mono text-2xl tracking-[0.5em]"
+              placeholder="••••••"
+              value={code}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, '').slice(0, 6)
+                setCode(v)
+                if (v.length === 6) void verify(v)
+              }}
+            />
+            <button type="submit" className="btn btn-primary w-full !h-12 text-base" disabled={code.length !== 6 || busy}>
+              {busy ? <Spinner size={16} /> : <ZapIcon size={16} />} Sign in
+            </button>
+            <div className="flex items-center justify-between text-xs text-ink-3">
+              <button type="button" className="link" onClick={() => setSent(false)}>
+                Use another email
+              </button>
+              <button type="button" className="link" disabled={cooldown > 0 || busy} onClick={() => void send()}>
+                {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
+              </button>
+            </div>
+          </>
+        )}
+        {error && <div className="rounded-xl bg-short/10 px-3 py-2 text-sm text-short">{error}</div>}
+        <p className="pt-1 text-center text-[11px] leading-relaxed text-ink-3">
+          <ShieldIcon size={12} className="inline -mt-0.5 mr-1" />
+          Your email stays private and is never shown on your profile.
+        </p>
+        <button type="button" className="btn btn-ghost w-full text-sm" onClick={close}>
+          Cancel
+        </button>
+      </form>
+    </div>
+  )
+}
+
+function WalletStep({ reason, onQr, onEmail }: { reason: string | null; onQr: () => void; onEmail: () => void }) {
   const close = useAuth((s) => s.closeSignIn)
   const setSession = useAuth((s) => s.setSession)
   const [wallets, setWallets] = useState<WalletOption[]>([])
@@ -96,15 +227,30 @@ function WalletStep({ reason, onQr }: { reason: string | null; onQr: () => void 
           </span>
         }
         onClose={close}
-        sub={reason ?? 'Connect a wallet and sign a message. Your address is your identity — no email, no password.'}
+        sub={reason ?? 'Sign in with your email, or connect a wallet — no password either way.'}
       />
-      <div className="mx-5 mb-3 flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 py-2 text-xs text-ink-2">
-        <img src="/robinhood-chain.png" alt="" width={18} height={18} className="rounded-md" />
-        <span>
-          Perpcast is built on <b className="text-ink">Robinhood Chain</b>. Any EVM wallet works — you can switch networks later in Settings.
-        </span>
-      </div>
       <div className="px-5 pb-5 space-y-3">
+        <button className="signin-email group" onClick={onEmail}>
+          <span className="signin-email-ic">
+            <MessageIcon size={20} />
+          </span>
+          <span className="min-w-0 flex-1 text-left">
+            <span className="block text-sm font-bold">Continue with email</span>
+            <span className="block text-xs text-ink-3">Get a 6-digit code in your inbox</span>
+          </span>
+          <ArrowUpRightIcon size={16} className="text-ink-3 transition group-hover:text-ink" />
+        </button>
+        <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider text-ink-3">
+          <span className="h-px flex-1 bg-line" />
+          or connect a wallet
+          <span className="h-px flex-1 bg-line" />
+        </div>
+        <div className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 py-2 text-xs text-ink-2">
+          <img src="/robinhood-chain.png" alt="" width={18} height={18} className="rounded-md" />
+          <span>
+            Built on <b className="text-ink">Robinhood Chain</b>. Any EVM wallet works — needed for trading & launching.
+          </span>
+        </div>
         {!scanned && wallets.length === 0 && (
           <div className="flex items-center justify-center gap-2 py-2 text-xs text-ink-3">
             <Spinner size={14} /> Looking for wallets…
