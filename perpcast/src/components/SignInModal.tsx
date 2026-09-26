@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Modal, Spinner, Logo } from './ui'
-import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon, ArrowUpRightIcon, MessageIcon, CheckIcon } from './Icons'
+import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon, ArrowUpRightIcon, MessageIcon, CheckIcon, XIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
-import { api, googleClientId } from '../lib/api'
+import { api, googleClientId, xSignInEnabled } from '../lib/api'
 import { mountGoogleButton } from '../lib/google'
 import { Link } from 'react-router-dom'
 import { brandWallet, chainName, currentChainId, discoverWallets, isMobile, onAccountsChanged, onChainChanged, requestAccounts, signMessage, unbrandedWallets, WALLET_BRANDS, WALLETCONNECT_ID, walletIcon, type WalletOption } from '../lib/wallet'
@@ -65,6 +65,17 @@ function StartStep({ reason, onEmail, onWallet }: { reason: string | null; onEma
   const [gReady, setGReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const clientId = googleClientId()
+  const xOn = xSignInEnabled()
+  const [xBusy, setXBusy] = useState(false)
+
+  const startX = () => {
+    if (!xOn) {
+      setError('X sign-in is being set up — use a wallet or email for now')
+      return
+    }
+    setXBusy(true)
+    location.assign('/api/auth/x/start')
+  }
 
   useEffect(() => {
     if (!clientId || !gHost.current) return
@@ -121,13 +132,11 @@ function StartStep({ reason, onEmail, onWallet }: { reason: string | null; onEma
           </button>
           {clientId && <div ref={gHost} className={cx('absolute inset-0 overflow-hidden rounded-2xl opacity-0 [&>div]:h-full [&>div]:w-full [&_iframe]:!h-full', (!gReady || gBusy) && 'pointer-events-none')} aria-label="Continue with Google" />}
         </div>
-        <button type="button" className="start-opt" onClick={onEmail}>
-          <span className="start-opt-ic text-white" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
-            <MessageIcon size={20} />
-          </span>
+        <button type="button" className="start-opt" disabled={xBusy} onClick={startX}>
+          <span className="start-opt-ic bg-black text-white">{xBusy ? <Spinner size={18} /> : <XIcon size={20} />}</span>
           <span className="min-w-0 flex-1 text-left">
-            <span className="block text-sm font-bold">Continue with email</span>
-            <span className="block text-xs text-ink-3">Get a 6-digit code in your inbox</span>
+            <span className="block text-sm font-bold">Continue with X</span>
+            <span className="block text-xs text-ink-3">{xOn ? 'Your X handle shows on your profile' : 'Coming soon'}</span>
           </span>
           <ArrowUpRightIcon size={16} className="text-ink-3" />
         </button>
@@ -144,6 +153,9 @@ function StartStep({ reason, onEmail, onWallet }: { reason: string | null; onEma
               <img key={b.id} src={b.icon} alt="" className="h-5 w-5 rounded-md ring-2 ring-surface" />
             ))}
           </span>
+        </button>
+        <button type="button" className="link mx-auto flex items-center gap-1.5 pt-1 text-xs text-ink-2" onClick={onEmail}>
+          <MessageIcon size={13} /> Continue with email instead
         </button>
         {error && <div className="rounded-xl bg-short/10 px-3 py-2 text-sm text-short">{error}</div>}
         <p className="pt-2 text-center text-[11px] leading-relaxed text-ink-3">

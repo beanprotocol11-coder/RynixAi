@@ -37,11 +37,12 @@ function Privacy() {
           "Encrypted for another device", and if you clear your browser data the key is gone and past messages cannot be recovered by us.
         </p>
       </Section>
-      <Section title="Sign-in codes and Google">
+      <Section title="Sign-in with X, Google and email codes">
         <p>
-          Email codes are six digits, hashed before storage, expire after ten minutes and are single use. We send them via Resend from
-          login@perpcast.app. Google sign-in uses Google Identity Services; we verify the ID token with Google and keep only your verified
-          email, name and avatar URL.
+          X sign-in uses X's OAuth 2.0 (read-only scopes: users.read, tweet.read). We keep only your X user ID, handle, name and avatar URL,
+          never post on your behalf, and discard the access token after reading your profile. Email codes are six digits, hashed before
+          storage, expire after ten minutes and are single use. We send them via Resend from login@perpcast.app. Google sign-in uses Google
+          Identity Services; we verify the ID token with Google and keep only your verified email, name and avatar URL.
         </p>
       </Section>
       <Section title="Wallets and on-chain data">

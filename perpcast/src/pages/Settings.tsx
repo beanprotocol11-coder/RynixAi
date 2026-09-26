@@ -34,7 +34,7 @@ export default function Settings() {
 
   const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => toast({ kind: 'success', title: 'Copied' }))
 
-  const isEmail = session?.walletId === 'email' || session?.walletId === 'google'
+  const isEmail = session?.walletId === 'email' || session?.walletId === 'google' || session?.walletId === 'x'
   const onRobinhood = session ? session.chainId === ROBINHOOD_CHAIN.id || session.chainId === ROBINHOOD_TESTNET.id : false
   const switchChain = async () => {
     if (!session) return

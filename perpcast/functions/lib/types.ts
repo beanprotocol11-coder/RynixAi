@@ -25,6 +25,8 @@ export interface Env {
   PINATA_JWT?: string
   RESEND_API_KEY?: string
   GOOGLE_CLIENT_ID?: string
+  X_CLIENT_ID?: string
+  X_CLIENT_SECRET?: string
   EMAIL_FROM?: string
   IPFS_GATEWAY?: string
 }

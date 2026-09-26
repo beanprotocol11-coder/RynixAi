@@ -250,6 +250,12 @@ class HttpBackend implements Backend {
 let backend: Backend | null = null
 let ready: Promise<Backend> | null = null
 let googleClient: string | null = null
+let xEnabled = false
+
+/** True when the server has X (Twitter) OAuth credentials configured. */
+export function xSignInEnabled(): boolean {
+  return xEnabled
+}
 
 /** Google OAuth client ID advertised by the server; null when Google sign-in is not configured. */
 export function googleClientId(): string | null {
@@ -265,8 +271,9 @@ export function initBackend(): Promise<Backend> {
       const t = setTimeout(() => ctrl.abort(), 4000)
       const res = await fetch('/api/health', { signal: ctrl.signal, headers: { accept: 'application/json' } })
       clearTimeout(t)
-      const data = (await res.json()) as { ok?: boolean; db?: boolean; google?: string | null }
+      const data = (await res.json()) as { ok?: boolean; db?: boolean; google?: string | null; x?: boolean }
       googleClient = typeof data.google === 'string' && data.google ? data.google : null
+      xEnabled = data.x === true
       backend = res.ok && data.ok && data.db ? new HttpBackend() : new LocalBackend()
     } catch {
       backend = new LocalBackend()

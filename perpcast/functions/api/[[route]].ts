@@ -75,7 +75,7 @@ route('GET', '/health', async (ctx) => {
   } catch {
     db = false
   }
-  return json({ ok: true, db, time: Date.now(), google: ctx.env.GOOGLE_CLIENT_ID || null })
+  return json({ ok: true, db, time: Date.now(), google: ctx.env.GOOGLE_CLIENT_ID || null, x: !!(ctx.env.X_CLIENT_ID && ctx.env.X_CLIENT_SECRET) })
 })
 
 /* ---------------- auth ---------------- */
@@ -262,6 +262,108 @@ route('POST', '/auth/google', async (ctx) => {
   const id = await userForEmail(ctx.db, email, { name: info.name, picture: info.picture })
   return json(await openSession(ctx.db, id, await getUserById(ctx.db, id)))
 })
+
+/* ---------------- Sign in with X (OAuth 2.0 + PKCE) ---------------- */
+
+const X_SCOPE = 'users.read tweet.read'
+
+function b64url(buf: ArrayBuffer | Uint8Array): string {
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf)
+  let s = ''
+  for (const b of bytes) s += String.fromCharCode(b)
+  return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function xRedirect(url: URL): string {
+  return `${url.origin}/api/auth/x/callback`
+}
+
+function backToApp(url: URL, frag: string): Response {
+  return new Response(null, { status: 302, headers: { location: `${url.origin}/#${frag}`, 'cache-control': 'no-store' } })
+}
+
+route('GET', '/auth/x/start', async (ctx) => {
+  if (!ctx.env.X_CLIENT_ID || !ctx.env.X_CLIENT_SECRET) throw new HttpError(503, 'X sign-in is not configured yet')
+  const state = rid()
+  const verifier = rid() + rid()
+  const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)))
+  const now = Date.now()
+  await ctx.db.batch([
+    ctx.db.prepare('DELETE FROM nonces WHERE created_at < ?').bind(now - NONCE_TTL),
+    ctx.db.prepare('INSERT INTO nonces (nonce, address, created_at) VALUES (?, ?, ?)').bind(state, `x:${verifier}`, now),
+  ])
+  const q = new URLSearchParams({
+    response_type: 'code',
+    client_id: ctx.env.X_CLIENT_ID,
+    redirect_uri: xRedirect(ctx.url),
+    scope: X_SCOPE,
+    state,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+  })
+  return new Response(null, { status: 302, headers: { location: `https://x.com/i/oauth2/authorize?${q}`, 'cache-control': 'no-store' } })
+})
+
+interface XUser {
+  id: string
+  username: string
+  name?: string
+  profile_image_url?: string
+}
+
+route('GET', '/auth/x/callback', async (ctx) => {
+  const { X_CLIENT_ID: cid, X_CLIENT_SECRET: secret } = ctx.env
+  if (!cid || !secret) return backToApp(ctx.url, 'xerr=' + encodeURIComponent('X sign-in is not configured yet'))
+  const code = ctx.url.searchParams.get('code') ?? ''
+  const state = ctx.url.searchParams.get('state') ?? ''
+  if (ctx.url.searchParams.get('error') || !code || !/^[0-9a-f]{32}$/.test(state)) return backToApp(ctx.url, 'xerr=' + encodeURIComponent('X sign-in was cancelled'))
+  const row = await ctx.db.prepare('SELECT address, created_at FROM nonces WHERE nonce = ?').bind(state).first<{ address: string; created_at: number }>()
+  await ctx.db.prepare('DELETE FROM nonces WHERE nonce = ?').bind(state).run()
+  if (!row || !row.address.startsWith('x:') || row.created_at < Date.now() - NONCE_TTL) return backToApp(ctx.url, 'xerr=' + encodeURIComponent('X sign-in expired — try again'))
+  const verifier = row.address.slice(2)
+
+  const tokenRes = await fetch('https://api.x.com/2/oauth2/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded', authorization: `Basic ${btoa(`${cid}:${secret}`)}` },
+    body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: xRedirect(ctx.url), code_verifier: verifier, client_id: cid }),
+  })
+  if (!tokenRes.ok) {
+    console.error('x token', tokenRes.status, await tokenRes.text().catch(() => ''))
+    return backToApp(ctx.url, 'xerr=' + encodeURIComponent('X rejected the sign-in — try again'))
+  }
+  const tok = (await tokenRes.json()) as { access_token?: string }
+  if (!tok.access_token) return backToApp(ctx.url, 'xerr=' + encodeURIComponent('X rejected the sign-in — try again'))
+
+  const meRes = await fetch('https://api.x.com/2/users/me?user.fields=profile_image_url,name,username', { headers: { authorization: `Bearer ${tok.access_token}` } })
+  if (!meRes.ok) {
+    console.error('x me', meRes.status, await meRes.text().catch(() => ''))
+    return backToApp(ctx.url, 'xerr=' + encodeURIComponent('Could not read your X profile — try again'))
+  }
+  const xu = ((await meRes.json()) as { data?: XUser }).data
+  if (!xu?.id || !xu.username) return backToApp(ctx.url, 'xerr=' + encodeURIComponent('Could not read your X profile — try again'))
+
+  const id = await userForX(ctx.db, xu)
+  const { token } = await openSession(ctx.db, id, null)
+  return backToApp(ctx.url, `x=${token}`)
+})
+
+/** Find-or-create the account owned by a verified X account. X-only accounts have no wallet address. */
+async function userForX(db: D1Database, xu: XUser): Promise<string> {
+  const xid = str(xu.id, 40)
+  const existing = (await db.prepare('SELECT id FROM users WHERE x_id = ?').bind(xid).first<{ id: string }>())?.id
+  const handle = str(xu.username, 15).replace(/^@/, '')
+  const pfp = typeof xu.profile_image_url === 'string' && /^https:\/\//.test(xu.profile_image_url) ? xu.profile_image_url.replace('_normal.', '_400x400.').slice(0, 500) : ''
+  if (existing) {
+    await db.prepare('UPDATE users SET twitter = ? WHERE id = ? AND twitter = ""').bind(handle, existing).run()
+    return existing
+  }
+  const id = `x_${rid().slice(0, 20)}`
+  const base = handle.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20)
+  const username = await freeUsername(db, base.length >= 3 ? base : `${base}${rid().slice(0, 3)}`)
+  const displayName = str(xu.name, 40).trim() || handle
+  await db.prepare('INSERT INTO users (id, address, username, display_name, pfp, bio, twitter, x_id, created_at) VALUES (?, "", ?, ?, ?, "", ?, ?, ?)').bind(id, username, displayName, pfp, handle, xid, Date.now()).run()
+  return id
+}
 
 /** Newest accounts, for the cross-device "just joined Perpcast" feed. */
 route('GET', '/users/recent', async (ctx) => {
