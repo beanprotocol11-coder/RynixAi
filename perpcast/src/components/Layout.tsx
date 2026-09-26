@@ -312,7 +312,7 @@ export function SearchBox({ autoFocus, className }: { autoFocus?: boolean; class
       }}
     >
       <SearchIcon size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-3" />
-      <input className="input !rounded-full !pl-10" placeholder="Search users, channels, markets" value={q} onChange={(e) => setQ(e.target.value)} autoFocus={autoFocus} />
+      <input className="input !rounded-full !pl-10" placeholder="Search people, casts, memes, markets" value={q} onChange={(e) => setQ(e.target.value)} autoFocus={autoFocus} />
     </form>
   )
 }
