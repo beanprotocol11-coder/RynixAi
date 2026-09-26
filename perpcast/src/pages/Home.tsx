@@ -86,9 +86,9 @@ export default function Home() {
         ) : (
           <div className="px-6 py-16 text-center">
             <h3 className="font-display text-lg font-extrabold">See casts from people you follow</h3>
-            <p className="mx-auto mt-1 max-w-xs text-sm text-ink-3">Sign in with your wallet to follow traders and build your own feed.</p>
+            <p className="mx-auto mt-1 max-w-xs text-sm text-ink-3">Get started with Google, email or a wallet to follow traders and build your own feed.</p>
             <button className="btn btn-primary mt-4" onClick={() => openSignIn()}>
-              Sign in
+              Get started
             </button>
           </div>
         ))}

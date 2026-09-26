@@ -47,7 +47,11 @@ export const useNotify = create<NotifyState>()(
         setTimeout(() => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== toast.id) })), toast.ttl)
       },
       dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })),
-      push: (n) => set((s) => ({ notifications: [{ id: uid(), time: Date.now(), read: false, ...n }, ...s.notifications].slice(0, 200) })),
+      push: (n) =>
+        set((s) => {
+          if (n.kind === 'joined' && s.notifications.some((x) => x.kind === 'joined' && x.href === n.href)) return s
+          return { notifications: [{ id: uid(), time: Date.now(), read: false, ...n }, ...s.notifications].slice(0, 200) }
+        }),
       markAllRead: () => set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) })),
       markRead: (id) => set((s) => ({ notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) })),
       clear: () => set({ notifications: [] }),
@@ -57,7 +61,18 @@ export const useNotify = create<NotifyState>()(
       partialize: (s) => ({ notifications: s.notifications }),
       merge: (persisted, current) => {
         const p = persisted as Partial<Pick<NotifyState, 'notifications'>> | undefined
-        return { ...current, notifications: (p?.notifications ?? []).filter((n) => !/^Signed in with /.test(n.title)) }
+        const seen = new Set<string>()
+        const list = (p?.notifications ?? []).filter((n) => {
+          if (/^Signed in with /.test(n.title)) return false
+          if (n.kind === 'joined') {
+            if (n.href === '/u/zouravxbt') return false
+            const k = `joined:${n.href}`
+            if (seen.has(k)) return false
+            seen.add(k)
+          }
+          return true
+        })
+        return { ...current, notifications: list }
       },
     },
   ),

@@ -15,21 +15,21 @@ export interface Category {
 }
 
 export const CATEGORY_LINKS: Category[] = [
-  { id: 'memes', label: 'Memes', to: '/memes', from: '#ff5fd2', toColor: '#8b5cf6', icon: SmileIcon, match: (p) => p.startsWith('/memes') },
-  { id: 'stocks', label: 'Stocks', to: '/trade?cat=stocks', from: '#38bdf8', toColor: '#4f46e5', icon: BuildingIcon, match: (p, s) => p.startsWith('/trade') && s.includes('cat=stocks') },
-  { id: 'rwa', label: 'RWAs', to: '/trade?cat=rwa', from: '#fbbf24', toColor: '#f97316', icon: GemIcon, match: (p, s) => p.startsWith('/trade') && s.includes('cat=rwa') },
-  { id: 'nfts', label: 'NFTs', to: '/nfts', from: '#a78bfa', toColor: '#ec4899', icon: GalleryIcon, match: (p) => p.startsWith('/nfts') },
-  { id: 'hyperliquid', label: 'Hyperliquid', to: '/trade', from: '#2dd4bf', toColor: '#0ea5e9', icon: DropIcon, match: (p, s) => p.startsWith('/trade') && !s.includes('cat=stocks') && !s.includes('cat=rwa') },
-  { id: 'macro', label: 'Macro', to: '/channel/macro', from: '#a3e635', toColor: '#16a34a', icon: GlobeIcon, match: (p) => p === '/channel/macro' },
-  { id: 'dev', label: 'Dev', to: '/channel/dev', from: '#c084fc', toColor: '#6366f1', icon: CodeIcon, match: (p) => p === '/channel/dev' },
-  { id: 'launch', label: 'Launch token', to: '/launch', from: '#fb7185', toColor: '#f97316', icon: RocketIcon, match: (p) => p.startsWith('/launch') },
+  { id: 'memes', label: 'Memes', to: '/memes', from: '#f97a3a', toColor: '#e2552f', icon: SmileIcon, match: (p) => p.startsWith('/memes') },
+  { id: 'stocks', label: 'Stocks', to: '/trade?cat=stocks', from: '#6ea8ff', toColor: '#3b7df0', icon: BuildingIcon, match: (p, s) => p.startsWith('/trade') && s.includes('cat=stocks') },
+  { id: 'rwa', label: 'RWAs', to: '/trade?cat=rwa', from: '#ffd23f', toColor: '#f2b500', icon: GemIcon, match: (p, s) => p.startsWith('/trade') && s.includes('cat=rwa') },
+  { id: 'nfts', label: 'NFTs', to: '/nfts', from: '#c4b5fd', toColor: '#a78bfa', icon: GalleryIcon, match: (p) => p.startsWith('/nfts') },
+  { id: 'hyperliquid', label: 'Hyperliquid', to: '/trade', from: '#7fe0c4', toColor: '#2bbfa0', icon: DropIcon, match: (p, s) => p.startsWith('/trade') && !s.includes('cat=stocks') && !s.includes('cat=rwa') },
+  { id: 'macro', label: 'Macro', to: '/channel/macro', from: '#8fe388', toColor: '#4fc16a', icon: GlobeIcon, match: (p) => p === '/channel/macro' },
+  { id: 'dev', label: 'Dev', to: '/channel/dev', from: '#a98bff', toColor: '#7c5cf5', icon: CodeIcon, match: (p) => p === '/channel/dev' },
+  { id: 'launch', label: 'Launch token', to: '/launch', from: '#ff8ab5', toColor: '#f2578f', icon: RocketIcon, match: (p) => p.startsWith('/launch') },
 ]
 
 /** Horizontal strip of big obvious category buttons. Lives under the page header on Home / Explore / Channel. */
 export function CategoryBar({ className, exclude = [] }: { className?: string; exclude?: string[] }) {
   const { pathname, search } = useLocation()
   return (
-    <nav aria-label="Categories" className={cx('flex gap-2.5 overflow-x-auto no-scrollbar px-4 py-3', className)}>
+    <nav aria-label="Categories" className={cx('flex gap-3 overflow-x-auto no-scrollbar px-4 pt-3 pb-5', className)}>
       {CATEGORY_LINKS.filter((c) => !exclude.includes(c.id)).map((c) => {
         const active = c.match(pathname, search)
         return (

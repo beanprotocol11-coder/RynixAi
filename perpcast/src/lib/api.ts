@@ -35,10 +35,12 @@ export interface Backend {
   verify(address: string, message: string, signature: string): Promise<AuthResult>
   emailStart(email: string): Promise<void>
   emailVerify(email: string, code: string): Promise<AuthResult>
+  googleVerify(credential: string): Promise<AuthResult>
   recentUsers(since: number): Promise<User[]>
   me(): Promise<User | null>
   signOut(): Promise<void>
   updateProfile(patch: ProfilePatch): Promise<User>
+  publishDmKey(key: string): Promise<void>
 
   getUser(handle: string): Promise<User | null>
   searchUsers(q: string, limit?: number): Promise<User[]>
@@ -135,6 +137,11 @@ class HttpBackend implements Backend {
     setToken(r.token)
     return r
   }
+  async googleVerify(credential: string) {
+    const r = await this.post<AuthResult>('/auth/google', { credential })
+    setToken(r.token)
+    return r
+  }
   async recentUsers(since: number) {
     return (await this.get<{ users: User[] }>(`/users/recent?since=${since}`)).users
   }
@@ -223,6 +230,9 @@ class HttpBackend implements Backend {
     await this.post('/activity/read')
   }
 
+  async publishDmKey(key: string) {
+    await this.call('PUT', '/me/dmkey', { key })
+  }
   async dmThreads() {
     return (await this.get<{ threads: DMThread[] }>('/dm')).threads
   }
@@ -239,6 +249,12 @@ class HttpBackend implements Backend {
 
 let backend: Backend | null = null
 let ready: Promise<Backend> | null = null
+let googleClient: string | null = null
+
+/** Google OAuth client ID advertised by the server; null when Google sign-in is not configured. */
+export function googleClientId(): string | null {
+  return googleClient
+}
 
 /** Probe the Pages Functions API once; fall back to the on-device store when it is unavailable (static preview, no D1 binding, offline). */
 export function initBackend(): Promise<Backend> {
@@ -249,7 +265,8 @@ export function initBackend(): Promise<Backend> {
       const t = setTimeout(() => ctrl.abort(), 4000)
       const res = await fetch('/api/health', { signal: ctrl.signal, headers: { accept: 'application/json' } })
       clearTimeout(t)
-      const data = (await res.json()) as { ok?: boolean; db?: boolean }
+      const data = (await res.json()) as { ok?: boolean; db?: boolean; google?: string | null }
+      googleClient = typeof data.google === 'string' && data.google ? data.google : null
       backend = res.ok && data.ok && data.db ? new HttpBackend() : new LocalBackend()
     } catch {
       backend = new LocalBackend()

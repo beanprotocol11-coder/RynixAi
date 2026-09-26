@@ -56,7 +56,7 @@ export default function Messages() {
         <div className="hidden md:block">
           <PageHeader title="Messages" />
         </div>
-        <Empty title="Sign in to message traders" body="Direct messages on Perpcast are private between you and the other wallet." icon={<MessageIcon />} action={<button className="btn btn-primary" onClick={() => openSignIn('Sign in to send messages.')}>Sign in</button>} />
+        <Empty title="Sign in to message traders" body="Direct messages are end-to-end encrypted — only you and the other person can read them." icon={<MessageIcon />} action={<button className="btn btn-primary" onClick={() => openSignIn('Sign in to send messages.')}>Sign in</button>} />
       </div>
     )
   }
@@ -90,7 +90,7 @@ export default function Messages() {
         />
       </div>
       <div className="flex items-center gap-2 border-b border-line px-4 py-2 text-xs text-ink-3">
-        <ShieldIcon size={14} /> {local ? 'Offline mode: messages are stored in this browser only.' : 'Messages are stored on Perpcast and visible only to the two wallets in the chat.'}
+        <ShieldIcon size={14} /> {local ? 'Offline mode: messages are stored in this browser only.' : 'End-to-end encrypted: messages are sealed on your device and Perpcast only stores ciphertext it cannot read. Keys stay on the device you send from.'}
       </div>
       {sorted.length === 0 && loading && !loaded && (
         <div className="flex justify-center py-16">
@@ -121,7 +121,7 @@ export default function Messages() {
                 <span className="truncate text-xs text-ink-3">@{t.peer.username}</span>
                 {last && <span className="ml-auto shrink-0 text-xs text-ink-3">{timeAgo(lastTime(t))}</span>}
               </span>
-              <span className={cx('block truncate text-sm', t.unread ? 'font-semibold text-ink' : 'text-ink-3')}>{last ? (last.from === me.id ? `You: ${last.text}` : last.text) : 'Say hi 👋'}</span>
+              <span className={cx('block truncate text-sm', t.unread ? 'font-semibold text-ink' : 'text-ink-3')}>{last ? (last.locked ? '🔒 Encrypted message' : last.from === me.id ? `You: ${last.text}` : last.text) : 'Say hi 👋'}</span>
             </span>
             {t.unread > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[11px] font-bold text-white">{t.unread}</span>}
           </button>
@@ -292,7 +292,13 @@ function Chat({ thread, me }: { thread: DMThread; me: User }) {
               {showDay && <div className="my-3 text-center text-[11px] font-semibold uppercase tracking-wider text-ink-3">{new Date(m.time).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>}
               <div className={cx('mb-1.5 flex', mine ? 'justify-end' : 'justify-start')}>
                 <div className={cx('max-w-[78%] rounded-2xl px-3.5 py-2 text-[15px] leading-snug break-words', mine ? 'bg-accent text-white rounded-br-md' : 'bg-surface-2 rounded-bl-md')} title={fullDate(m.time)}>
-                  {m.text}
+                  {m.locked ? (
+                    <span className={cx('inline-flex items-center gap-1 italic', mine ? 'text-white/80' : 'text-ink-3')}>
+                      <ShieldIcon size={12} /> {m.locked === 'other-device' ? 'Encrypted for another device' : 'Unreadable message'}
+                    </span>
+                  ) : (
+                    m.text
+                  )}
                   <span className={cx('ml-2 align-baseline text-[10px]', mine ? 'text-white/70' : 'text-ink-3')}>{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>

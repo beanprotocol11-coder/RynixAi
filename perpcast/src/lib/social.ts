@@ -10,6 +10,8 @@ export interface User {
   banner?: string
   twitter?: string
   website?: string
+  /** X25519 public key (hex) for end-to-end encrypted DMs; empty until the account sets one up. */
+  dmKey?: string
   createdAt: number
   followers: number
   following: number
@@ -79,6 +81,8 @@ export interface DMMessage {
   to: string
   text: string
   time: number
+  /** Set when the ciphertext could not be opened on this device (sealed for another device's key). */
+  locked?: 'other-device' | 'corrupt'
 }
 
 export interface DMThread {

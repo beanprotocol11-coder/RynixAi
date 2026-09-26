@@ -24,6 +24,7 @@ export interface Env {
   ASSETS?: { fetch: (req: Request) => Promise<Response> }
   PINATA_JWT?: string
   RESEND_API_KEY?: string
+  GOOGLE_CLIENT_ID?: string
   EMAIL_FROM?: string
   IPFS_GATEWAY?: string
 }

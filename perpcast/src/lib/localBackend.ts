@@ -166,6 +166,9 @@ export class LocalBackend implements Backend {
   async emailVerify(): Promise<AuthResult> {
     throw new Error('Email sign-in needs the Perpcast server, which is unreachable right now — use a wallet instead')
   }
+  async googleVerify(): Promise<AuthResult> {
+    throw new Error('Google sign-in needs the Perpcast server, which is unreachable right now — use a wallet instead')
+  }
   async recentUsers(since: number): Promise<User[]> {
     return Object.values(this.db.users)
       .filter((u) => u.createdAt > since)
@@ -181,6 +184,11 @@ export class LocalBackend implements Backend {
     const t = getToken()
     if (t) delete this.db.sessions[t]
     setToken(null)
+    this.save()
+  }
+  async publishDmKey(key: string) {
+    const id = this.requireMe()
+    this.db.users[id].dmKey = key
     this.save()
   }
   async updateProfile(patch: ProfilePatch) {

@@ -34,6 +34,7 @@ export interface UserRow {
   banner: string | null
   twitter: string | null
   website: string | null
+  dm_key: string | null
   created_at: number
   followers?: number
   following?: number
@@ -50,6 +51,7 @@ export interface User {
   banner: string
   twitter: string
   website: string
+  dmKey: string
   createdAt: number
   followers: number
   following: number
@@ -91,7 +93,7 @@ export interface Cast {
 }
 
 export const USER_SELECT = `
-  u.id, u.address, u.username, u.display_name, u.pfp, u.bio, u.banner, u.twitter, u.website, u.created_at,
+  u.id, u.address, u.username, u.display_name, u.pfp, u.bio, u.banner, u.twitter, u.website, u.dm_key, u.created_at,
   (SELECT COUNT(*) FROM follows f WHERE f.followee_id = u.id) AS followers,
   (SELECT COUNT(*) FROM follows f WHERE f.follower_id = u.id) AS following,
   (SELECT COUNT(*) FROM casts c WHERE c.author_id = u.id AND c.parent_id IS NULL) AS cast_count`
@@ -107,6 +109,7 @@ export function toUser(r: UserRow): User {
     banner: r.banner ?? '',
     twitter: r.twitter ?? '',
     website: r.website ?? '',
+    dmKey: r.dm_key ?? '',
     createdAt: r.created_at,
     followers: r.followers ?? 0,
     following: r.following ?? 0,

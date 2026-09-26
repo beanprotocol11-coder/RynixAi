@@ -3,6 +3,21 @@ import { api } from '../lib/api'
 import type { DMMessage, DMThread, User } from '../lib/social'
 import { useAuth } from './auth'
 import { toast } from './notify'
+import { deviceKey, isEncrypted, open as openSealed, seal } from '../lib/e2e'
+
+export class NoPeerKeyError extends Error {
+  constructor(name: string) {
+    super(`${name} hasn't opened Perpcast since encrypted DMs launched, so there's no key to encrypt to yet. Ask them to sign in once, then try again.`)
+  }
+}
+
+/** Turns a stored (encrypted) message into what this device can show. */
+function reveal(m: DMMessage): DMMessage {
+  const me = useAuth.getState().user
+  if (!me || !isEncrypted(m.text)) return m
+  const r = openSealed(m.text, deviceKey(me.id))
+  return r.ok ? { ...m, text: r.text } : { ...m, text: '', locked: r.reason }
+}
 
 interface DMState {
   threads: DMThread[]
@@ -28,7 +43,7 @@ export const useDMs = create<DMState>()((set, get) => ({
     if (!useAuth.getState().user) return
     set({ loading: true })
     try {
-      const threads = await api().dmThreads()
+      const threads = (await api().dmThreads()).map((t) => (t.last ? { ...t, last: reveal(t.last) } : t))
       set((s) => {
         // keep locally-opened empty threads that the server does not know about yet
         const known = new Set(threads.map((t) => t.peer.id))
@@ -51,7 +66,7 @@ export const useDMs = create<DMState>()((set, get) => ({
     const have = get().messages[peerId]
     const since = have?.length ? have[have.length - 1].time : undefined
     try {
-      const list = await api().dmMessages(peerId, since)
+      const list = (await api().dmMessages(peerId, since)).map(reveal)
       if (!list.length && have) return
       set((s) => {
         const prev = s.messages[peerId] ?? []
@@ -65,7 +80,17 @@ export const useDMs = create<DMState>()((set, get) => ({
   },
 
   send: async (peer, text) => {
-    const msg = await api().dmSend(peer.id, text)
+    const me = useAuth.getState().user
+    if (!me) throw new Error('Sign in to send messages')
+    let peerKey = peer.dmKey
+    if (!peerKey) {
+      const fresh = await api().getUser(peer.username).catch(() => null)
+      peerKey = fresh?.dmKey
+      if (fresh) peer = fresh
+    }
+    if (!peerKey) throw new NoPeerKeyError(peer.displayName || `@${peer.username}`)
+    const sent = await api().dmSend(peer.id, seal(text, deviceKey(me.id), peerKey))
+    const msg: DMMessage = { ...sent, text }
     set((s) => {
       const prev = s.messages[peer.id] ?? []
       const threads = s.threads.filter((t) => t.peer.id !== peer.id)

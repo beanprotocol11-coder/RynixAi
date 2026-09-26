@@ -146,9 +146,9 @@ function Sidebar() {
             )}
           </Menu>
         ) : (
-          <button className="btn btn-ink h-11 w-11 self-center !p-0 xl:w-full xl:self-auto" onClick={() => openSignIn()}>
+          <button className="btn btn-primary h-11 w-11 self-center !p-0 xl:w-full xl:self-auto" onClick={() => openSignIn()}>
             <UserIcon size={20} className="xl:hidden" />
-            <span className="hidden xl:inline">Sign in</span>
+            <span className="hidden xl:inline">Get started</span>
           </button>
         )}
       </div>
@@ -204,7 +204,7 @@ function MobileNav() {
           ) : (
             <UserIcon size={23} />
           )}
-          {me ? 'Wallet' : 'Sign in'}
+          {me ? 'Wallet' : 'Get started'}
         </NavLink>
       </div>
     </nav>
@@ -239,7 +239,13 @@ export function MobileTopBar({ title }: { title?: React.ReactNode }) {
         {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={32} /> : <Logo size={44} className="logo-glow" />}
       </button>
       <div className="flex-1 text-center">{title ?? <Wordmark />}</div>
-      <WalletChip />
+      {me ? (
+        <WalletChip />
+      ) : (
+        <button className="btn btn-primary !h-8 !px-3 text-xs" onClick={() => openSignIn()}>
+          Get started
+        </button>
+      )}
       <button className="icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
         {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
       </button>
@@ -291,7 +297,9 @@ function RightRail() {
           <img src="/robinhood-chain.png" alt="" width={14} height={14} className="rounded-sm" /> Built on Robinhood Chain
         </span>
         <br />
-        Perpcast · Sign in with your wallet · Prices via Hyperliquid (crypto, memes, stocks & RWAs). Trading on Perpcast is a paper-trading simulation — no real funds are at risk.
+        Perpcast · Sign in with Google, email or wallet · DMs end-to-end encrypted · Prices via Hyperliquid (crypto, memes, stocks & RWAs). Trading on Perpcast is a paper-trading simulation — no real funds are at risk.
+        <br />
+        <Link to="/privacy" className="hover:text-ink">Privacy</Link> · <Link to="/terms" className="hover:text-ink">Terms</Link>
       </footer>
     </aside>
   )

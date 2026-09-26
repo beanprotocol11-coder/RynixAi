@@ -75,7 +75,7 @@ route('GET', '/health', async (ctx) => {
   } catch {
     db = false
   }
-  return json({ ok: true, db, time: Date.now() })
+  return json({ ok: true, db, time: Date.now(), google: ctx.env.GOOGLE_CLIENT_ID || null })
 })
 
 /* ---------------- auth ---------------- */
@@ -216,14 +216,50 @@ route('POST', '/auth/email/verify', async (ctx) => {
     throw new HttpError(401, 'Wrong code, try again')
   }
   await ctx.db.prepare('DELETE FROM email_codes WHERE email = ?').bind(email).run()
+  const id = await userForEmail(ctx.db, email)
+  return json(await openSession(ctx.db, id, await getUserById(ctx.db, id)))
+})
 
-  let id = (await ctx.db.prepare('SELECT id FROM users WHERE email = ?').bind(email).first<{ id: string }>())?.id
-  if (!id) {
-    id = `em_${rid().slice(0, 20)}`
-    const base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 15) || 'caster'
-    const username = await freeUsername(ctx.db, base.length >= 3 ? base : `${base}${rid().slice(0, 3)}`)
-    await ctx.db.prepare('INSERT INTO users (id, address, username, display_name, pfp, bio, email, created_at) VALUES (?, "", ?, ?, "", "", ?, ?)').bind(id, username, username, email, Date.now()).run()
-  }
+/** Find-or-create the account owned by a verified email. Email-only accounts have no wallet address. */
+async function userForEmail(db: D1Database, email: string, profile?: { name?: string; picture?: string }): Promise<string> {
+  const existing = (await db.prepare('SELECT id FROM users WHERE email = ?').bind(email).first<{ id: string }>())?.id
+  if (existing) return existing
+  const id = `em_${rid().slice(0, 20)}`
+  const base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 15) || 'caster'
+  const username = await freeUsername(db, base.length >= 3 ? base : `${base}${rid().slice(0, 3)}`)
+  const displayName = str(profile?.name, 40).trim() || username
+  const pfp = typeof profile?.picture === 'string' && /^https:\/\//.test(profile.picture) ? profile.picture.slice(0, 500) : ''
+  await db.prepare('INSERT INTO users (id, address, username, display_name, pfp, bio, email, created_at) VALUES (?, "", ?, ?, ?, "", ?, ?)').bind(id, username, displayName, pfp, email, Date.now()).run()
+  return id
+}
+
+interface GoogleTokenInfo {
+  aud?: string
+  iss?: string
+  sub?: string
+  email?: string
+  email_verified?: string | boolean
+  name?: string
+  picture?: string
+  exp?: string
+}
+
+/** Sign in with Google: the browser gets an ID token from Google Identity Services; we verify it with Google and map the verified email to an account. */
+route('POST', '/auth/google', async (ctx) => {
+  const clientId = ctx.env.GOOGLE_CLIENT_ID
+  if (!clientId) throw new HttpError(503, 'Google sign-in is not configured yet')
+  const b = await body<{ credential?: string }>(ctx.req)
+  const credential = str(b.credential, 4096)
+  if (!credential) throw new HttpError(400, 'Missing Google credential')
+  const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`)
+  if (!res.ok) throw new HttpError(401, 'Google sign-in was rejected — try again')
+  const info = (await res.json()) as GoogleTokenInfo
+  const issOk = info.iss === 'https://accounts.google.com' || info.iss === 'accounts.google.com'
+  const verified = info.email_verified === true || info.email_verified === 'true'
+  const email = str(info.email, 254).trim().toLowerCase()
+  if (info.aud !== clientId || !issOk || !verified || !EMAIL_RE.test(email)) throw new HttpError(401, 'Google account could not be verified')
+  if (Number(info.exp) * 1000 < Date.now()) throw new HttpError(401, 'Google sign-in expired — try again')
+  const id = await userForEmail(ctx.db, email, { name: info.name, picture: info.picture })
   return json(await openSession(ctx.db, id, await getUserById(ctx.db, id)))
 })
 
@@ -243,6 +279,16 @@ route('POST', '/auth/logout', async (ctx) => {
 })
 
 /* ---------------- me ---------------- */
+
+/** Publish this account's X25519 public key for encrypted DMs. The private key never reaches the server. */
+route('PUT', '/me/dmkey', async (ctx) => {
+  const me = requireViewer(ctx)
+  const b = await body<{ key?: string }>(ctx.req)
+  const key = str(b.key, 64).toLowerCase()
+  if (!/^[0-9a-f]{64}$/.test(key)) throw new HttpError(400, 'Invalid key')
+  await ctx.db.prepare('UPDATE users SET dm_key = ? WHERE id = ?').bind(key, me.id).run()
+  return json({ ok: true })
+})
 
 route('PATCH', '/me', async (ctx) => {
   const me = requireViewer(ctx)
@@ -576,7 +622,7 @@ route('POST', '/dm/:peer', async (ctx, p) => {
   if (!peer) throw new HttpError(404, 'User not found')
   if (peer.id === me.id) throw new HttpError(400, "You can't message yourself")
   const b = await body<{ text?: string }>(ctx.req)
-  const text = str(b.text, 2000).trim()
+  const text = str(b.text, 12000).trim()
   if (!text) throw new HttpError(400, 'Message is empty')
   const id = rid()
   const now = Date.now()

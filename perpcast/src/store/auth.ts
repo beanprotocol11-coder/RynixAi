@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { api, getToken } from '../lib/api'
+import { deviceKey } from '../lib/e2e'
 import type { User } from '../lib/social'
 import { disconnectWalletConnect, WALLETCONNECT_ID } from '../lib/wallet'
 
@@ -24,6 +25,21 @@ interface AuthState {
   closeSignIn: () => void
   signOut: () => Promise<void>
   refresh: () => Promise<void>
+}
+
+/** Publishes this device's DM public key once per account so peers can encrypt to it. */
+const published = new Set<string>()
+async function ensureDmKey(u: User) {
+  const key = deviceKey(u.id)
+  if (published.has(u.id) || u.dmKey === key.pub) return
+  published.add(u.id)
+  try {
+    await api().publishDmKey(key.pub)
+    const cur = useAuth.getState()
+    if (cur.user?.id === u.id) cur.setUser({ ...cur.user, dmKey: key.pub })
+  } catch {
+    published.delete(u.id)
+  }
 }
 
 export const useAuth = create<AuthState>()(
@@ -71,3 +87,7 @@ export const useAuth = create<AuthState>()(
     },
   ),
 )
+
+useAuth.subscribe((s, prev) => {
+  if (s.hydrated && s.user && getToken() && (s.user.id !== prev.user?.id || !prev.hydrated)) void ensureDmKey(s.user)
+})
