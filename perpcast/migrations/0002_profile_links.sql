@@ -1,0 +1,4 @@
+-- Profile banner + social links
+ALTER TABLE users ADD COLUMN banner TEXT NOT NULL DEFAULT '';
+ALTER TABLE users ADD COLUMN twitter TEXT NOT NULL DEFAULT '';
+ALTER TABLE users ADD COLUMN website TEXT NOT NULL DEFAULT '';

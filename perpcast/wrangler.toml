@@ -1,0 +1,17 @@
+name = "perpcast"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 database that backs casts, profiles, follows, reactions, activity and DMs.
+# Without this binding the API answers /api/health with db:false and the app runs in
+# per-browser local mode. To enable shared server persistence:
+#   npx wrangler d1 create perpcast          # copy the database_id it prints
+#   npx wrangler d1 migrations apply perpcast --remote
+# then uncomment the block below with the real id (or add the "DB" binding in the Pages dashboard).
+#
+[[d1_databases]]
+binding = "DB"
+database_name = "perpcast"
+database_id = "8892b452-53d0-44f0-b275-1fe89ce3bb48"
+migrations_dir = "migrations"

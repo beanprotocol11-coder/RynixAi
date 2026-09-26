@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN x_id TEXT NOT NULL DEFAULT '';
+CREATE INDEX IF NOT EXISTS idx_users_x_id ON users (x_id);
