@@ -8,6 +8,7 @@ import { PAIR_CANDIDATES } from '../lib/pons'
 import { fetchPonsTokens, type PonsToken } from '../lib/robinhood'
 
 const PAIR_LOGO = Object.fromEntries(PAIR_CANDIDATES.map((p) => [p.symbol, p.logo ?? '']))
+const PERP_ORBIT = ['BTC', 'ETH', 'HYPE', 'SOL', 'XRP', 'DOGE', 'BNB', 'SUI', 'LINK', 'AVAX', 'PEPE']
 const LAUNCH_ORBIT = ['ETH', 'USDG', 'TSLA', 'NVDA', 'AAPL', 'GLD', 'SPY', 'MSTR']
 
 const NAMES = ['nova', 'kenji', 'aria', 'degen.eth', 'maya', 'zed', 'luna', 'satoshi_jr', 'pixel', 'rio', 'hana', 'orbit']
@@ -136,14 +137,14 @@ export function HomeShowcase() {
               <div className="mt-1 text-xs opacity-90">{s.sub}</div>
             </div>
             {s.to === '/trade' ? (
-              <div className="hidden flex-col gap-1 sm:flex">
-                {ticker.slice(0, 3).map((t) => (
-                  <div key={t.c} className="flex items-center gap-2 rounded-xl bg-white/15 px-2 py-1 text-xs backdrop-blur">
-                    <CoinLogo coin={t.c} size={16} />
-                    <b>{t.c}</b>
-                    <span className="font-mono">{px(t.px)}</span>
-                    <span className={cx('font-mono', t.ch >= 0 ? 'text-emerald-200' : 'text-rose-200')}>{pct(t.ch)}</span>
-                  </div>
+              <div className="launch-orbit" aria-hidden>
+                <span className="launch-core flex h-10 w-10 items-center justify-center bg-white/95">
+                  <CoinLogo coin={PERP_ORBIT[0]} size={32} />
+                </span>
+                {PERP_ORBIT.slice(1).map((c, i, arr) => (
+                  <span key={c} className="launch-sat flex h-[26px] w-[26px] items-center justify-center" style={{ ['--i' as string]: i, ['--n' as string]: arr.length }}>
+                    <CoinLogo coin={c} size={24} />
+                  </span>
                 ))}
               </div>
             ) : s.to === '/nfts/perpcast' ? (

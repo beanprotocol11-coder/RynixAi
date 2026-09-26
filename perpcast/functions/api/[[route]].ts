@@ -163,7 +163,8 @@ function otpHtml(code: string, host: string): string {
   return `<!doctype html><html><body style="margin:0;background:#07050f;padding:32px 16px;font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;color:#e7e2ff">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
   <table role="presentation" width="420" cellpadding="0" cellspacing="0" style="max-width:420px;background:#0e0a1f;border:1px solid #2a2347;border-radius:24px;padding:32px">
-    <tr><td align="center" style="padding-bottom:16px"><img src="https://${host}/logo.svg" width="56" height="56" alt="Perpcast" style="border-radius:16px"></td></tr>
+    <tr><td align="center" style="padding-bottom:16px"><img src="https://${host}/logo-224.png" width="64" height="64" alt="Perpcast" style="display:block;border-radius:18px;width:64px;height:64px"></td></tr>
+    <tr><td align="center" style="font-size:13px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#c7b6ff;padding-bottom:14px">Perpcast</td></tr>
     <tr><td align="center" style="font-size:22px;font-weight:800;padding-bottom:6px">Your Perpcast sign-in code</td></tr>
     <tr><td align="center" style="font-size:14px;color:#9d95bd;padding-bottom:24px">Enter this code on ${host}. It expires in 10 minutes.</td></tr>
     <tr><td align="center" style="padding-bottom:24px"><table role="presentation" cellpadding="0" cellspacing="0"><tr>${digits}</tr></table></td></tr>

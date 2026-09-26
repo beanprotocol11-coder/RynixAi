@@ -15,6 +15,7 @@ import { cx, px, pct, usd } from '../lib/format'
 import { MobileTopBar } from '../components/Layout'
 import { CategoryBar } from '../components/CategoryBar'
 import { Feed, feedLoader } from '../components/Feed'
+import { fetchPonsTokens, type PonsToken } from '../lib/robinhood'
 
 export default function Explore() {
   const [params] = useSearchParams()
@@ -151,7 +152,7 @@ export function UserRow({ u }: { u: User }) {
   )
 }
 
-type SearchTab = 'top' | 'casts'
+type SearchTab = 'top' | 'people' | 'casts' | 'tokens'
 
 function SearchResults({ q }: { q: string }) {
   const markets = useMarket((s) => s.markets)
@@ -163,8 +164,13 @@ function SearchResults({ q }: { q: string }) {
 
   const channels = CHANNELS.filter((c) => c.id.includes(lower) || c.name.toLowerCase().includes(lower) || c.description.toLowerCase().includes(lower))
   const coins = markets.filter((m) => m.symbol.toLowerCase().includes(lower) || coinName(m.coin).toLowerCase().includes(lower)).slice(0, 8)
+  const { data: pons, loading: ponsLoading } = useAsync<PonsToken[]>(async () => (await fetchPonsTokens()).tokens, [])
+  const tokens = useMemo(
+    () => (pons ?? []).filter((t) => t.symbol.toLowerCase().includes(lower) || t.name.toLowerCase().includes(lower) || t.address.toLowerCase() === lower),
+    [pons, lower],
+  )
   const people = users ?? []
-  const nothing = !loading && people.length === 0 && channels.length === 0 && coins.length === 0
+  const nothing = !loading && !ponsLoading && people.length === 0 && channels.length === 0 && coins.length === 0 && tokens.length === 0
 
   return (
     <div>
@@ -173,10 +179,34 @@ function SearchResults({ q }: { q: string }) {
         onChange={setTab}
         tabs={[
           { id: 'top', label: 'Top' },
+          { id: 'people', label: 'People' },
           { id: 'casts', label: 'Casts' },
+          { id: 'tokens', label: 'Memes' },
         ]}
       />
       {tab === 'casts' && <Feed load={castLoader} pollMs={0} emptyTitle="No casts match" emptyBody={`Nobody has cast about “${q}” yet.`} />}
+      {tab === 'people' && (
+        <div className="px-4 py-4">
+          {loading && <div className="flex items-center gap-2 text-sm text-ink-3"><Spinner /> Searching…</div>}
+          {!loading && people.length === 0 && <Empty title="No people found" body={`No Perpcast user matches “${lower}”. Try a username or display name.`} icon={<SearchIcon />} />}
+          <div className="grid gap-2 sm:grid-cols-2">
+            {people.map((u) => (
+              <UserRow key={u.id} u={u} />
+            ))}
+          </div>
+        </div>
+      )}
+      {tab === 'tokens' && (
+        <div className="px-4 py-4">
+          {ponsLoading && <div className="flex items-center gap-2 text-sm text-ink-3"><Spinner /> Loading Pons tokens…</div>}
+          {!ponsLoading && tokens.length === 0 && <Empty title="No token found" body={`No Pons token on Robinhood Chain matches “${lower}”. Try the ticker, name or contract address.`} icon={<SearchIcon />} />}
+          <div className="grid gap-2 sm:grid-cols-2">
+            {tokens.slice(0, 30).map((t) => (
+              <TokenRow key={t.address} t={t} />
+            ))}
+          </div>
+        </div>
+      )}
       {tab === 'top' && (
         <div className="flex flex-col gap-6 px-4 py-4">
           <div className="text-sm text-ink-3">
@@ -237,9 +267,41 @@ function SearchResults({ q }: { q: string }) {
               </div>
             </section>
           )}
-          {nothing && <Empty title="Nothing found" body="Try a username, a wallet address, a channel like /stocks or a market like TSLA." icon={<SearchIcon />} />}
+          {tokens.length > 0 && (
+            <section>
+              <h3 className="mb-2 font-display font-extrabold">Memes · Pons on Robinhood Chain</h3>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {tokens.slice(0, 6).map((t) => (
+                  <TokenRow key={t.address} t={t} />
+                ))}
+              </div>
+              {tokens.length > 6 && (
+                <button className="link mt-2 text-sm" onClick={() => setTab('tokens')}>
+                  Show all {tokens.length} tokens
+                </button>
+              )}
+            </section>
+          )}
+          {nothing && <Empty title="Nothing found" body="Try a username, a cast keyword, a Pons meme ticker, a channel like /stocks or a market like TSLA." icon={<SearchIcon />} />}
         </div>
       )}
     </div>
+  )
+}
+
+function TokenRow({ t }: { t: PonsToken }) {
+  const mcap = t.marketCap ?? t.fdv
+  return (
+    <Link to={`/memes/${t.address}`} className="card flex items-center gap-3 p-3 hover:bg-surface-hover">
+      {t.image ? <img src={t.image} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover bg-surface-2" /> : <span className="grid h-8 w-8 place-items-center rounded-full bg-surface-2 text-xs font-bold">{t.symbol.slice(0, 2)}</span>}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold">${t.symbol}</span>
+        <span className="block truncate text-xs text-ink-3">{t.name} · {t.venue} · {t.quoteSymbol} pair</span>
+      </span>
+      <span className="text-right">
+        <span className="block text-sm font-semibold">{usd(t.priceUsd)}</span>
+        <span className={cx('mono text-xs', t.change24h >= 0 ? 'text-long' : 'text-short')}>{pct(t.change24h)}{mcap ? ` · ${usd(mcap, { compact: true })}` : ''}</span>
+      </span>
+    </Link>
   )
 }
