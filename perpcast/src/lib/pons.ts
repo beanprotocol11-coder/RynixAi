@@ -1,5 +1,6 @@
-import { createPublicClient, custom, decodeEventLog, encodeFunctionData, formatEther, formatUnits, http, isAddress, parseAbi, toHex, type Address, type Hex, type Log } from 'viem'
+import { createPublicClient, custom, decodeEventLog, encodeFunctionData, formatEther, formatUnits, isAddress, parseAbi, toHex, type Address, type Hex, type Log } from 'viem'
 import { ROBINHOOD_CHAIN, type EIP1193Provider } from './wallet'
+import { robinhoodTransport } from './rpc'
 
 /**
  * Pons V2 — token launchpad on Robinhood Chain. Tokens start on a bonding curve and graduate into a
@@ -94,7 +95,7 @@ export function readTokenLogo(token: Address): Promise<string | null> {
 
 export const PAIR_KIND_LABEL: Record<PairKind, string> = { native: 'Native', stable: 'Stablecoin', stock: 'Stock', etf: 'ETF', rwa: 'RWA' }
 
-const publicClient = createPublicClient({ transport: http(ROBINHOOD_CHAIN.rpc, { batch: true }) })
+const publicClient = createPublicClient({ transport: robinhoodTransport() })
 
 export interface LaunchConfig {
   id: number

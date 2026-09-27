@@ -1,5 +1,6 @@
 import { createPublicClient, encodeFunctionData, formatEther, formatUnits, http, parseAbi, parseUnits, type Address } from 'viem'
 import { ROBINHOOD_CHAIN, type EIP1193Provider } from './wallet'
+import { robinhoodTransport } from './rpc'
 import { PAIR_CANDIDATES } from './pons'
 
 /**
@@ -19,7 +20,7 @@ const INFO_URL = 'https://api.hyperliquid.xyz/info'
 
 const ERC20 = parseAbi(['function balanceOf(address) view returns (uint256)', 'function transfer(address to, uint256 amount) returns (bool)'])
 
-const rh = createPublicClient({ chain: { id: ROBINHOOD_CHAIN.id, name: ROBINHOOD_CHAIN.name, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [ROBINHOOD_CHAIN.rpc] } } }, transport: http() })
+const rh = createPublicClient({ chain: { id: ROBINHOOD_CHAIN.id, name: ROBINHOOD_CHAIN.name, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [ROBINHOOD_CHAIN.rpc] } } }, transport: robinhoodTransport() })
 const arb = createPublicClient({ chain: { id: ARBITRUM.id, name: ARBITRUM.name, nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: { default: { http: [ARBITRUM.rpc] } } }, transport: http() })
 
 export interface WalletBalances {

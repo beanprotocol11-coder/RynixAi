@@ -4,9 +4,10 @@
  * (contracts/PerpcastMascots.sol) is deployed once from the founder's wallet; its address is then
  * pinned via VITE_MASCOTS_CONTRACT so mint / OpenSea buttons light up for everyone.
  */
-import { createPublicClient, encodeDeployData, encodeFunctionData, http, toHex, type Address, type Hex } from 'viem'
+import { createPublicClient, encodeDeployData, encodeFunctionData, toHex, type Address, type Hex } from 'viem'
 import artifact from './mascotsArtifact.json'
 import { ROBINHOOD_CHAIN, type EIP1193Provider } from './wallet'
+import { robinhoodTransport } from './rpc'
 
 export const SITE = 'https://perpcast.app'
 export const MASCOT_SUPPLY = 100
@@ -66,7 +67,7 @@ export function explorerContractUrl(contract: Address) {
 
 const ABI = artifact.abi
 const BYTECODE = artifact.bytecode as Hex
-const publicClient = createPublicClient({ transport: http(ROBINHOOD_CHAIN.rpc, { batch: true }) })
+const publicClient = createPublicClient({ transport: robinhoodTransport() })
 
 export interface MascotsState {
   totalSupply: number
