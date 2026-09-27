@@ -9,6 +9,7 @@ export function robinhoodTransport() {
   return fallback(
     [
       http(ROBINHOOD_CHAIN.rpc, { batch: true, timeout: 12_000, retryCount: 1 }),
+      http('https://robinhood.drpc.org', { batch: true, timeout: 12_000, retryCount: 1 }),
       http(typeof location === 'undefined' ? ROBINHOOD_RPC_PROXY : `${location.origin}${ROBINHOOD_RPC_PROXY}`, { batch: true, timeout: 15_000, retryCount: 2 }),
     ],
     { rank: false, retryCount: 2, retryDelay: 400 },
