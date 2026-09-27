@@ -4,8 +4,7 @@ import { Modal, Spinner, Logo } from './ui'
 import { ArrowLeftIcon, ExternalIcon, QrIcon, RefreshIcon, ShieldIcon, WalletIcon, ZapIcon, ArrowUpRightIcon, MessageIcon, CheckIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
-import { api, googleClientId } from '../lib/api'
-import { mountGoogleButton } from '../lib/google'
+import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
 import { brandWallet, chainName, currentChainId, discoverWallets, isMobile, onAccountsChanged, onChainChanged, requestAccounts, signMessage, unbrandedWallets, WALLET_BRANDS, WALLETCONNECT_ID, walletIcon, type WalletOption } from '../lib/wallet'
 import { cx } from '../lib/format'
@@ -45,59 +44,9 @@ export function SignInModal() {
   )
 }
 
-function GoogleMark({ size = 20 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden>
-      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-    </svg>
-  )
-}
-
-/** Landing step: one "Get started" surface with every way in — Google, email code, or any EVM wallet. */
+/** Landing step: one "Get started" surface with every way in — email code or any EVM wallet. */
 function StartStep({ reason, onEmail, onWallet }: { reason: string | null; onEmail: () => void; onWallet: () => void }) {
   const close = useAuth((s) => s.closeSignIn)
-  const setSession = useAuth((s) => s.setSession)
-  const gHost = useRef<HTMLDivElement>(null)
-  const [gBusy, setGBusy] = useState(false)
-  const [gReady, setGReady] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const clientId = googleClientId()
-
-  useEffect(() => {
-    if (!clientId || !gHost.current) return
-    let cancel = () => {}
-    let alive = true
-    mountGoogleButton(
-      gHost.current,
-      clientId,
-      (credential) => {
-        setGBusy(true)
-        setError(null)
-        api()
-          .googleVerify(credential)
-          .then(({ user }) => {
-            if (!alive) return
-            setSession({ user, walletId: 'google', walletName: 'Google', chainId: 0, signedInAt: Date.now() })
-            toast({ kind: 'success', title: `Welcome, ${user.displayName || user.username}`, body: 'Signed in with Google · connect a wallet any time in Settings' })
-          })
-          .catch((e: Error) => alive && setError(e.message))
-          .finally(() => alive && setGBusy(false))
-      },
-      (msg) => alive && setError(msg),
-    )
-      .then((c) => {
-        cancel = c
-        if (alive) setGReady(true)
-      })
-      .catch((e: Error) => alive && setError(e.message))
-    return () => {
-      alive = false
-      cancel()
-    }
-  }, [clientId, setSession])
 
   return (
     <div>
@@ -110,17 +59,6 @@ function StartStep({ reason, onEmail, onWallet }: { reason: string | null; onEma
         <p className="mt-1 max-w-[280px] text-center text-sm text-ink-2">{reason ?? 'Cast, chat and trade perps in one feed. Pick any way in — no password, ever.'}</p>
       </div>
       <div className="px-5 pb-5 pt-4 space-y-2.5">
-        <div className="relative">
-          <button type="button" className="start-opt" disabled={gBusy || !clientId} onClick={() => !clientId && setError('Google sign-in is being set up — use email or a wallet for now')}>
-            <span className="start-opt-ic bg-white">{gBusy ? <Spinner size={18} /> : <GoogleMark size={22} />}</span>
-            <span className="min-w-0 flex-1 text-left">
-              <span className="block text-sm font-bold">Continue with Google</span>
-              <span className="block text-xs text-ink-3">{clientId ? 'One tap with your Google account' : 'Coming soon'}</span>
-            </span>
-            <ArrowUpRightIcon size={16} className="text-ink-3" />
-          </button>
-          {clientId && <div ref={gHost} className={cx('absolute inset-0 overflow-hidden rounded-2xl opacity-0 [&>div]:h-full [&>div]:w-full [&_iframe]:!h-full', (!gReady || gBusy) && 'pointer-events-none')} aria-label="Continue with Google" />}
-        </div>
         <button type="button" className="start-opt" onClick={onEmail}>
           <span className="start-opt-ic text-white" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-2))' }}>
             <MessageIcon size={20} />
@@ -145,7 +83,6 @@ function StartStep({ reason, onEmail, onWallet }: { reason: string | null; onEma
             ))}
           </span>
         </button>
-        {error && <div className="rounded-xl bg-short/10 px-3 py-2 text-sm text-short">{error}</div>}
         <p className="pt-2 text-center text-[11px] leading-relaxed text-ink-3">
           <ShieldIcon size={12} className="inline -mt-0.5 mr-1" />
           Your email and wallet address are never shown publicly. DMs are end-to-end encrypted. By continuing you agree to the{' '}
