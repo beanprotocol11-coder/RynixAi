@@ -11,7 +11,8 @@ import { robinhoodTransport } from './rpc'
 
 export const SITE = 'https://perpcast.app'
 export const MASCOT_SUPPLY = 30
-export const MASCOTS_CONTRACT: Address | null = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || null) as Address | null
+/** Deployed 2026-09-28 from the founder wallet on Robinhood Chain (chain 4663). */
+export const MASCOTS_CONTRACT: Address | null = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || '0x4a77b8e0f5a9c86e0970ab53adfc5acecdcd23ab') as Address
 
 export interface MascotTraits {
   Element: string

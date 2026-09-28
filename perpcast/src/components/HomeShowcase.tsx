@@ -98,7 +98,7 @@ function ActRow({ a, i }: { a: Act; i: number }) {
 const SLIDES = [
   { to: '/trade', tag: 'Perps', title: 'Trade perps while you cast', sub: 'Live Hyperliquid prices · share positions to the feed', cls: 'from-accent to-accent-2' },
   { to: '/launch', tag: 'Launchpad', title: 'Launch token on Perpcast through Pons', sub: 'Memes · Stocks · RWAs — paired with real Robinhood tokens', cls: 'from-[#0f0c29] via-[#302b63] to-[#24243e]' },
-  { to: '/nfts/perpcast', tag: 'NFTs', title: 'Perpcast NFTs Collection', sub: '30 pixel-art mages · minting soon on Robinhood Chain', cls: 'from-fuchsia-500 to-orange-400' },
+  { to: '/nfts/perpcast', tag: 'NFTs', title: 'Perpcast NFTs Collection', sub: '30 pixel-art mages · free mint live on Robinhood Chain', cls: 'from-fuchsia-500 to-orange-400' },
 ] as const
 
 export function HomeShowcase() {
