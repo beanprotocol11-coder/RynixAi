@@ -15,7 +15,6 @@ import {
   openSeaAssetUrl,
   openSeaCollectionUrl,
   readMascotsState,
-  reserveMascots,
   type MascotCollection,
   type MascotIndexItem,
   type MascotsState,
@@ -82,7 +81,6 @@ function MascotGrid({ col }: { col: MascotCollection }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'mine'>('all')
   const [deployed, setDeployed] = useState<Address | null>(null)
-  const isOwner = !!state && !!me && state.owner.toLowerCase() === me.address.toLowerCase()
 
   const shown = useMemo(() => (filter === 'mine' && state ? col.items.filter((i) => state.ownedIds.includes(i.id)) : col.items), [col, filter, state])
 
@@ -107,7 +105,6 @@ function MascotGrid({ col }: { col: MascotCollection }) {
   }
 
   const mint = () => run('Mint', () => mintMascot(wallet!.provider, me!.address as Address, MASCOTS_CONTRACT!), 'Mascot minted — welcome to the family')
-  const reserve = () => run('Reserve', () => reserveMascots(wallet!.provider, me!.address as Address, MASCOTS_CONTRACT!, 10), '10 mascots reserved to your wallet')
   const deploy = () =>
     run(
       'Deploy',
@@ -183,11 +180,6 @@ function MascotGrid({ col }: { col: MascotCollection }) {
                 <a className="btn btn-outline" href={explorerContractUrl(MASCOTS_CONTRACT)} target="_blank" rel="noreferrer">
                   <ExternalIcon size={16} /> Contract
                 </a>
-                {isOwner && !soldOut && (
-                  <button className="btn btn-outline" disabled={!!busy} onClick={reserve}>
-                    {busy === 'Reserve' ? <Spinner size={16} /> : null} Reserve 10 (owner)
-                  </button>
-                )}
               </>
             ) : deployed ? (
               <DeployedNotice address={deployed} />
@@ -223,7 +215,7 @@ function MascotGrid({ col }: { col: MascotCollection }) {
                 {state?.ownedIds.includes(it.id) && <span className="chip !py-0 !text-[10px]">Yours</span>}
               </div>
               <div className="mt-0.5 truncate text-[11px] text-ink-3">
-                {it.traits.Mood} · {it.traits.Hat !== 'None' ? it.traits.Hat : it.traits.Eyes}
+                {it.traits.Element} · {it.traits.Hat}
               </div>
             </div>
           </Link>
@@ -264,7 +256,7 @@ function MascotDetail({ item, col }: { item: MascotIndexItem; col: MascotCollect
   const next = col.items.find((x) => x.id === item.id + 1)
   const share = () => {
     if (!me) return openSignIn('Sign in to share mascots to your feed.')
-    openComposer({ text: `Perpcast Mascot #${item.id} · ${item.name} (${item.traits.Mood}) ${SITE}/nfts/perpcast/${item.id}\n${SITE}${mascotImage(item.id)}` })
+    openComposer({ text: `Perpcast Mascot #${item.id} · ${item.name} (${item.traits.Element}) ${SITE}/nfts/perpcast/${item.id}\n${SITE}${mascotImage(item.id)}` })
   }
   return (
     <div>

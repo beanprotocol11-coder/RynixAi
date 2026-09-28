@@ -3,11 +3,15 @@ pragma solidity ^0.8.24;
 
 /// @title Perpcast Mascots — 30 pixel-art mage mascots on Robinhood Chain.
 /// Minimal, dependency-free ERC-721 (ERC-165 / ERC-721 / ERC-721Metadata / ERC-2981 / ERC-7572 contractURI).
-/// Free public mint, one per wallet; the owner can reserve a batch and update the metadata base URI.
+/// Free public mint, one per wallet; the owner can override the metadata URIs.
+/// Kept deliberately small so deployment fits inside conservative mobile-wallet gas caps.
 contract PerpcastMascots {
     string public constant name = "Perpcast Mascots";
     string public constant symbol = "PCAST";
     uint256 public constant MAX_SUPPLY = 30;
+
+    string private constant DEFAULT_BASE_URI = "https://perpcast.app/nft/meta/";
+    string private constant DEFAULT_CONTRACT_URI = "https://perpcast.app/nft/collection.json";
 
     address public owner;
     string private _baseURI;
@@ -25,36 +29,29 @@ contract PerpcastMascots {
     event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
     event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-    event ContractURIUpdated();
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "not owner");
+        require(msg.sender == owner);
         _;
     }
 
-    constructor(string memory baseURI_, string memory contractURI_) {
+    constructor() {
         owner = msg.sender;
-        _baseURI = baseURI_;
-        _contractURI = contractURI_;
         emit OwnershipTransferred(address(0), msg.sender);
     }
 
     // ----- minting -----
 
     function mint() external {
-        require(mintOpen, "mint closed");
-        require(!minted[msg.sender], "already minted");
+        require(mintOpen);
+        require(!minted[msg.sender]);
         minted[msg.sender] = true;
         _mintNext(msg.sender);
     }
 
-    function reserve(address to, uint256 count) external onlyOwner {
-        for (uint256 i = 0; i < count; i++) _mintNext(to);
-    }
-
     function _mintNext(address to) internal {
-        require(to != address(0), "zero address");
-        require(totalSupply < MAX_SUPPLY, "sold out");
+        require(to != address(0));
+        require(totalSupply < MAX_SUPPLY);
         uint256 id = ++totalSupply;
         _owners[id] = to;
         _balances[to] += 1;
@@ -73,11 +70,10 @@ contract PerpcastMascots {
 
     function setContractURI(string calldata uri) external onlyOwner {
         _contractURI = uri;
-        emit ContractURIUpdated();
     }
 
     function transferOwnership(address to) external onlyOwner {
-        require(to != address(0), "zero address");
+        require(to != address(0));
         emit OwnershipTransferred(owner, to);
         owner = to;
     }
@@ -85,12 +81,13 @@ contract PerpcastMascots {
     // ----- metadata -----
 
     function tokenURI(uint256 tokenId) external view returns (string memory) {
-        require(_owners[tokenId] != address(0), "no token");
-        return string(abi.encodePacked(_baseURI, _toString(tokenId), ".json"));
+        require(_owners[tokenId] != address(0));
+        string memory base = bytes(_baseURI).length == 0 ? DEFAULT_BASE_URI : _baseURI;
+        return string(abi.encodePacked(base, _toString(tokenId), ".json"));
     }
 
     function contractURI() external view returns (string memory) {
-        return _contractURI;
+        return bytes(_contractURI).length == 0 ? DEFAULT_CONTRACT_URI : _contractURI;
     }
 
     /// ERC-2981: 5% royalty to the collection owner.
@@ -105,19 +102,19 @@ contract PerpcastMascots {
     // ----- ERC-721 -----
 
     function balanceOf(address a) external view returns (uint256) {
-        require(a != address(0), "zero address");
+        require(a != address(0));
         return _balances[a];
     }
 
     function ownerOf(uint256 tokenId) public view returns (address) {
         address o = _owners[tokenId];
-        require(o != address(0), "no token");
+        require(o != address(0));
         return o;
     }
 
     function approve(address to, uint256 tokenId) external {
         address o = ownerOf(tokenId);
-        require(msg.sender == o || _operators[o][msg.sender], "not authorized");
+        require(msg.sender == o || _operators[o][msg.sender]);
         _approvals[tokenId] = to;
         emit Approval(o, to, tokenId);
     }
@@ -138,9 +135,9 @@ contract PerpcastMascots {
 
     function transferFrom(address from, address to, uint256 tokenId) public {
         address o = ownerOf(tokenId);
-        require(o == from, "wrong from");
-        require(to != address(0), "zero address");
-        require(msg.sender == o || msg.sender == _approvals[tokenId] || _operators[o][msg.sender], "not authorized");
+        require(o == from);
+        require(to != address(0));
+        require(msg.sender == o || msg.sender == _approvals[tokenId] || _operators[o][msg.sender]);
         delete _approvals[tokenId];
         _balances[from] -= 1;
         _balances[to] += 1;
@@ -158,7 +155,7 @@ contract PerpcastMascots {
             (bool ok, bytes memory ret) = to.call(
                 abi.encodeWithSelector(0x150b7a02, msg.sender, from, tokenId, data)
             );
-            require(ok && ret.length >= 32 && abi.decode(ret, (bytes4)) == 0x150b7a02, "unsafe recipient");
+            require(ok && ret.length >= 32 && abi.decode(ret, (bytes4)) == 0x150b7a02);
         }
     }
 

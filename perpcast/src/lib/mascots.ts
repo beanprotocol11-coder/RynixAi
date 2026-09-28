@@ -12,17 +12,13 @@ import { robinhoodTransport } from './rpc'
 export const SITE = 'https://perpcast.app'
 export const MASCOT_SUPPLY = 30
 export const MASCOTS_CONTRACT: Address | null = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || null) as Address | null
-export const MASCOTS_BASE_URI = `${SITE}/nft/meta/`
-export const MASCOTS_CONTRACT_URI = `${SITE}/nft/collection.json`
 
 export interface MascotTraits {
+  Element: string
   Background: string
-  Pattern: string
-  Body: string
   Hat: string
-  Eyes: string
   Item: string
-  Mood: string
+  Aura: string
 }
 export interface MascotIndexItem {
   id: number
@@ -102,18 +98,26 @@ function walletErrorMessage(e: unknown): string {
   return err?.message || 'Wallet could not send the transaction'
 }
 
-const DEPLOY_GAS_FLOOR = 2_500_000n
-const CALL_GAS_FLOOR = 250_000n
+/** Deploy is kept under ~1.1M gas so it also fits wallets that cap unknown-chain txs at 1.2M. */
+const DEPLOY_GAS_FLOOR = 1_190_000n
+const CALL_GAS_FLOOR = 160_000n
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error('timeout')), ms)
+    p.then((v) => (clearTimeout(t), res(v)), (e) => (clearTimeout(t), rej(e)))
+  })
+}
 
 async function send(provider: EIP1193Provider, tx: { from: Address; to?: Address; data: Hex }): Promise<Hex> {
   const floor = tx.to ? CALL_GAS_FLOOR : DEPLOY_GAS_FLOOR
   let gas = floor
   try {
-    const est = await publicClient.estimateGas({ account: tx.from, to: tx.to, data: tx.data })
-    gas = (est * 150n) / 100n
+    const est = await withTimeout(publicClient.estimateGas({ account: tx.from, to: tx.to, data: tx.data }), 4_000)
+    gas = (est * 120n) / 100n
     if (gas < floor) gas = floor
   } catch (e) {
-    if (tx.to) throw new Error(walletErrorMessage(e))
+    if (tx.to && !(e instanceof Error && e.message === 'timeout')) throw new Error(walletErrorMessage(e))
   }
   let hash: Hex
   try {
@@ -125,13 +129,17 @@ async function send(provider: EIP1193Provider, tx: { from: Address; to?: Address
     throw new Error(walletErrorMessage(e))
   }
   const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 180_000 })
-  if (receipt.status !== 'success') throw new Error(`Transaction reverted — ${ROBINHOOD_CHAIN.explorer}/tx/${hash}`)
+  if (receipt.status !== 'success') {
+    const sent = await publicClient.getTransaction({ hash }).catch(() => null)
+    const why = sent && receipt.gasUsed >= sent.gas ? `Ran out of gas (wallet capped it at ${sent.gas.toLocaleString()}) — raise the gas limit in your wallet before confirming` : 'Transaction reverted'
+    throw new Error(`${why} — ${ROBINHOOD_CHAIN.explorer}/tx/${hash}`)
+  }
   return hash
 }
 
 /** Deploys the collection from the connected wallet; returns the new contract address. */
 export async function deployMascots(provider: EIP1193Provider, from: Address): Promise<{ hash: Hex; address: Address }> {
-  const data = encodeDeployData({ abi: ABI, bytecode: BYTECODE, args: [MASCOTS_BASE_URI, MASCOTS_CONTRACT_URI] })
+  const data = encodeDeployData({ abi: ABI, bytecode: BYTECODE })
   const hash = await send(provider, { from, data })
   const receipt = await publicClient.getTransactionReceipt({ hash })
   if (!receipt.contractAddress) throw new Error('Deployment receipt has no contract address')
@@ -140,8 +148,4 @@ export async function deployMascots(provider: EIP1193Provider, from: Address): P
 
 export function mintMascot(provider: EIP1193Provider, from: Address, contract: Address): Promise<Hex> {
   return send(provider, { from, to: contract, data: encodeFunctionData({ abi: ABI, functionName: 'mint' }) })
-}
-
-export function reserveMascots(provider: EIP1193Provider, from: Address, contract: Address, count: number): Promise<Hex> {
-  return send(provider, { from, to: contract, data: encodeFunctionData({ abi: ABI, functionName: 'reserve', args: [from, BigInt(count)] }) })
 }

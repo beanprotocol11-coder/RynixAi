@@ -223,6 +223,7 @@ export function WalletChip({ className }: { className?: string }) {
     <Link to="/portfolio" className={cx('chip mono !gap-1.5 !py-1 text-xs tabular-nums', className)} title="Your wallet balance (live)">
       <span className="inline-block h-1.5 w-1.5 rounded-full bg-long" />
       {total === null ? '…' : usd(total)}
+      <img src="/robinhood-chain.png" alt="Robinhood Chain" width={16} height={16} className="rounded-[4px]" />
     </Link>
   )
 }
