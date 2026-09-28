@@ -102,13 +102,24 @@ function walletErrorMessage(e: unknown): string {
   return err?.message || 'Wallet could not send the transaction'
 }
 
+const DEPLOY_GAS_FLOOR = 2_500_000n
+const CALL_GAS_FLOOR = 250_000n
+
 async function send(provider: EIP1193Provider, tx: { from: Address; to?: Address; data: Hex }): Promise<Hex> {
-  const gas = await publicClient.estimateGas({ account: tx.from, to: tx.to, data: tx.data }).catch(() => undefined)
+  const floor = tx.to ? CALL_GAS_FLOOR : DEPLOY_GAS_FLOOR
+  let gas = floor
+  try {
+    const est = await publicClient.estimateGas({ account: tx.from, to: tx.to, data: tx.data })
+    gas = (est * 150n) / 100n
+    if (gas < floor) gas = floor
+  } catch (e) {
+    if (tx.to) throw new Error(walletErrorMessage(e))
+  }
   let hash: Hex
   try {
     hash = (await provider.request({
       method: 'eth_sendTransaction',
-      params: [{ from: tx.from, ...(tx.to ? { to: tx.to } : {}), data: tx.data, ...(gas ? { gas: toHex((gas * 125n) / 100n) } : {}) }],
+      params: [{ from: tx.from, ...(tx.to ? { to: tx.to } : {}), data: tx.data, gas: toHex(gas) }],
     })) as Hex
   } catch (e) {
     throw new Error(walletErrorMessage(e))
