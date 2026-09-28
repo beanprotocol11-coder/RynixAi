@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/// @title Perpcast Mascots — 100 generative mascots on Robinhood Chain.
+/// @title Perpcast Mascots — 30 pixel-art mage mascots on Robinhood Chain.
 /// Minimal, dependency-free ERC-721 (ERC-165 / ERC-721 / ERC-721Metadata / ERC-2981 / ERC-7572 contractURI).
 /// Free public mint, one per wallet; the owner can reserve a batch and update the metadata base URI.
 contract PerpcastMascots {
     string public constant name = "Perpcast Mascots";
     string public constant symbol = "PCAST";
-    uint256 public constant MAX_SUPPLY = 100;
+    uint256 public constant MAX_SUPPLY = 30;
 
     address public owner;
     string private _baseURI;

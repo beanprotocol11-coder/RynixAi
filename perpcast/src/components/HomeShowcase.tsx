@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMarket, change24h } from '../store/market'
-import { mascotImage } from '../lib/mascots'
+import { mascotImage, MASCOT_SUPPLY } from '../lib/mascots'
 import { CoinLogo } from '../components/CoinLogo'
 import { cx, px, pct } from '../lib/format'
 import { PAIR_CANDIDATES } from '../lib/pons'
@@ -88,7 +88,7 @@ function ActRow({ a, i }: { a: Act; i: number }) {
   })()
   return (
     <div className="showcase-act">
-      <img src={mascotImage((i % 100) + 1)} alt="" width={26} height={26} className="rounded-lg" />
+      <img src={mascotImage((i % MASCOT_SUPPLY) + 1)} alt="" width={26} height={26} className="rounded-lg" />
       <span className="font-semibold">@{name}</span>
       <span className="text-ink-2">{body}</span>
     </div>
@@ -98,7 +98,7 @@ function ActRow({ a, i }: { a: Act; i: number }) {
 const SLIDES = [
   { to: '/trade', tag: 'Perps', title: 'Trade perps while you cast', sub: 'Live Hyperliquid prices · share positions to the feed', cls: 'from-accent to-accent-2' },
   { to: '/launch', tag: 'Launchpad', title: 'Launch token on Perpcast through Pons', sub: 'Memes · Stocks · RWAs — paired with real Robinhood tokens', cls: 'from-[#0f0c29] via-[#302b63] to-[#24243e]' },
-  { to: '/nfts/perpcast', tag: 'NFTs', title: 'Perpcast NFTs Collection', sub: '100 generative pieces · minting soon on Robinhood Chain', cls: 'from-fuchsia-500 to-orange-400' },
+  { to: '/nfts/perpcast', tag: 'NFTs', title: 'Perpcast NFTs Collection', sub: '30 pixel-art mages · minting soon on Robinhood Chain', cls: 'from-fuchsia-500 to-orange-400' },
 ] as const
 
 export function HomeShowcase() {
@@ -149,7 +149,7 @@ export function HomeShowcase() {
               </div>
             ) : s.to === '/nfts/perpcast' ? (
               <div className="flex -space-x-3">
-                {[3, 11, 27, 64].map((n) => (
+                {[1, 11, 21, 24].map((n) => (
                   <img key={n} src={mascotImage(n)} alt="" width={56} height={56} className="rounded-2xl ring-2 ring-white/70 showcase-float" style={{ animationDelay: `${n % 4}00ms` }} />
                 ))}
               </div>

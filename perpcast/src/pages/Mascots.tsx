@@ -126,7 +126,7 @@ function MascotGrid({ col }: { col: MascotCollection }) {
       <div className="hidden md:block">
         <PageHeader
           title="Perpcast Mascots"
-          sub={`${MASCOT_SUPPLY} generative mascots · Robinhood Chain`}
+          sub={`${MASCOT_SUPPLY} pixel-art mascots · Robinhood Chain`}
           back={
             <Link to="/nfts" className="icon-btn" aria-label="Back">
               <ArrowLeftIcon size={18} />
