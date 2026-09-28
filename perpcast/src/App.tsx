@@ -58,6 +58,40 @@ function Shortcuts() {
   return null
 }
 
+declare const __BUILD_ID__: string
+
+/** Reloads once when the server has a newer build than the one running (stale in-app-browser caches). */
+function FreshBuildWatcher() {
+  useEffect(() => {
+    let stopped = false
+    const check = async () => {
+      try {
+        const r = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })
+        const v = (await r.json()) as { build?: string }
+        if (!stopped && v.build && v.build !== __BUILD_ID__ && document.visibilityState === 'visible') {
+          const key = `perpcast:reloaded:${v.build}`
+          if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, '1')
+            location.reload()
+          }
+        }
+      } catch {
+        /* offline */
+      }
+    }
+    check()
+    const onVis = () => document.visibilityState === 'visible' && check()
+    document.addEventListener('visibilitychange', onVis)
+    const t = setInterval(check, 5 * 60_000)
+    return () => {
+      stopped = true
+      clearInterval(t)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [])
+  return null
+}
+
 export default function App() {
   const theme = useUI((s) => s.theme)
   useEffect(() => {
@@ -67,6 +101,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Shortcuts />
+      <FreshBuildWatcher />
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />

@@ -12,7 +12,7 @@ import { robinhoodTransport } from './rpc'
 export const SITE = 'https://perpcast.app'
 export const MASCOT_SUPPLY = 30
 /** Deployed 2026-09-28 from the founder wallet on Robinhood Chain (chain 4663). */
-export const MASCOTS_CONTRACT: Address | null = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || '0x4a77b8e0f5a9c86e0970ab53adfc5acecdcd23ab') as Address
+export const MASCOTS_CONTRACT: Address = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || '0x4a77b8e0f5a9c86e0970ab53adfc5acecdcd23ab') as Address
 
 export interface MascotTraits {
   Element: string
@@ -52,8 +52,8 @@ export function fetchMascotIndex(): Promise<MascotCollection> {
   return indexCache
 }
 
-export function openSeaCollectionUrl(contract: Address | null) {
-  return contract ? `https://opensea.io/assets/robinhood/${contract}` : 'https://opensea.io/'
+export function openSeaCollectionUrl(contract: Address) {
+  return `https://opensea.io/assets/robinhood/${contract}`
 }
 export function openSeaAssetUrl(contract: Address, id: number) {
   return `https://opensea.io/assets/robinhood/${contract}/${id}`

@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Address } from 'viem'
 import { PageHeader, Spinner, Empty } from '../components/ui'
-import { ArrowLeftIcon, CheckIcon, CopyIcon, ExternalIcon, ShareIcon, SparkIcon } from '../components/Icons'
+import { ArrowLeftIcon, ExternalIcon, ShareIcon, SparkIcon } from '../components/Icons'
 import {
   MASCOTS_CONTRACT,
   MASCOT_SUPPLY,
   SITE,
-  deployMascots,
   explorerContractUrl,
   fetchMascotIndex,
   mascotImage,
@@ -60,7 +59,6 @@ function useMascotsChain(account: string | undefined) {
   const [state, setState] = useState<MascotsState | null>(null)
   const [tick, setTick] = useState(0)
   useEffect(() => {
-    if (!MASCOTS_CONTRACT) return
     let alive = true
     readMascotsState(MASCOTS_CONTRACT, (account as Address | undefined) ?? null)
       .then((s) => alive && setState(s))
@@ -80,7 +78,6 @@ function MascotGrid({ col }: { col: MascotCollection }) {
   const { state, refresh } = useMascotsChain(me?.address)
   const [busy, setBusy] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'mine'>('all')
-  const [deployed, setDeployed] = useState<Address | null>(null)
 
   const shown = useMemo(() => (filter === 'mine' && state ? col.items.filter((i) => state.ownedIds.includes(i.id)) : col.items), [col, filter, state])
 
@@ -104,16 +101,7 @@ function MascotGrid({ col }: { col: MascotCollection }) {
     }
   }
 
-  const mint = () => run('Mint', () => mintMascot(wallet!.provider, me!.address as Address, MASCOTS_CONTRACT!), 'Mascot minted — welcome to the family')
-  const deploy = () =>
-    run(
-      'Deploy',
-      async () => {
-        const r = await deployMascots(wallet!.provider, me!.address as Address)
-        setDeployed(r.address)
-      },
-      'Collection deployed on Robinhood Chain',
-    )
+  const mint = () => run('Mint', () => mintMascot(wallet!.provider, me!.address as Address, MASCOTS_CONTRACT), 'Mascot minted — welcome to the family')
 
   const minted = state?.totalSupply ?? 0
   const soldOut = minted >= MASCOT_SUPPLY
@@ -163,16 +151,12 @@ function MascotGrid({ col }: { col: MascotCollection }) {
               <span className="chip">{MASCOT_SUPPLY} items</span>
               <span className="chip">Free mint · 1 per wallet</span>
               <span className="chip">Robinhood Chain</span>
-              {MASCOTS_CONTRACT && (
-                <span className="chip">
-                  {minted}/{MASCOT_SUPPLY} minted
-                </span>
-              )}
+              <span className="chip">
+                {minted}/{MASCOT_SUPPLY} minted
+              </span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {MASCOTS_CONTRACT ? (
-              <>
                 <button className="btn btn-primary" disabled={!!busy || soldOut || (state?.minted ?? false) || state?.mintOpen === false} onClick={mint}>
                   {busy === 'Mint' ? <Spinner size={16} /> : <SparkIcon size={16} />}
                   {soldOut ? 'Sold out' : state?.minted ? 'Minted ✓' : state?.mintOpen === false ? 'Mint closed' : me ? 'Mint free' : 'Sign in to mint'}
@@ -180,20 +164,11 @@ function MascotGrid({ col }: { col: MascotCollection }) {
                 <a className="btn btn-outline" href={explorerContractUrl(MASCOTS_CONTRACT)} target="_blank" rel="noreferrer">
                   <ExternalIcon size={16} /> Contract
                 </a>
-              </>
-            ) : deployed ? (
-              <DeployedNotice address={deployed} />
-            ) : (
-              <button className="btn btn-primary" disabled={!!busy} onClick={me ? deploy : () => openSignIn('Sign in to deploy the collection from your wallet.')}>
-                {busy === 'Deploy' ? <Spinner size={16} /> : <SparkIcon size={16} />}
-                {me ? 'Deploy collection from my wallet' : 'Sign in to deploy'}
-              </button>
-            )}
           </div>
         </div>
       </div>
 
-      {MASCOTS_CONTRACT && me && (
+      {me && (
         <div className="mb-3 flex gap-2 px-4">
           {(['all', 'mine'] as const).map((f) => (
             <button key={f} className={cx('cat-pill !rounded-full !px-3 !py-1.5 !text-xs', filter === f && 'is-active')} aria-current={filter === f ? 'page' : undefined} onClick={() => setFilter(f)}>
@@ -221,28 +196,6 @@ function MascotGrid({ col }: { col: MascotCollection }) {
           </Link>
         ))}
       </div>
-    </div>
-  )
-}
-
-function DeployedNotice({ address }: { address: Address }) {
-  const [copied, setCopied] = useState(false)
-  return (
-    <div className="dreamy-card rounded-2xl p-3 text-xs">
-      <div className="font-bold">Deployed! Contract address:</div>
-      <button
-        className="mono mt-1 flex items-center gap-1 break-all text-left"
-        onClick={() => {
-          void navigator.clipboard.writeText(address)
-          setCopied(true)
-        }}
-      >
-        {address} {copied ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
-      </button>
-      <div className="mt-1 text-ink-3">Send this address to the Perpcast team so mint + OpenSea buttons switch on for everyone.</div>
-      <a className="mt-1 inline-flex items-center gap-1 underline" href={explorerContractUrl(address)} target="_blank" rel="noreferrer">
-        View on explorer <ExternalIcon size={12} />
-      </a>
     </div>
   )
 }
@@ -288,13 +241,9 @@ function MascotDetail({ item, col }: { item: MascotIndexItem; col: MascotCollect
             ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-            {MASCOTS_CONTRACT ? (
               <a className="btn btn-primary" href={openSeaAssetUrl(MASCOTS_CONTRACT, item.id)} target="_blank" rel="noreferrer">
                 <OpenSeaMark /> View on OpenSea
               </a>
-            ) : (
-              <span className="chip">OpenSea listing appears once the collection is deployed</span>
-            )}
             <button className="btn btn-outline" onClick={share}>
               <ShareIcon size={16} /> Share to cast
             </button>

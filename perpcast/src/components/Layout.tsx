@@ -220,10 +220,15 @@ export function WalletChip({ className }: { className?: string }) {
   const eth = Number(mids['ETH'] ?? 0)
   const total = data ? data.hlAccountValue + data.hlSpotUsdc + data.rhUsdg + data.arbUsdc + data.rhEth * eth : null
   return (
-    <Link to="/portfolio" className={cx('chip mono !gap-1.5 !py-1 text-xs tabular-nums', className)} title="Your wallet balance (live)">
-      <span className="inline-block h-1.5 w-1.5 rounded-full bg-long" />
-      {total === null ? '…' : usd(total)}
-      <img src="/robinhood-chain.png" alt="Robinhood Chain" width={16} height={16} className="rounded-[4px]" />
+    <Link to="/portfolio" className={cx('wallet-chip', className)} title="Your wallet balance (live)">
+      <span className="wallet-chip-ic">
+        <img src="/robinhood-chain.png" alt="Robinhood Chain" width={18} height={18} />
+      </span>
+      <span className="flex flex-col leading-none">
+        <span className="text-[9px] font-bold uppercase tracking-wider text-ink-3">Balance</span>
+        <span className="mono text-xs font-bold tabular-nums">{total === null ? '…' : usd(total)}</span>
+      </span>
+      <span className="wallet-chip-dot" />
     </Link>
   )
 }

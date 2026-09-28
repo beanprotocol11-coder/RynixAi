@@ -251,6 +251,32 @@
     background: var(--surface);
     box-shadow: 0 0 0 3px var(--accent-soft);
   }
+  .wallet-chip {
+    @apply inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition-all;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--surface-2) 80%, transparent), color-mix(in srgb, var(--accent) 12%, var(--surface-2)));
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 4px 14px -6px color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--text);
+  }
+  .wallet-chip:hover {
+    border-color: color-mix(in srgb, var(--accent) 70%, var(--line));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 6px 18px -6px color-mix(in srgb, var(--accent) 65%, transparent);
+    transform: translateY(-1px);
+  }
+  .wallet-chip-ic {
+    @apply grid h-7 w-7 shrink-0 place-items-center rounded-full;
+    background: #ccff00;
+    box-shadow: 0 0 0 2px color-mix(in srgb, #ccff00 35%, transparent), 0 0 12px -2px #ccff00aa;
+  }
+  .wallet-chip-ic img {
+    @apply h-[18px] w-[18px] rounded-full;
+  }
+  .wallet-chip-dot {
+    @apply ml-0.5 inline-block h-1.5 w-1.5 rounded-full;
+    background: var(--long);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--long) 25%, transparent);
+    animation: wallet-dot 2s ease-in-out infinite;
+  }
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-colors;
     background: var(--surface-2);
@@ -734,4 +760,8 @@
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+@keyframes wallet-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
