@@ -23,11 +23,12 @@ export function SignInModal() {
   const open = useAuth((s) => s.signInOpen)
   const reason = useAuth((s) => s.signInReason)
   const close = useAuth((s) => s.closeSignIn)
+  const initial = useAuth((s) => s.signInStep)
   const [step, setStep] = useState<'main' | 'wallet' | 'qr' | 'email'>('main')
 
   useEffect(() => {
-    if (open) setStep('main')
-  }, [open])
+    if (open) setStep(initial ?? 'main')
+  }, [open, initial])
 
   return (
     <Modal open={open} onClose={close} size="sm" label="Get started with Perpcast">

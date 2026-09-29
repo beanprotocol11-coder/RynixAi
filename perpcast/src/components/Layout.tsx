@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, ChannelIcon, Logo, Menu, MenuItem, Wordmark, LiveNumber } from './ui'
-import { BellIcon, BookmarkIcon, ChartIcon, CompassIcon, HomeIcon, LogoutIcon, MessageIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, WalletIcon, MoreIcon, ExternalIcon, HashIcon, TrendUpIcon, TrendDownIcon, SmileIcon, RocketIcon, GalleryIcon } from './Icons'
+import { BellIcon, BookmarkIcon, ChartIcon, CompassIcon, HomeIcon, LogoutIcon, MessageIcon, MoonIcon, PlusIcon, SearchIcon, SettingsIcon, SunIcon, UserIcon, WalletIcon, MoreIcon, ExternalIcon, HashIcon, TrendUpIcon, TrendDownIcon, SmileIcon, RocketIcon, GalleryIcon, GlobeIcon, ChevronDownIcon, ChevronRightIcon } from './Icons'
 import { useAuth } from '../store/auth'
 import { useUI } from '../store/ui'
 import { useNotify } from '../store/notify'
@@ -233,28 +233,98 @@ export function WalletChip({ className }: { className?: string }) {
   )
 }
 
-export function MobileTopBar({ title }: { title?: React.ReactNode }) {
+/** Top-right account pill: avatar + chevron opening a "Get connected / Explore / Display" menu. */
+export function AccountMenu() {
   const me = useAuth((s) => s.user)
+  const session = useAuth((s) => s.session)
   const openSignIn = useAuth((s) => s.openSignIn)
+  const signOut = useAuth((s) => s.signOut)
   const theme = useUI((s) => s.theme)
   const toggleTheme = useUI((s) => s.toggleTheme)
   const nav = useNavigate()
+  const hasWallet = !!me?.address && session?.walletId !== 'email'
+  const go = (to: string, close: () => void) => {
+    nav(to)
+    close()
+  }
   return (
-    <div className="flex h-14 items-center gap-3 px-4 md:hidden">
+    <Menu
+      align="right"
+      trigger={(open) => (
+        <button className={cx('acct-pill', open && 'is-open')} aria-label="Account menu" aria-expanded={open}>
+          <span className="relative">
+            {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={26} /> : <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-surface-2 text-ink-2"><UserIcon size={15} /></span>}
+            <span className={cx('acct-dot', me ? 'bg-long' : 'bg-accent-2')} />
+          </span>
+          <ChevronDownIcon size={14} className={cx('text-ink-3 transition-transform', open && 'rotate-180')} />
+        </button>
+      )}
+    >
+      {(close) => (
+        <div className="acct-menu">
+          <div className="acct-sec">{me ? 'Account' : 'Get connected'}</div>
+          <MenuItem icon={<UserIcon />} onClick={() => (me ? go(userPath(me), close) : (openSignIn(undefined, 'main'), close()))}>
+            Profile
+          </MenuItem>
+          {!hasWallet && (
+            <MenuItem icon={<WalletIcon />} onClick={() => (openSignIn(me ? 'Connect a wallet to trade, mint and launch.' : undefined, 'wallet'), close())}>
+              Connect wallet
+            </MenuItem>
+          )}
+          {!me && (
+            <MenuItem icon={<MessageIcon />} onClick={() => (openSignIn(undefined, 'email'), close())}>
+              Continue with email
+            </MenuItem>
+          )}
+          <MenuItem icon={<GlobeIcon />} onClick={() => go('/portfolio', close)}>
+            <span className="flex-1">Network</span>
+            <span className="flex items-center gap-1 text-xs text-ink-3">
+              <img src="/robinhood-chain.png" alt="" width={14} height={14} className="rounded-sm" /> Robinhood <ChevronRightIcon size={12} />
+            </span>
+          </MenuItem>
+          <div className="acct-sec">Explore</div>
+          <MenuItem icon={<ChartIcon />} onClick={() => go('/trade', close)}>
+            Trade perps
+          </MenuItem>
+          <MenuItem icon={<RocketIcon />} onClick={() => go('/launch', close)}>
+            Launch token
+          </MenuItem>
+          <MenuItem icon={<GalleryIcon />} onClick={() => go('/nfts/perpcast', close)}>
+            Mascots NFT
+          </MenuItem>
+          <div className="acct-sec">Display</div>
+          <MenuItem icon={theme === 'dark' ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme}>
+            <span className="flex-1">{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+            <ChevronRightIcon size={12} className="text-ink-3" />
+          </MenuItem>
+          {me && (
+            <>
+              <MenuItem icon={<SettingsIcon />} onClick={() => go('/settings', close)}>
+                Settings
+              </MenuItem>
+              <MenuItem icon={<LogoutIcon />} danger onClick={() => (void signOut(), close())}>
+                Sign out
+              </MenuItem>
+            </>
+          )}
+        </div>
+      )}
+    </Menu>
+  )
+}
+
+export function MobileTopBar({ title }: { title?: React.ReactNode }) {
+  const me = useAuth((s) => s.user)
+  const openSignIn = useAuth((s) => s.openSignIn)
+  const nav = useNavigate()
+  return (
+    <div className="flex h-14 items-center gap-2 px-3 md:hidden">
       <button onClick={() => (me ? nav(userPath(me)) : openSignIn())} aria-label="Profile">
         {me ? <Avatar src={me.pfp} name={me.displayName || me.username} seed={me.id} size={32} /> : <Logo size={44} className="logo-glow" />}
       </button>
       <div className="flex-1 text-center">{title ?? <Wordmark />}</div>
-      {me ? (
-        <WalletChip />
-      ) : (
-        <button className="btn btn-primary !h-8 !px-3 text-xs" onClick={() => openSignIn()}>
-          Get started
-        </button>
-      )}
-      <button className="icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
-        {theme === 'dark' ? <SunIcon size={20} /> : <MoonIcon size={20} />}
-      </button>
+      {me && <WalletChip />}
+      <AccountMenu />
     </div>
   )
 }
@@ -293,7 +363,10 @@ function MarketTape() {
 function RightRail() {
   return (
     <aside className="sticky top-8 hidden h-[calc(100dvh-2rem)] w-[340px] shrink-0 flex-col gap-4 overflow-y-auto no-scrollbar px-5 py-3 lg:flex">
-      <SearchBox />
+      <div className="flex items-center gap-2">
+        <SearchBox className="min-w-0 flex-1" />
+        <AccountMenu />
+      </div>
       <MarketsWidget />
       <PositionsWidget />
       <ChannelsWidget />

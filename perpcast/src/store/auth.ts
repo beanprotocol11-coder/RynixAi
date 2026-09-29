@@ -13,15 +13,18 @@ export interface Session {
   signedInAt: number
 }
 
+export type SignInStep = 'main' | 'wallet' | 'email'
+
 interface AuthState {
   session: Session | null
   user: User | null
   signInOpen: boolean
   signInReason: string | null
+  signInStep: SignInStep | null
   hydrated: boolean
   setSession: (s: Session | null) => void
   setUser: (u: User) => void
-  openSignIn: (reason?: string) => void
+  openSignIn: (reason?: string, step?: SignInStep) => void
   closeSignIn: () => void
   signOut: () => Promise<void>
   refresh: () => Promise<void>
@@ -49,13 +52,14 @@ export const useAuth = create<AuthState>()(
       user: null,
       signInOpen: false,
       signInReason: null,
+      signInStep: null,
       hydrated: false,
       setSession: (s) => set({ session: s, user: s?.user ?? null, signInOpen: false, signInReason: null }),
       setUser: (u) => {
         const s = get().session
         set({ user: u, session: s ? { ...s, user: u } : s })
       },
-      openSignIn: (reason) => set({ signInOpen: true, signInReason: reason ?? null }),
+      openSignIn: (reason, step) => set({ signInOpen: true, signInReason: reason ?? null, signInStep: step ?? null }),
       closeSignIn: () => set({ signInOpen: false, signInReason: null }),
       signOut: async () => {
         const wasWc = get().session?.walletId === WALLETCONNECT_ID

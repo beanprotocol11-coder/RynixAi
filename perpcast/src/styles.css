@@ -35,35 +35,43 @@
 }
 
 [data-theme="dark"] {
-  /* Dark: deep violet-black, dreamy */
-  --bg: #08060f;
-  --bg-elev: #110d1d;
-  --bg-sunken: #05040a;
-  --surface: #110d1d;
-  --surface-2: #181328;
-  --surface-hover: #1f1933;
-  --border: rgba(190, 170, 255, 0.09);
-  --border-strong: rgba(190, 170, 255, 0.18);
-  --text: #f3f0fb;
-  --text-2: #b7b0cc;
-  --text-3: #756e8c;
-  --accent: #9b7dff;
-  --accent-2: #e15ef2;
-  --accent-3: #ff8a5c;
-  --accent-soft: rgba(155, 125, 255, 0.16);
-  --long: #2fe08a;
-  --long-soft: rgba(47, 224, 138, 0.14);
-  --short: #ff5c7c;
-  --short-soft: rgba(255, 92, 124, 0.14);
-  --info: #7fb2ff;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 10px 30px -14px rgba(0, 0, 0, 0.75);
+  /* Dark: Tor purple with a soft fade to black */
+  --bg: #2b0f45;
+  --bg-elev: #351656;
+  --bg-sunken: #1c0a2f;
+  --surface: #3a1a5e;
+  --surface-2: #47236f;
+  --surface-hover: #542d80;
+  --border: rgba(230, 210, 255, 0.14);
+  --border-strong: rgba(230, 210, 255, 0.28);
+  --text: #fbf7ff;
+  --text-2: #d9ccf0;
+  --text-3: #a893c9;
+  --accent: #c99cff;
+  --accent-2: #ff7ad9;
+  --accent-3: #ffb35c;
+  --accent-soft: rgba(201, 156, 255, 0.2);
+  --long: #4ef0a0;
+  --long-soft: rgba(78, 240, 160, 0.16);
+  --short: #ff6b8f;
+  --short-soft: rgba(255, 107, 143, 0.16);
+  --info: #8fc1ff;
+  --shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 12px 30px -14px rgba(0, 0, 0, 0.7);
   --shadow-lg: 0 30px 80px -24px rgba(0, 0, 0, 0.85);
-  --ring: rgba(155, 125, 255, 0.55);
-  --glow-1: rgba(124, 92, 255, 0.28);
-  --glow-2: rgba(225, 94, 242, 0.16);
-  --glow-3: rgba(255, 138, 92, 0.10);
-  --chart-bg: #0b0810;
-  --chart-grid: rgba(190, 170, 255, 0.07);
+  --ring: rgba(201, 156, 255, 0.6);
+  --glow-1: rgba(201, 156, 255, 0.3);
+  --glow-2: rgba(255, 122, 217, 0.18);
+  --glow-3: rgba(255, 179, 92, 0.12);
+  --chart-bg: #200b36;
+  --chart-grid: rgba(230, 210, 255, 0.08);
+}
+[data-theme="dark"] body {
+  background: radial-gradient(120% 80% at 50% -10%, #5a2a86 0%, #3a175f 40%, #2b0f45 70%, #140620 100%) fixed;
+}
+[data-theme="dark"] .card,
+[data-theme="dark"] .dreamy-card {
+  border-width: 1.5px;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.45), 0 14px 34px -16px rgba(0, 0, 0, 0.7);
 }
 
 @theme inline {
@@ -250,6 +258,30 @@
     border-color: var(--accent);
     background: var(--surface);
     box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .acct-pill {
+    @apply inline-flex h-10 items-center gap-1.5 rounded-full pl-1.5 pr-2.5 transition-all;
+    background: var(--surface);
+    border: 1.5px solid var(--border-strong);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+  }
+  .acct-pill:hover,
+  .acct-pill.is-open {
+    background: var(--surface-hover);
+    transform: translateY(-1px);
+  }
+  .acct-dot {
+    @apply absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full;
+    border: 2px solid var(--surface);
+  }
+  .acct-menu {
+    @apply w-[240px];
+  }
+  .acct-sec {
+    @apply px-3 pb-1 pt-2 text-[11px] font-semibold text-ink-3;
+  }
+  .acct-sec:first-child {
+    @apply pt-1;
   }
   .wallet-chip {
     @apply inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition-all;
