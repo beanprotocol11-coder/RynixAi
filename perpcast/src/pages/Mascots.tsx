@@ -4,13 +4,18 @@ import type { Address } from 'viem'
 import { PageHeader, Spinner, Empty } from '../components/ui'
 import { ArrowLeftIcon, ExternalIcon, ShareIcon, SparkIcon } from '../components/Icons'
 import {
+  FOUNDER_WALLET,
   MASCOTS_CONTRACT,
+  MASCOTS_V1_CONTRACT,
+  MASCOT_RESERVE,
   MASCOT_SUPPLY,
   SITE,
+  deployMascots,
   explorerContractUrl,
   fetchMascotIndex,
   mascotImage,
   mintMascot,
+  reserveMascots,
   openSeaAssetUrl,
   openSeaCollectionUrl,
   readMascotsState,
@@ -55,18 +60,35 @@ export function MascotsGallery({ id }: { id?: string }) {
   return item ? <MascotDetail item={item} col={col} /> : <MascotGrid col={col} />
 }
 
-function useMascotsChain(account: string | undefined) {
+const DEPLOYED_KEY = 'perpcast:mascotsV2'
+/** Pinned V2 address, or the one this browser just deployed (until the env var is set). */
+function useContractAddress(): [Address | null, (a: Address) => void] {
+  const [local, setLocal] = useState<Address | null>(() => (localStorage.getItem(DEPLOYED_KEY) as Address | null) ?? null)
+  return [
+    MASCOTS_CONTRACT ?? local,
+    (a) => {
+      localStorage.setItem(DEPLOYED_KEY, a)
+      setLocal(a)
+    },
+  ]
+}
+
+function useMascotsChain(contract: Address | null, account: string | undefined) {
   const [state, setState] = useState<MascotsState | null>(null)
   const [tick, setTick] = useState(0)
   useEffect(() => {
     let alive = true
-    readMascotsState(MASCOTS_CONTRACT, (account as Address | undefined) ?? null)
+    if (!contract) {
+      setState(null)
+      return
+    }
+    readMascotsState(contract, (account as Address | undefined) ?? null)
       .then((s) => alive && setState(s))
       .catch(() => alive && setState(null))
     return () => {
       alive = false
     }
-  }, [account, tick])
+  }, [contract, account, tick])
   return { state, refresh: () => setTick((t) => t + 1) }
 }
 
@@ -75,7 +97,9 @@ function MascotGrid({ col }: { col: MascotCollection }) {
   const session = useAuth((s) => s.session)
   const openSignIn = useAuth((s) => s.openSignIn)
   const wallet = session ? findWallet(session.walletId) : undefined
-  const { state, refresh } = useMascotsChain(me?.address)
+  const [contract, setContract] = useContractAddress()
+  const { state, refresh } = useMascotsChain(contract, me?.address)
+  const isFounder = !!me?.address && me.address.toLowerCase() === FOUNDER_WALLET.toLowerCase()
   const [busy, setBusy] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'mine'>('all')
 
@@ -101,10 +125,33 @@ function MascotGrid({ col }: { col: MascotCollection }) {
     }
   }
 
-  const mint = () => run('Mint', () => mintMascot(wallet!.provider, me!.address as Address, MASCOTS_CONTRACT), 'Mascot minted — welcome to the family')
+  const mint = () => run('Mint', () => mintMascot(wallet!.provider, me!.address as Address, contract!), 'Mascot minted — welcome to the family')
+  const deploy = () =>
+    run(
+      'Deploy',
+      async () => {
+        const { address } = await deployMascots(wallet!.provider, me!.address as Address)
+        setContract(address)
+      },
+      'Collection deployed — now claim your reserve',
+    )
+  const reserve = () => run('Reserve', () => reserveMascots(wallet!.provider, me!.address as Address, contract!), `${MASCOT_RESERVE} mascots reserved to your wallet`)
 
   const minted = state?.totalSupply ?? 0
   const soldOut = minted >= MASCOT_SUPPLY
+  const needsReserve = isFounder && !!contract && state?.totalSupply === 0
+  const mintLabel = !contract
+    ? 'Mint opens soon'
+    : soldOut
+      ? 'Sold out'
+      : state?.minted
+        ? 'Minted ✓'
+        : state?.mintOpen === false
+          ? 'Mint closed'
+          : me
+            ? 'Mint free'
+            : 'Sign in to mint'
+  const osUrl = openSeaCollectionUrl(contract ?? MASCOTS_V1_CONTRACT)
 
   return (
     <div>
@@ -118,7 +165,7 @@ function MascotGrid({ col }: { col: MascotCollection }) {
             </Link>
           }
           right={
-            <a className="btn btn-outline !h-9 !px-3 !text-xs" href={openSeaCollectionUrl(MASCOTS_CONTRACT)} target="_blank" rel="noreferrer">
+            <a className="btn btn-outline !h-9 !px-3 !text-xs" href={osUrl} target="_blank" rel="noreferrer">
               <OpenSeaMark /> OpenSea
             </a>
           }
@@ -129,7 +176,7 @@ function MascotGrid({ col }: { col: MascotCollection }) {
           <ArrowLeftIcon size={18} />
         </Link>
         <div className="min-w-0 flex-1 font-display text-lg font-extrabold">Perpcast Mascots</div>
-        <a className="btn btn-outline !h-9 !px-3 !text-xs" href={openSeaCollectionUrl(MASCOTS_CONTRACT)} target="_blank" rel="noreferrer">
+        <a className="btn btn-outline !h-9 !px-3 !text-xs" href={osUrl} target="_blank" rel="noreferrer">
           <OpenSeaMark /> OpenSea
         </a>
       </div>
@@ -149,24 +196,41 @@ function MascotGrid({ col }: { col: MascotCollection }) {
             <p className="mt-1 max-w-md text-sm text-ink-3">{col.description}</p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <span className="chip">{MASCOT_SUPPLY} items</span>
-              <span className="chip">Free mint · 1 per wallet</span>
+              <span className="chip">Free mint · 1 per wallet · signed-in users</span>
               <span className="chip">Robinhood Chain</span>
-              <span className="chip">
-                {minted}/{MASCOT_SUPPLY} minted
-              </span>
+              {contract && (
+                <span className="chip">
+                  {minted}/{MASCOT_SUPPLY} minted
+                </span>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-                <button className="btn btn-primary" disabled={!!busy || soldOut || (state?.minted ?? false) || state?.mintOpen === false} onClick={mint}>
-                  {busy === 'Mint' ? <Spinner size={16} /> : <SparkIcon size={16} />}
-                  {soldOut ? 'Sold out' : state?.minted ? 'Minted ✓' : state?.mintOpen === false ? 'Mint closed' : me ? 'Mint free' : 'Sign in to mint'}
-                </button>
-                <a className="btn btn-outline" href={explorerContractUrl(MASCOTS_CONTRACT)} target="_blank" rel="noreferrer">
-                  <ExternalIcon size={16} /> Contract
-                </a>
+            {!contract && isFounder ? (
+              <button className="btn btn-primary" disabled={!!busy} onClick={deploy}>
+                {busy === 'Deploy' ? <Spinner size={16} /> : <SparkIcon size={16} />} Deploy v2 collection
+              </button>
+            ) : needsReserve ? (
+              <button className="btn btn-primary" disabled={!!busy} onClick={reserve}>
+                {busy === 'Reserve' ? <Spinner size={16} /> : <SparkIcon size={16} />} Claim {MASCOT_RESERVE} reserved
+              </button>
+            ) : (
+              <button className="btn btn-primary" disabled={!contract || !!busy || soldOut || (state?.minted ?? false) || state?.mintOpen === false} onClick={mint}>
+                {busy === 'Mint' ? <Spinner size={16} /> : <SparkIcon size={16} />}
+                {mintLabel}
+              </button>
+            )}
+            <a className="btn btn-outline" href={explorerContractUrl(contract ?? MASCOTS_V1_CONTRACT)} target="_blank" rel="noreferrer">
+              <ExternalIcon size={16} /> {contract ? 'Contract' : 'Genesis (sold out)'}
+            </a>
           </div>
         </div>
       </div>
+      {!contract && (
+        <p className="mx-4 mb-3 text-xs text-ink-3">
+          The genesis edition was sniped by bots in minutes. Edition 2 mints only with a voucher issued to signed-in Perpcast accounts — opening soon.
+        </p>
+      )}
 
       {me && (
         <div className="mb-3 flex gap-2 px-4">
@@ -205,6 +269,7 @@ function MascotDetail({ item, col }: { item: MascotIndexItem; col: MascotCollect
   const me = useAuth((s) => s.user)
   const openSignIn = useAuth((s) => s.openSignIn)
   const openComposer = useUI((s) => s.openComposer)
+  const [contract] = useContractAddress()
   const prev = col.items.find((x) => x.id === item.id - 1)
   const next = col.items.find((x) => x.id === item.id + 1)
   const share = () => {
@@ -241,9 +306,11 @@ function MascotDetail({ item, col }: { item: MascotIndexItem; col: MascotCollect
             ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
-              <a className="btn btn-primary" href={openSeaAssetUrl(MASCOTS_CONTRACT, item.id)} target="_blank" rel="noreferrer">
+            {contract && (
+              <a className="btn btn-primary" href={openSeaAssetUrl(contract, item.id)} target="_blank" rel="noreferrer">
                 <OpenSeaMark /> View on OpenSea
               </a>
+            )}
             <button className="btn btn-outline" onClick={share}>
               <ShareIcon size={16} /> Share to cast
             </button>

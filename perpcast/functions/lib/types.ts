@@ -27,6 +27,7 @@ export interface Env {
   GOOGLE_CLIENT_ID?: string
   X_CLIENT_ID?: string
   X_CLIENT_SECRET?: string
+  MASCOTS_SIGNER_KEY?: string
   EMAIL_FROM?: string
   IPFS_GATEWAY?: string
 }

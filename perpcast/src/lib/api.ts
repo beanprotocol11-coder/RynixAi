@@ -37,6 +37,7 @@ export interface Backend {
   emailVerify(email: string, code: string): Promise<AuthResult>
   googleVerify(credential: string): Promise<AuthResult>
   recentUsers(since: number): Promise<User[]>
+  mintVoucher(contract: string, chainId: number): Promise<{ deadline: number; signature: `0x${string}` }>
   me(): Promise<User | null>
   signOut(): Promise<void>
   updateProfile(patch: ProfilePatch): Promise<User>
@@ -141,6 +142,9 @@ class HttpBackend implements Backend {
     const r = await this.post<AuthResult>('/auth/google', { credential })
     setToken(r.token)
     return r
+  }
+  mintVoucher(contract: string, chainId: number) {
+    return this.post<{ deadline: number; signature: `0x${string}` }>('/mascots/voucher', { contract, chainId })
   }
   async recentUsers(since: number) {
     return (await this.get<{ users: User[] }>(`/users/recent?since=${since}`)).users

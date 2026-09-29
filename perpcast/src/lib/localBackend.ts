@@ -169,6 +169,9 @@ export class LocalBackend implements Backend {
   async googleVerify(): Promise<AuthResult> {
     throw new Error('Google sign-in needs the Perpcast server, which is unreachable right now — use a wallet instead')
   }
+  async mintVoucher(): Promise<{ deadline: number; signature: `0x${string}` }> {
+    throw new Error('Minting needs the Perpcast server — please reload')
+  }
   async recentUsers(since: number): Promise<User[]> {
     return Object.values(this.db.users)
       .filter((u) => u.createdAt > since)

@@ -5,14 +5,22 @@
  * pinned via VITE_MASCOTS_CONTRACT so mint / OpenSea buttons light up for everyone.
  */
 import { createPublicClient, encodeDeployData, encodeFunctionData, toHex, type Address, type Hex } from 'viem'
-import artifact from './mascotsArtifact.json'
+import artifact from './mascotsV2Artifact.json'
 import { ROBINHOOD_CHAIN, type EIP1193Provider } from './wallet'
 import { robinhoodTransport } from './rpc'
+import { api } from './api'
 
 export const SITE = 'https://perpcast.app'
 export const MASCOT_SUPPLY = 30
-/** Deployed 2026-09-28 from the founder wallet on Robinhood Chain (chain 4663). */
-export const MASCOTS_CONTRACT: Address = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || '0x4a77b8e0f5a9c86e0970ab53adfc5acecdcd23ab') as Address
+export const MASCOT_RESERVE = 3
+/** Genesis (v1) contract, deployed 2026-09-28 — fully minted by a sybil bot within minutes; kept for reference. */
+export const MASCOTS_V1_CONTRACT: Address = '0x4a77b8e0f5a9c86e0970ab53adfc5acecdcd23ab'
+/** V2 contract with server-signed mint vouchers. `null` until the founder deploys it from /nfts/perpcast. */
+export const MASCOTS_CONTRACT: Address | null = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || null) as Address | null
+/** Wallet allowed to deploy / claim the reserve. */
+export const FOUNDER_WALLET: Address = '0x5384a862EEA70013D2e711aB44308ce8FCc28290'
+/** Address of the Perpcast voucher signer (its private key lives only on the server). */
+export const MASCOTS_SIGNER: Address = '0x3E3ba937C81be90049737c7C7d682E85cA70856a'
 
 export interface MascotTraits {
   Element: string
@@ -138,15 +146,31 @@ async function send(provider: EIP1193Provider, tx: { from: Address; to?: Address
   return hash
 }
 
-/** Deploys the collection from the connected wallet; returns the new contract address. */
+/** Deploys the V2 collection from the connected wallet; returns the new contract address. */
 export async function deployMascots(provider: EIP1193Provider, from: Address): Promise<{ hash: Hex; address: Address }> {
-  const data = encodeDeployData({ abi: ABI, bytecode: BYTECODE })
+  const data = encodeDeployData({ abi: ABI, bytecode: BYTECODE, args: [MASCOTS_SIGNER] })
   const hash = await send(provider, { from, data })
   const receipt = await publicClient.getTransactionReceipt({ hash })
   if (!receipt.contractAddress) throw new Error('Deployment receipt has no contract address')
   return { hash, address: receipt.contractAddress }
 }
 
-export function mintMascot(provider: EIP1193Provider, from: Address, contract: Address): Promise<Hex> {
-  return send(provider, { from, to: contract, data: encodeFunctionData({ abi: ABI, functionName: 'mint' }) })
+/** Owner-only: claims tokens 1..RESERVE right after deploy. */
+export function reserveMascots(provider: EIP1193Provider, from: Address, contract: Address): Promise<Hex> {
+  return send(provider, { from, to: contract, data: encodeFunctionData({ abi: ABI, functionName: 'reserve' }) })
+}
+
+/** Asks the Perpcast server for a signed voucher (signed-in wallet only), then mints with it. */
+export async function mintMascot(provider: EIP1193Provider, from: Address, contract: Address): Promise<Hex> {
+  const { deadline, signature } = await api().mintVoucher(contract, ROBINHOOD_CHAIN.id)
+  const sig = signature.slice(2)
+  const r = `0x${sig.slice(0, 64)}` as Hex
+  const s = `0x${sig.slice(64, 128)}` as Hex
+  let v = parseInt(sig.slice(128, 130), 16)
+  if (v < 27) v += 27
+  return send(provider, {
+    from,
+    to: contract,
+    data: encodeFunctionData({ abi: ABI, functionName: 'mint', args: [BigInt(deadline), v, r, s] }),
+  })
 }

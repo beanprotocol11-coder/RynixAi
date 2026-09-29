@@ -1,4 +1,5 @@
-import { verifyMessage } from 'viem'
+import { encodeAbiParameters, keccak256, verifyMessage } from 'viem'
+import { privateKeyToAccount } from 'viem/accounts'
 import type { D1Database, Env, PagesFunction } from '../lib/types'
 import { HttpError, USERNAME_RE, USER_SELECT, defaultUsername, fetchCastRows, getUserByHandle, getUserById, getUsers, hydrateCasts, json, pushActivity, rid, toUser, type Cast, type CastRow, type User, type UserRow } from '../lib/db'
 
@@ -739,6 +740,51 @@ route('POST', '/dm/:peer/read', async (ctx, p) => {
   const me = requireViewer(ctx)
   await ctx.db.prepare('INSERT OR REPLACE INTO dm_reads (user_id, peer_id, read_at) VALUES (?, ?, ?)').bind(me.id, p.peer.toLowerCase(), Date.now()).run()
   return json({ ok: true })
+})
+
+/* ---------------- mascots mint vouchers ---------------- */
+
+const VOUCHER_TTL = 1000 * 60 * 15
+const VOUCHER_PER_IP_PER_DAY = 2
+const VOUCHER_GLOBAL_PER_HOUR = 8
+const MIN_ACCOUNT_AGE = 1000 * 60 * 2
+
+/**
+ * Issues a server-signed mint voucher for the signed-in user's own wallet. Bots that sybil fresh
+ * wallets must also create a Perpcast session per wallet, wait out the account-age gate and stay
+ * under the per-IP and global rate limits — which is what stopped the v1 collection from being fair.
+ */
+route('POST', '/mascots/voucher', async (ctx) => {
+  const me = requireViewer(ctx)
+  const key = ctx.env.MASCOTS_SIGNER_KEY
+  if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key)) throw new HttpError(503, 'Minting is not configured yet')
+  const b = await body<{ contract?: string; chainId?: number }>(ctx.req)
+  if (!isAddress(b.contract)) throw new HttpError(400, 'Invalid contract')
+  const chainId = Number.isInteger(b.chainId) && (b.chainId as number) > 0 ? (b.chainId as number) : 4663
+  if (!isAddress(me.address)) throw new HttpError(400, 'Connect a wallet to mint')
+  const now = Date.now()
+  if (now - me.createdAt < MIN_ACCOUNT_AGE) throw new HttpError(429, 'Fresh account — try again in a couple of minutes')
+  const ip = ctx.req.headers.get('cf-connecting-ip') || ''
+  const [perIp, global] = await Promise.all([
+    ctx.db.prepare('SELECT COUNT(DISTINCT wallet) AS n FROM mint_vouchers WHERE ip = ? AND created_at > ?').bind(ip, now - 86_400_000).first<{ n: number }>(),
+    ctx.db.prepare('SELECT COUNT(DISTINCT wallet) AS n FROM mint_vouchers WHERE created_at > ? AND wallet != ?').bind(now - 3_600_000, me.address.toLowerCase()).first<{ n: number }>(),
+  ])
+  const mine = await ctx.db.prepare('SELECT 1 FROM mint_vouchers WHERE ip = ? AND wallet = ? AND created_at > ?').bind(ip, me.address.toLowerCase(), now - 86_400_000).first()
+  if (!mine && ip && (perIp?.n ?? 0) >= VOUCHER_PER_IP_PER_DAY) throw new HttpError(429, 'Mint limit reached from this network today')
+  if ((global?.n ?? 0) >= VOUCHER_GLOBAL_PER_HOUR) throw new HttpError(429, 'Mint is busy right now — try again in a few minutes')
+  const deadline = Math.floor((now + VOUCHER_TTL) / 1000)
+  const inner = keccak256(
+    encodeAbiParameters(
+      [{ type: 'address' }, { type: 'uint256' }, { type: 'address' }, { type: 'uint256' }],
+      [b.contract, BigInt(chainId), me.address, BigInt(deadline)],
+    ),
+  )
+  const signature = await privateKeyToAccount(key as `0x${string}`).signMessage({ message: { raw: inner } })
+  await ctx.db.batch([
+    ctx.db.prepare('DELETE FROM mint_vouchers WHERE created_at < ?').bind(now - 7 * 86_400_000),
+    ctx.db.prepare('INSERT INTO mint_vouchers (id, user_id, wallet, contract, ip, deadline, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(rid(), me.id, me.address.toLowerCase(), b.contract.toLowerCase(), ip, deadline, now).run(),
+  ])
+  return json({ deadline, signature })
 })
 
 /* ---------------- dispatch ---------------- */
