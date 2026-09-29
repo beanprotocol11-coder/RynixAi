@@ -782,7 +782,7 @@ route('POST', '/mascots/voucher', async (ctx) => {
   const signature = await privateKeyToAccount(key as `0x${string}`).signMessage({ message: { raw: inner } })
   await ctx.db.batch([
     ctx.db.prepare('DELETE FROM mint_vouchers WHERE created_at < ?').bind(now - 7 * 86_400_000),
-    ctx.db.prepare('INSERT INTO mint_vouchers (id, user_id, wallet, contract, ip, deadline, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(rid(), me.id, me.address.toLowerCase(), b.contract.toLowerCase(), ip, deadline, now).run(),
+    ctx.db.prepare('INSERT INTO mint_vouchers (id, user_id, wallet, contract, ip, deadline, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(rid(), me.id, me.address.toLowerCase(), b.contract.toLowerCase(), ip, deadline, now),
   ])
   return json({ deadline, signature })
 })

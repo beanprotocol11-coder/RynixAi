@@ -15,8 +15,8 @@ export const MASCOT_SUPPLY = 30
 export const MASCOT_RESERVE = 3
 /** Genesis (v1) contract, deployed 2026-09-28 — fully minted by a sybil bot within minutes; kept for reference. */
 export const MASCOTS_V1_CONTRACT: Address = '0x4a77b8e0f5a9c86e0970ab53adfc5acecdcd23ab'
-/** V2 contract with server-signed mint vouchers. `null` until the founder deploys it from /nfts/perpcast. */
-export const MASCOTS_CONTRACT: Address | null = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || null) as Address | null
+/** V2 contract with server-signed mint vouchers, deployed 2026-09-29 from the founder wallet (nonce 5). */
+export const MASCOTS_CONTRACT: Address | null = ((import.meta.env.VITE_MASCOTS_CONTRACT as string | undefined) || '0xC3750d2dB03BCb2929DD7268C400510a45437161') as Address
 /** Wallet allowed to deploy / claim the reserve. */
 export const FOUNDER_WALLET: Address = '0x5384a862EEA70013D2e711aB44308ce8FCc28290'
 /** Address of the Perpcast voucher signer (its private key lives only on the server). */
