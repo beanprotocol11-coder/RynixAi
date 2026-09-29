@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Address } from 'viem'
-import { PageHeader, Spinner, Empty } from '../components/ui'
+import { PageHeader, Spinner, Empty, Modal } from '../components/ui'
 import { ArrowLeftIcon, ExternalIcon, ShareIcon, SparkIcon } from '../components/Icons'
 import {
   FOUNDER_WALLET,
@@ -102,6 +102,7 @@ function MascotGrid({ col }: { col: MascotCollection }) {
   const isFounder = !!me?.address && me.address.toLowerCase() === FOUNDER_WALLET.toLowerCase()
   const [busy, setBusy] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'mine'>('all')
+  const [reveal, setReveal] = useState<MascotIndexItem | null>(null)
 
   const shown = useMemo(() => (filter === 'mine' && state ? col.items.filter((i) => state.ownedIds.includes(i.id)) : col.items), [col, filter, state])
 
@@ -125,7 +126,16 @@ function MascotGrid({ col }: { col: MascotCollection }) {
     }
   }
 
-  const mint = () => run('Mint', () => mintMascot(wallet!.provider, me!.address as Address, contract!), 'Mascot minted — welcome to the family')
+  const mint = () =>
+    run(
+      'Mint',
+      async () => {
+        const { tokenId } = await mintMascot(wallet!.provider, me!.address as Address, contract!)
+        const item = col.items.find((x) => x.id === tokenId)
+        if (item) setReveal(item)
+      },
+      'Mascot minted — welcome to the family',
+    )
   const deploy = () =>
     run(
       'Deploy',
@@ -140,8 +150,11 @@ function MascotGrid({ col }: { col: MascotCollection }) {
   const minted = state?.totalSupply ?? 0
   const soldOut = minted >= MASCOT_SUPPLY
   const needsReserve = isFounder && !!contract && state?.totalSupply === 0
+  const chainPending = !!contract && !state
   const mintLabel = !contract
     ? 'Mint opens soon'
+    : chainPending
+      ? 'Loading…'
     : soldOut
       ? 'Sold out'
       : state?.minted
@@ -215,8 +228,8 @@ function MascotGrid({ col }: { col: MascotCollection }) {
                 {busy === 'Reserve' ? <Spinner size={16} /> : <SparkIcon size={16} />} Claim {MASCOT_RESERVE} reserved
               </button>
             ) : (
-              <button className="btn btn-primary" disabled={!contract || !!busy || soldOut || (state?.minted ?? false) || state?.mintOpen === false} onClick={mint}>
-                {busy === 'Mint' ? <Spinner size={16} /> : <SparkIcon size={16} />}
+              <button className="btn btn-primary" disabled={!contract || chainPending || !!busy || soldOut || (state?.minted ?? false) || state?.mintOpen === false} onClick={mint}>
+                {busy === 'Mint' || chainPending ? <Spinner size={16} /> : <SparkIcon size={16} />}
                 {mintLabel}
               </button>
             )}
@@ -232,6 +245,40 @@ function MascotGrid({ col }: { col: MascotCollection }) {
         </p>
       )}
 
+      <Modal open={!!reveal} onClose={() => setReveal(null)} size="sm" label="Mascot minted">
+        {reveal && contract && (
+          <div className="mint-reveal px-5 pb-6 pt-7 text-center">
+            <div className="mint-reveal-glow" aria-hidden />
+            <div className="mint-reveal-burst" aria-hidden>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <i key={i} style={{ ['--i' as string]: i }} />
+              ))}
+            </div>
+            <img src={mascotImage(reveal.id)} alt={reveal.name} width={512} height={512} className="mint-reveal-img mx-auto w-52 rounded-3xl" />
+            <div className="mint-reveal-text mt-4">
+              <div className="text-xs font-bold uppercase tracking-widest text-accent">You got</div>
+              <h3 className="font-display text-2xl font-extrabold">
+                #{reveal.id} · {reveal.name}
+              </h3>
+              <div className="mt-2 flex flex-wrap justify-center gap-1.5 text-[11px]">
+                {Object.entries(reveal.traits).map(([k, v]) => (
+                  <span key={k} className="chip !py-0.5">
+                    {k}: {v}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <Link to={`/nfts/perpcast/${reveal.id}`} className="btn btn-primary" onClick={() => setReveal(null)}>
+                  View my mascot
+                </Link>
+                <a className="btn btn-outline" href={openSeaAssetUrl(contract, reveal.id)} target="_blank" rel="noreferrer">
+                  <OpenSeaMark /> OpenSea
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
       {me && (
         <div className="mb-3 flex gap-2 px-4">
           {(['all', 'mine'] as const).map((f) => (

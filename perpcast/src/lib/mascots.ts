@@ -4,7 +4,7 @@
  * (contracts/PerpcastMascots.sol) is deployed once from the founder's wallet; its address is then
  * pinned via VITE_MASCOTS_CONTRACT so mint / OpenSea buttons light up for everyone.
  */
-import { createPublicClient, encodeDeployData, encodeFunctionData, toHex, type Address, type Hex } from 'viem'
+import { createPublicClient, encodeDeployData, encodeFunctionData, parseEventLogs, toHex, type Address, type Hex } from 'viem'
 import artifact from './mascotsV2Artifact.json'
 import { ROBINHOOD_CHAIN, type EIP1193Provider } from './wallet'
 import { robinhoodTransport } from './rpc'
@@ -160,17 +160,21 @@ export function reserveMascots(provider: EIP1193Provider, from: Address, contrac
   return send(provider, { from, to: contract, data: encodeFunctionData({ abi: ABI, functionName: 'reserve' }) })
 }
 
-/** Asks the Perpcast server for a signed voucher (signed-in wallet only), then mints with it. */
-export async function mintMascot(provider: EIP1193Provider, from: Address, contract: Address): Promise<Hex> {
+/** Asks the Perpcast server for a signed voucher (signed-in wallet only), then mints with it. Resolves with the minted token id. */
+export async function mintMascot(provider: EIP1193Provider, from: Address, contract: Address): Promise<{ hash: Hex; tokenId: number }> {
   const { deadline, signature } = await api().mintVoucher(contract, ROBINHOOD_CHAIN.id)
   const sig = signature.slice(2)
   const r = `0x${sig.slice(0, 64)}` as Hex
   const s = `0x${sig.slice(64, 128)}` as Hex
   let v = parseInt(sig.slice(128, 130), 16)
   if (v < 27) v += 27
-  return send(provider, {
+  const hash = await send(provider, {
     from,
     to: contract,
     data: encodeFunctionData({ abi: ABI, functionName: 'mint', args: [BigInt(deadline), v, r, s] }),
   })
+  const receipt = await publicClient.getTransactionReceipt({ hash })
+  const transfers = parseEventLogs({ abi: ABI, eventName: 'Transfer', logs: receipt.logs }) as unknown as { args: { to: Address; tokenId: bigint } }[]
+  const mine = transfers.find((t) => t.args.to.toLowerCase() === from.toLowerCase())
+  return { hash, tokenId: mine ? Number(mine.args.tokenId) : 0 }
 }
