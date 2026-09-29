@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createChart, AreaSeries, ColorType, type IChartApi, type UTCTimestamp } from 'lightweight-charts'
-import { useTrading, unrealized, START_BALANCE } from '../store/trading'
+import { useTrading, unrealized } from '../store/trading'
 import { useMarket } from '../store/market'
 import { useAuth } from '../store/auth'
 import { useUI } from '../store/ui'
@@ -11,7 +11,7 @@ import { PageHeader, Modal, ModalHeader, Empty } from '../components/ui'
 import { MobileTopBar } from '../components/Layout'
 import { RefreshIcon, ChartIcon } from '../components/Icons'
 import { WalletFunds } from '../components/WalletFunds'
-import { cx, usd, pct, compact } from '../lib/format'
+import { cx, usd, pct } from '../lib/format'
 
 export default function Portfolio() {
   const me = useAuth((s) => s.user)
@@ -168,7 +168,7 @@ export default function Portfolio() {
               setResetOpen(false)
             }}
           >
-            Reset to {compact(START_BALANCE)}
+            Reset desk
           </button>
         </div>
       </Modal>

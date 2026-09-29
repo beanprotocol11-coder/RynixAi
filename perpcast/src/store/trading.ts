@@ -53,7 +53,7 @@ export interface Fill {
 
 export const TAKER_FEE = 0.00045
 export const MAKER_FEE = 0.00015
-export const START_BALANCE = 10_000
+export const START_BALANCE = 0
 
 export function maintenanceRate(maxLeverage: number): number {
   return 1 / (2 * Math.max(1, maxLeverage))
@@ -271,10 +271,18 @@ export const useTrading = create<TradingState>()(
 
       reset: () => {
         set({ balance: START_BALANCE, positions: [], orders: [], fills: [], equityHistory: [], totalDeposited: START_BALANCE })
-        toast({ kind: 'info', title: 'Desk reset', body: `Balance restored to ${usd(START_BALANCE)}.` })
+        toast({ kind: 'info', title: 'Desk reset', body: 'Positions, orders and paper balance cleared.' })
       },
     }),
-    { name: 'perpcast:trading' },
+    {
+      name: 'perpcast:trading',
+      version: 2,
+      migrate: (persisted) => {
+        const s = persisted as Partial<TradingState>
+        const untouched = (s.positions?.length ?? 0) === 0 && (s.orders?.length ?? 0) === 0 && (s.fills?.length ?? 0) === 0
+        return untouched ? { ...s, balance: 0, totalDeposited: 0, equityHistory: [] } : s
+      },
+    },
   ),
 )
 

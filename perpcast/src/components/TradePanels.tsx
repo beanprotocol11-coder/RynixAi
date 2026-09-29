@@ -205,7 +205,7 @@ export function OrderForm({ market, mark, className }: { market: Market; mark: n
 
       {free < 100 && me && (
         <button className="btn btn-ghost w-full text-xs" onClick={() => deposit(10_000)}>
-          Low balance — deposit $10,000 paper USDC
+          Add $10,000 paper USDC to practice
         </button>
       )}
       <p className="text-center text-[11px] leading-snug text-ink-3">Paper trading on live Hyperliquid prices. No real funds are used.</p>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import type { Address } from 'viem'
 import { useAuth } from '../store/auth'
 import { toast } from '../store/notify'
@@ -12,27 +12,49 @@ import { cx, usd, shortAddr } from '../lib/format'
 
 const REFRESH_MS = 15_000
 
+/** Shared, per-address cache so every chip/card shows the same number and the last good value survives remounts + RPC hiccups. */
+const balanceCache = new Map<string, WalletBalances>()
+const listeners = new Set<() => void>()
+let inflight: Promise<void> | null = null
+let loadingNow = false
+function emit() {
+  listeners.forEach((l) => l())
+}
+function subscribe(l: () => void) {
+  listeners.add(l)
+  return () => listeners.delete(l)
+}
+async function loadBalances(address: Address) {
+  if (inflight) return inflight
+  loadingNow = true
+  emit()
+  inflight = fetchBalances(address)
+    .then((b) => {
+      balanceCache.set(address.toLowerCase(), b)
+    })
+    .catch(() => undefined)
+    .finally(() => {
+      inflight = null
+      loadingNow = false
+      emit()
+    })
+  return inflight
+}
+
 export function useWalletBalances() {
   const me = useAuth((s) => s.user)
-  const [data, setData] = useState<WalletBalances | null>(null)
-  const [loading, setLoading] = useState(false)
   const address = me?.address as Address | undefined
+  const key = address?.toLowerCase() ?? ''
+  const data = useSyncExternalStore(subscribe, () => (key ? balanceCache.get(key) ?? null : null))
+  const loading = useSyncExternalStore(subscribe, () => loadingNow)
 
   const refresh = useCallback(async () => {
     if (!address) return
-    setLoading(true)
-    try {
-      setData(await fetchBalances(address))
-    } finally {
-      setLoading(false)
-    }
+    await loadBalances(address)
   }, [address])
 
   useEffect(() => {
-    if (!address) {
-      setData(null)
-      return
-    }
+    if (!address) return
     void refresh()
     const t = setInterval(() => void refresh(), REFRESH_MS)
     const vis = () => document.visibilityState === 'visible' && void refresh()
