@@ -23,6 +23,7 @@ const Memes = lazy(() => import('./pages/Memes'))
 const Nfts = lazy(() => import('./pages/Nfts'))
 const Launch = lazy(() => import('./pages/Launch'))
 const Legal = lazy(() => import('./pages/Legal'))
+const Docs = lazy(() => import('./pages/Docs'))
 
 function PageFallback() {
   return (
@@ -122,6 +123,7 @@ export default function App() {
                   <Route path="search" element={<Navigate to="/explore" replace />} />
                   <Route path="privacy" element={<Legal />} />
                   <Route path="terms" element={<Legal />} />
+                  <Route path="docs" element={<Docs />} />
                   <Route path="channel/:id" element={<Channel />} />
                   <Route path="cast/:id" element={<CastDetail />} />
                   <Route path="u/:handle" element={<Profile />} />

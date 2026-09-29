@@ -292,6 +292,9 @@ export function AccountMenu() {
           <MenuItem icon={<GalleryIcon />} onClick={() => go('/nfts/perpcast', close)}>
             Mascots NFT
           </MenuItem>
+          <MenuItem icon={<CompassIcon />} onClick={() => go('/docs', close)}>
+            Docs
+          </MenuItem>
           <div className="acct-sec">Display</div>
           <MenuItem icon={theme === 'dark' ? <SunIcon /> : <MoonIcon />} onClick={toggleTheme}>
             <span className="flex-1">{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
@@ -378,7 +381,7 @@ function RightRail() {
         <br />
         Perpcast · Sign in with Google, email or wallet · DMs end-to-end encrypted · Prices via Hyperliquid (crypto, memes, stocks & RWAs). Trading on Perpcast is a paper-trading simulation — no real funds are at risk.
         <br />
-        <Link to="/privacy" className="hover:text-ink">Privacy</Link> · <Link to="/terms" className="hover:text-ink">Terms</Link>
+        <Link to="/docs" className="hover:text-ink">Docs</Link> · <Link to="/privacy" className="hover:text-ink">Privacy</Link> · <Link to="/terms" className="hover:text-ink">Terms</Link>
       </footer>
     </aside>
   )
